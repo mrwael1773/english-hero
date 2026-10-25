@@ -14,6 +14,12 @@
   <meta property="og:url" content="https://mrwael1773.github.io/english-hero/">
   <meta name="twitter:card" content="summary">
   <meta name="theme-color" content="#090e1b">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="English Hero">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>English Hero | تعلّم الإنجليزية مجانًا من الصفر</title>
 
 <style>
@@ -1257,5 +1263,10 @@ theme();renderStats();renderCourses();renderHome();
   |
   <a href="contact.html">تواصل معنا</a>
 </footer>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.warn('App offline setup failed:', error)));
+}
+</script>
 </body>
 </html>
