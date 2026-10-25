@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'english-hero-shell-v6';
+const CACHE_NAME = 'english-hero-shell-v7';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
