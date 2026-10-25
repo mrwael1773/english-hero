@@ -31,7 +31,7 @@ jobs:
           from pathlib import Path
 
           html = Path("index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script\\b[^>]*>([\\s\\S]*?)</script\\s*>", html, re.I)
+          scripts = re.findall(r"<script\b[^>]*>([\s\S]*?)</script\s*>", html, re.I)
           inline_scripts = []
           for script in scripts:
               if script.strip():
