@@ -25,13 +25,14 @@
     if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled=!user||!ready;
   };
   async function uploadProgress(){
-    if(!client||!user||!ready) return;
+    if(!client||!user||!ready) return false;
     const current=revision;
     const {error}=await client.from('learning_progress').upsert({
       user_id:user.id, progress:state, updated_at:new Date().toISOString()
     },{onConflict:'user_id'});
-    if(error){status('تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من إعداد قاعدة البيانات والاتصال.');console.error('English Hero cloud save:',error.message);return;}
+    if(error){status('تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من إعداد قاعدة البيانات والاتصال.');console.error('English Hero cloud save:',error.message);return false;}
     if(current===revision) status('✅ تمت مزامنة تقدمك مع حسابك السحابي.');
+    return true;
   }
   window.queueCloudSave=function(){
     if(!user||!ready) return;
@@ -71,8 +72,8 @@
       ready=true;setSignedInUI();
       renderStats();renderCourses();renderHome();renderProfile();renderReview();
       revision++;
-      await uploadProgress();
-      status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
+      const saved=await uploadProgress();
+      if(saved) status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
     } catch(e) {
       ready=true;setSignedInUI();
       status('تعذرت مزامنة التقدم. بقيت بياناتك المحلية محفوظة؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
