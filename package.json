@@ -1,0 +1,17 @@
+{
+  "name": "english-hero-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android wrapper build for the English Hero learning website",
+  "scripts": {
+    "build:android": "npx cap sync android",
+    "open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}
