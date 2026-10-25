@@ -42,7 +42,14 @@ function speak(text){
   window.setTimeout(()=>{if(synth.paused)synth.resume();},200);
  }catch(error){speechStatus('حدث خطأ أثناء تشغيل الصوت. افتح الصفحة في Safari مباشرة وأعد المحاولة.');}
 }
-function render(){let q=$('search').value.trim().toLocaleLowerCase('de');let list=unique.filter(w=>w[0].toLocaleLowerCase('de').includes(q)||w[1].includes(q));let pages=Math.max(1,Math.ceil(list.length/20));page=Math.min(page,pages-1);$('page').textContent=(page+1)+' / '+pages+' · '+list.length+' كلمة';$('words').innerHTML=list.slice(page*20,(page+1)*20).map(w=>'<div class="word"><div><strong>'+esc(w[0])+'</strong><small>'+esc(w[1])+'</small></div><div class="word-actions"><button onclick="speak(/g,'\\u003c')+')" aria-label="نطق">🔊</button><button onclick="toggleSave('+JSON.stringify(w[0]).replace(/</g,'\\u003c')+')">'+(saved.has(w[0])?'★':'☆')+'</button></div></div>').join('')||'<p class="muted">لا توجد نتائج.</p>'; $('prev').disabled=page===0;$('next').disabled=page>=pages-1}
+function render(){
+ const q=$('search').value.trim().toLocaleLowerCase('de');
+ const list=unique.filter(w=>w[0].toLocaleLowerCase('de').includes(q)||w[1].includes(q));
+ const pages=Math.max(1,Math.ceil(list.length/20));page=Math.min(page,pages-1);
+ $('page').textContent=(page+1)+' / '+pages+' · '+list.length+' كلمة';
+ $('words').innerHTML=list.slice(page*20,(page+1)*20).map(w=>'<div class="word"><div><strong>'+esc(w[0])+'</strong><small>'+esc(w[1])+'</small></div><div class="word-actions"><button data-speak="'+esc(w[0])+'" aria-label="نطق">🔊</button><button data-save="'+esc(w[0])+'">'+(saved.has(w[0])?'★':'☆')+'</button></div></div>').join('')||'<p class="muted">لا توجد نتائج.</p>';
+ $('prev').disabled=page===0;$('next').disabled=page>=pages-1;
+}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toggleSave(w){saved.has(w)?saved.delete(w):saved.add(w);$('savedCount').textContent=saved.size;render()}
 $('search').addEventListener('input',()=>{page=0;render()});$('prev').onclick=()=>{page--;render()};$('next').onclick=()=>{page++;render()};
