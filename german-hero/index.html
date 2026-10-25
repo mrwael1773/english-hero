@@ -22,9 +22,10 @@ let page=0, saved=new Set(), quizNum=0, answered=false, qIndex=0;
 const $=id=>document.getElementById(id);
 $('count').textContent=unique.length;
 let germanVoices=[];
+function voiceQuality(v){const s=(v.name+' '+v.lang).toLowerCase();let score=0;if(/google/.test(s))score+=100;if(/microsoft/.test(s))score+=90;if(/neural|enhanced|premium/.test(s))score+=80;if(/natural/.test(s))score+=70;if(/^de[-_]de/.test(v.lang))score+=20;if(v.localService===false)score+=5;return score;}
 function loadGermanVoices(){
  if(!('speechSynthesis' in window))return;
- germanVoices=window.speechSynthesis.getVoices().filter(v=>/^de[-_]/i.test(v.lang));
+ germanVoices=window.speechSynthesis.getVoices().filter(v=>/^de[-_]/i.test(v.lang)).sort((a,b)=>voiceQuality(b)-voiceQuality(a));
  const select=$('voiceChoice');if(!select)return;
  const current=select.value;
  select.innerHTML='<option value="">أفضل صوت ألماني متاح تلقائيًا</option>'+germanVoices.map((v,i)=>'<option value="'+i+'">'+esc(v.name)+' — '+esc(v.lang)+(v.localService?' · على الجهاز':'')+'</option>').join('');
@@ -42,7 +43,7 @@ function speak(text){
   utterance.lang='de-DE';utterance.rate=0.68;utterance.pitch=1;utterance.volume=1;
   const voices=synth.getVoices();
   const selected=$('voiceChoice')?.value;
-  const voice=(selected!==''&&germanVoices[Number(selected)])?germanVoices[Number(selected)]:voices.find(v=>/^de[-_]de[-_].*(enhanced|premium|neural)/i.test(v.name+' '+v.lang))||voices.find(v=>/enhanced|premium|neural/i.test(v.name)&&/^de[-_]/i.test(v.lang))||voices.find(v=>v.lang.toLowerCase()==='de-de')||voices.find(v=>/^de[-_]/i.test(v.lang));
+  const voice=(selected!==''&&germanVoices[Number(selected)])?germanVoices[Number(selected)]:germanVoices[0]||voices.find(v=>/^de[-_]/i.test(v.lang));
   if(voice)utterance.voice=voice;
   utterance.onstart=()=>speechStatus('يعمل الصوت الآن بسرعة بطيئة مناسبة للتعلّم…');
   utterance.onend=()=>speechStatus('انتهى الصوت. جرّب اختيار صوت ألماني آخر من القائمة إذا كان متاحًا.');
