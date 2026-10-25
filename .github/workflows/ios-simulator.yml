@@ -1,0 +1,72 @@
+name: Build English Hero for iOS (unsigned simulator)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "index.html"
+      - "capacitor.config.json"
+      - "package.json"
+      - ".github/workflows/ios-simulator.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios-simulator:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install JavaScript dependencies
+        run: npm install
+
+      - name: Prepare web assets
+        run: |
+          mkdir -p www
+          cat > www/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+          <body><p>Loading English Hero…</p><script>location.replace('https://mrwael1773.github.io/english-hero/');</script></body>
+          </html>
+          EOF
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Build for iOS Simulator
+        run: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package simulator build
+        run: |
+          cd build/DerivedData/Build/Products
+          zip -r "$GITHUB_WORKSPACE/english-hero-ios-simulator.zip" Debug-iphonesimulator/App.app
+
+      - name: Upload simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: english-hero-ios-simulator
+          path: english-hero-ios-simulator.zip
+          if-no-files-found: error
+          retention-days: 7
