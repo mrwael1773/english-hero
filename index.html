@@ -1258,12 +1258,45 @@ theme();renderStats();renderCourses();renderHome();
 <script src="config.js" defer></script>
 <script src="cloud-sync.js" defer></script>
 
+<section id="installAppPanel" style="max-width:760px;margin:18px auto;padding:18px;border:1px solid #30415c;border-radius:18px;background:#141e32;text-align:center">
+  <div style="font-weight:800;font-size:18px;margin-bottom:6px">📲 ثبّت English Hero على جوالك</div>
+  <p style="margin:0 0 12px;color:#9fb2ce;font-size:14px">افتح دروسك بسرعة من الشاشة الرئيسية، مثل التطبيقات.</p>
+  <button id="installAppButton" type="button" style="border:0;border-radius:12px;padding:12px 20px;background:#6de6c3;color:#090e1b;font-weight:800">تثبيت التطبيق</button>
+  <p id="installAppMessage" role="status" style="font-size:13px;color:#9fb2ce;margin:10px 0 0"></p>
+</section>
 <footer style="text-align:center; padding:20px; font-size:14px;">
   <a href="privacy.html">سياسة الخصوصية</a>
   |
   <a href="contact.html">تواصل معنا</a>
 </footer>
 <script>
+let installPromptEvent = null;
+const installButton = document.getElementById('installAppButton');
+const installMessage = document.getElementById('installAppMessage');
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault();
+  installPromptEvent = event;
+  installButton.textContent = 'تثبيت التطبيق الآن';
+  installMessage.textContent = 'جهازك يدعم التثبيت من هذه الصفحة.';
+});
+window.addEventListener('appinstalled', () => {
+  installMessage.textContent = 'تم تثبيت English Hero على جهازك.';
+  installButton.hidden = true;
+  installPromptEvent = null;
+});
+installButton.addEventListener('click', async () => {
+  if (installPromptEvent) {
+    installPromptEvent.prompt();
+    const result = await installPromptEvent.userChoice;
+    installMessage.textContent = result.outcome === 'accepted' ? 'جارٍ إكمال التثبيت.' : 'يمكنك التثبيت لاحقًا من القائمة.';
+    installPromptEvent = null;
+    return;
+  }
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  installMessage.textContent = isIOS
+    ? 'على الآيفون: اضغط زر المشاركة في Safari، ثم «إضافة إلى الشاشة الرئيسية».'
+    : 'إذا لم يظهر خيار التثبيت، افتح قائمة المتصفح وابحث عن «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».';
+});
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.warn('App offline setup failed:', error)));
 }
