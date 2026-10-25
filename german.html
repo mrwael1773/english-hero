@@ -9,7 +9,7 @@
 <header class="top"><div class="brand"><div class="logo">DE</div><div>German Hero<div class="muted" style="font-size:12px;font-weight:500">رحلتك لتعلّم الألمانية</div></div></div><span class="badge">A1 · مبتدئ</span></header>
 <section class="hero"><div class="badge">WILLKOMMEN! · أهلاً بك</div><h1>ابدأ الألمانية من الصفر 🇩🇪</h1><p>تعلّم الكلمات الأساسية، تدرب على النطق، واختبر نفسك خطوة بخطوة. واجهة عربية بسيطة ومناسبة للجوال.</p><div class="stats"><div class="stat"><span class="muted">كلمات في النسخة الأولى</span><b id="count">—</b></div><div class="stat"><span class="muted">كلمات محفوظة</span><b id="savedCount">0</b></div><div class="stat"><span class="muted">اختبارات مجابة</span><b id="quizCount">0</b></div></div></section>
 <nav class="tabs"><button class="tab active" data-tab="dictionary">📚 الكلمات</button><button class="tab" data-tab="lesson">📖 درس سريع</button><button class="tab" data-tab="quiz">📝 اختبر نفسك</button></nav>
-<section id="dictionary" class="section active"><div class="card"><h2>مكتبة الكلمات</h2><p class="muted">ابحث بالألمانية أو بالعربية. اضغط 🔊 لسماع النطق إذا كان متصفحك يدعم الصوت.</p><input id="search" class="search" placeholder="ابحث عن كلمة مثل Haus أو بيت..."><div id="words"></div><div class="row" style="justify-content:center;margin-top:16px"><button id="prev">السابق</button><span id="page" class="muted"></span><button id="next">التالي</button></div></div></section>
+<section id="dictionary" class="section active"><div class="card"><h2>مكتبة الكلمات</h2><p class="muted">ابحث بالألمانية أو بالعربية. اضغط 🔊 لسماع النطق إذا كان متصفحك يدعم الصوت.</p><input id="search" class="search" placeholder="ابحث عن كلمة مثل Haus أو بيت..."><label for="voiceChoice" class="muted" style="display:block;margin:12px 0 6px">الصوت الألماني (اختر الأكثر وضوحًا على جهازك)</label><select id="voiceChoice" class="search" aria-label="اختيار الصوت الألماني"><option value="">أفضل صوت ألماني متاح تلقائيًا</option></select><div id="words"></div><div class="row" style="justify-content:center;margin-top:16px"><button id="prev">السابق</button><span id="page" class="muted"></span><button id="next">التالي</button></div></div></section>
 <section id="lesson" class="section"><div class="card"><span class="badge">الدرس 1 · مستوى A1</span><h2>بناء الجملة الألمانية والفعل sein</h2><p>سنبدأ بشيئين فقط: ترتيب الجملة، ثم تصريف الفعل <b>sein</b> ومعناه «يكون».</p><h3>1) ترتيب الجملة</h3><p>في الجملة الخبرية العادية يأتي الفعل المصرف غالبًا في المركز الثاني.</p><div class="stat"><b style="direction:ltr;text-align:left;font-size:22px">Ich lerne Deutsch.</b><span>أنا أتعلم الألمانية.</span><p>Ich = أنا · lerne = أتعلم · Deutsch = الألمانية</p><button class="primary" data-speak="Ich lerne Deutsch." onclick="speak(this.getAttribute('data-speak'))">🔊 استمع للجملة</button></div><p>لاحظ: الفاعل <b>Ich</b> أولًا، والفعل <b>lerne</b> ثانيًا، ثم بقية الجملة.</p><h3>2) تصريف الفعل sein</h3><p>لا تقل <b>Ich sein</b>. يجب تغيير الفعل حسب الضمير، واحفظ كل صيغة مع ضميرها:</p><div class="grid"><div class="stat"><b style="direction:ltr;font-size:20px">ich bin</b><span>أنا أكون → أنا</span><p style="direction:ltr;text-align:left">Ich bin Wael.</p><span>أنا وائل.</span><button data-speak="Ich bin Wael." onclick="speak(this.getAttribute('data-speak'))">🔊 استمع</button></div><div class="stat"><b style="direction:ltr;font-size:20px">du bist</b><span>أنت تكون → أنت</span><p style="direction:ltr;text-align:left">Du bist nett.</p><span>أنت لطيف.</span><button data-speak="Du bist nett." onclick="speak(this.getAttribute('data-speak'))">🔊 استمع</button></div><div class="stat"><b style="direction:ltr;font-size:20px">er / sie / es ist</b><span>هو / هي / لغير العاقل</span><p style="direction:ltr;text-align:left">Er ist hier.</p><span>هو هنا.</span><button data-speak="Er ist hier." onclick="speak(this.getAttribute('data-speak'))">🔊 استمع</button></div><div class="stat"><b style="direction:ltr;font-size:20px">wir sind</b><span>نحن</span><p style="direction:ltr;text-align:left">Wir sind hier.</p><span>نحن هنا.</span><button data-speak="Wir sind hier." onclick="speak(this.getAttribute('data-speak'))">🔊 استمع</button></div><div class="stat"><b style="direction:ltr;font-size:20px">ihr seid</b><span>أنتم (غير رسمي)</span><p style="direction:ltr;text-align:left">Ihr seid nett.</p><span>أنتم لطفاء.</span><button data-speak="Ihr seid nett." onclick="speak(this.getAttribute('data-speak'))">🔊 استمع</button></div><div class="stat"><b style="direction:ltr;font-size:20px">sie / Sie sind</b><span>هم / حضرتك أو حضراتكم رسميًا</span><p style="direction:ltr;text-align:left">Sie sind hier.</p><span>حضرتك هنا.</span><button data-speak="Sie sind hier." onclick="speak(this.getAttribute('data-speak'))">🔊 استمع</button></div></div><h3>3) جرّب بنفسك</h3><p>اختر العبارة التي تعني «أنا هنا»:</p><div class="answers"><button onclick="lessonAnswer(false)">Ich bist hier.</button><button onclick="lessonAnswer(true)">Ich bin hier.</button></div><p id="lessonFeedback" class="feedback" aria-live="polite">اختر إجابة لترى التصحيح.</p><button class="primary" data-speak="Guten Tag! Ich lerne Deutsch." onclick="speak(this.getAttribute('data-speak'))">🔊 اختبر الصوت الألماني</button><p id="speechStatus" class="feedback" role="status" aria-live="polite">اضغط زر الصوت لتجربته.</p></div></section>
 <section id="quiz" class="section"><div class="card"><span class="badge">اختبار قصير</span><h2>ما معنى هذه الكلمة؟</h2><div class="flash"><span class="muted">ترجم إلى العربية</span><h2 id="quizWord">Haus</h2></div><div class="answers" id="answers"></div><div id="feedback" class="feedback hidden"></div><div class="row" style="justify-content:center;margin-top:14px"><button id="nextQuiz" class="primary">السؤال التالي</button></div></div></section>
 <div class="footer">German Hero · تعلّم قليلًا كل يوم ✨</div></main>
@@ -22,7 +22,14 @@ let page=0, saved=new Set(), quizNum=0, answered=false, qIndex=0;
 const $=id=>document.getElementById(id);
 $('count').textContent=unique.length;
 let germanVoices=[];
-function loadGermanVoices(){if(!('speechSynthesis' in window))return;germanVoices=window.speechSynthesis.getVoices().filter(v=>/^de[-_]/i.test(v.lang));}
+function loadGermanVoices(){
+ if(!('speechSynthesis' in window))return;
+ germanVoices=window.speechSynthesis.getVoices().filter(v=>/^de[-_]/i.test(v.lang));
+ const select=$('voiceChoice');if(!select)return;
+ const current=select.value;
+ select.innerHTML='<option value="">أفضل صوت ألماني متاح تلقائيًا</option>'+germanVoices.map((v,i)=>'<option value="'+i+'">'+esc(v.name)+' — '+esc(v.lang)+(v.localService?' · على الجهاز':'')+'</option>').join('');
+ if(current!==''&&germanVoices[Number(current)])select.value=current;
+}
 if('speechSynthesis' in window){loadGermanVoices();window.speechSynthesis.onvoiceschanged=loadGermanVoices;}
 function speechStatus(message){const el=$('speechStatus');if(el){el.textContent=message;el.classList.remove('hidden');}}
 function speak(text){
@@ -32,13 +39,14 @@ function speak(text){
  try{
   synth.cancel();
   const utterance=new window.SpeechSynthesisUtterance(value);
-  utterance.lang='de-DE';utterance.rate=0.72;utterance.pitch=1;utterance.volume=1;
+  utterance.lang='de-DE';utterance.rate=0.68;utterance.pitch=1;utterance.volume=1;
   const voices=synth.getVoices();
-  const voice=voices.find(v=>/^de[-_]de[-_].*(enhanced|premium|neural)/i.test(v.name+' '+v.lang))||voices.find(v=>/enhanced|premium|neural/i.test(v.name)&&/^de[-_]/i.test(v.lang))||voices.find(v=>v.lang.toLowerCase()==='de-de')||voices.find(v=>/^de[-_]/i.test(v.lang));
+  const selected=$('voiceChoice')?.value;
+  const voice=(selected!==''&&germanVoices[Number(selected)])?germanVoices[Number(selected)]:voices.find(v=>/^de[-_]de[-_].*(enhanced|premium|neural)/i.test(v.name+' '+v.lang))||voices.find(v=>/enhanced|premium|neural/i.test(v.name)&&/^de[-_]/i.test(v.lang))||voices.find(v=>v.lang.toLowerCase()==='de-de')||voices.find(v=>/^de[-_]/i.test(v.lang));
   if(voice)utterance.voice=voice;
-  utterance.onstart=()=>speechStatus('يعمل الصوت الآن…');
-  utterance.onend=()=>speechStatus('انتهى الصوت. يمكنك تجربة كلمة أخرى.');
-  utterance.onerror=e=>speechStatus('تعذر تشغيل الصوت ('+(e.error||'unknown')+'). جرّب رفع صوت الوسائط وإعادة الضغط.');
+  utterance.onstart=()=>speechStatus('يعمل الصوت الآن بسرعة بطيئة مناسبة للتعلّم…');
+  utterance.onend=()=>speechStatus('انتهى الصوت. جرّب اختيار صوت ألماني آخر من القائمة إذا كان متاحًا.');
+  utterance.onerror=e=>speechStatus('تعذر تشغيل الصوت ('+(e.error||'unknown')+'). جرّب صوتًا آخر من القائمة.');
   synth.speak(utterance);
   if(synth.paused)synth.resume();
  }catch(e){speechStatus('تعذر بدء الصوت. أعد فتح الصفحة في Safari وجرب مرة أخرى.');}
