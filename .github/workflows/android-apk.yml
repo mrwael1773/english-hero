@@ -26,7 +26,9 @@ jobs:
       - name: Install Capacitor dependencies
         run: npm install
       - name: Prepare web directory
-        run: mkdir -p www
+        run: |
+          mkdir -p www
+          printf '%s\\n' '<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>English Hero</title><p>Opening English Hero…</p><script>location.replace("https://mrwael1773.github.io/english-hero/")</script></html>' > www/index.html
       - name: Add Android platform
         run: npx cap add android
       - name: Sync Android project
