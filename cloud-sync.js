@@ -46,9 +46,13 @@
     if(error){status('تعذر قراءة التقدم السحابي. تحقق من SQL وسياسات RLS.');console.error('English Hero cloud load:',error.message);ready=true;setSignedInUI();return;}
     if(data && data.progress && typeof data.progress==='object' && !Array.isArray(data.progress)){
       try {
-        localStorage.setItem('english-hero-academy-3',JSON.stringify(data.progress));
-        status('تم استرجاع تقدم الحساب. جارٍ تحديث الصفحة...');
-        location.reload();
+        // Keep the live page in sync without reloading (which would repeat auth restoration).
+        const remote=data.progress;
+        state={...state,...remote};
+        localStorage.setItem('english-hero-academy-3',JSON.stringify(state));
+        renderStats();renderCourses();renderHome();renderProfile();renderReview();
+        ready=true;setSignedInUI();
+        status('✅ تم استرجاع تقدم حسابك السحابي.');
         return;
       } catch(e) {
         status('تعذر استرجاع التقدم على هذا الجهاز؛ تحقق من مساحة التخزين.');
