@@ -32,9 +32,9 @@ function speak(text){
  try{
   synth.cancel();
   const utterance=new window.SpeechSynthesisUtterance(value);
-  utterance.lang='de-DE';utterance.rate=0.85;utterance.pitch=1;utterance.volume=1;
+  utterance.lang='de-DE';utterance.rate=0.72;utterance.pitch=1;utterance.volume=1;
   const voices=synth.getVoices();
-  const voice=voices.find(v=>v.lang.toLowerCase()==='de-de')||voices.find(v=>/^de[-_]/i.test(v.lang));
+  const voice=voices.find(v=>/^de[-_]de[-_].*(enhanced|premium|neural)/i.test(v.name+' '+v.lang))||voices.find(v=>/enhanced|premium|neural/i.test(v.name)&&/^de[-_]/i.test(v.lang))||voices.find(v=>v.lang.toLowerCase()==='de-de')||voices.find(v=>/^de[-_]/i.test(v.lang));
   if(voice)utterance.voice=voice;
   utterance.onstart=()=>speechStatus('يعمل الصوت الآن…');
   utterance.onend=()=>speechStatus('انتهى الصوت. يمكنك تجربة كلمة أخرى.');
