@@ -1,0 +1,12 @@
+{
+  "appId": "com.englishhero.app",
+  "appName": "English Hero",
+  "webDir": "www",
+  "server": {
+    "url": "https://mrwael1773.github.io/english-hero/",
+    "cleartext": false,
+    "allowNavigation": [
+      "mrwael1773.github.io"
+    ]
+  }
+}
