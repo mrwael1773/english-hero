@@ -21,7 +21,24 @@ const unique=[...new Map(words.map(w=>[w[0].toLocaleLowerCase('de'),w])).values(
 let page=0, saved=new Set(), quizNum=0, answered=false, qIndex=0;
 const $=id=>document.getElementById(id);
 $('count').textContent=unique.length;
-function speak(t){if(!('speechSynthesis'in window)){alert('النطق الصوتي غير مدعوم في هذا المتصفح');return}let u=new SpeechSynthesisUtterance(t);u.lang='de-DE';speechSynthesis.speak(u)}
+let germanVoices=[];
+function loadGermanVoices(){if(!('speechSynthesis'in window))return;germanVoices=speechSynthesis.getVoices().filter(v=>/^de(-|_)/i.test(v.lang));}
+if('speechSynthesis'in window){loadGermanVoices();speechSynthesis.addEventListener('voiceschanged',loadGermanVoices);}
+function speak(t){
+ if(!('speechSynthesis'in window)||!('SpeechSynthesisUtterance'in window)){alert('متصفحك لا يدعم النطق الصوتي. جرّب فتح الصفحة في Safari مباشرة.');return}
+ try{
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(String(t));
+  u.lang='de-DE';u.rate=0.82;u.pitch=1;
+  if(!germanVoices.length)loadGermanVoices();
+  const voice=germanVoices.find(v=>/^de-DE$/i.test(v.lang))||germanVoices.find(v=>/^de/i.test(v.lang));
+  if(voice)u.voice=voice;
+  u.onerror=()=>{console.warn('German speech playback failed');};
+  speechSynthesis.speak(u);
+  // iOS Safari can leave speech queued; resume after starting from a user tap.
+  if(speechSynthesis.paused)speechSynthesis.resume();
+ }catch(e){alert('تعذّر تشغيل الصوت. تأكد من إلغاء الوضع الصامت ورفع مستوى الصوت في الآيفون.');}
+}
 function render(){let q=$('search').value.trim().toLocaleLowerCase('de');let list=unique.filter(w=>w[0].toLocaleLowerCase('de').includes(q)||w[1].includes(q));let pages=Math.max(1,Math.ceil(list.length/20));page=Math.min(page,pages-1);$('page').textContent=(page+1)+' / '+pages+' · '+list.length+' كلمة';$('words').innerHTML=list.slice(page*20,(page+1)*20).map(w=>'<div class="word"><div><strong>'+esc(w[0])+'</strong><small>'+esc(w[1])+'</small></div><div class="word-actions"><button onclick="speak('+JSON.stringify(w[0]).replace(/</g,'\\u003c')+')" aria-label="نطق">🔊</button><button onclick="toggleSave('+JSON.stringify(w[0]).replace(/</g,'\\u003c')+')">'+(saved.has(w[0])?'★':'☆')+'</button></div></div>').join('')||'<p class="muted">لا توجد نتائج.</p>'; $('prev').disabled=page===0;$('next').disabled=page>=pages-1}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toggleSave(w){saved.has(w)?saved.delete(w):saved.add(w);$('savedCount').textContent=saved.size;render()}
