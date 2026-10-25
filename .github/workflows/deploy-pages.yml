@@ -20,6 +20,31 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Check application files and JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s index.html
+          test -s config.js
+          test -s cloud-sync.js
+          test -s privacy.html
+          test -s contact.html
+          node --check cloud-sync.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script\\b(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</script>', html, re.I)
+          scripts = [script for script in scripts if script.strip()]
+          if not scripts:
+              raise SystemExit('No inline application script found')
+          Path('/tmp/english-hero-inline.js').write_text(scripts[0], encoding='utf-8')
+          config = Path('config.js').read_text(encoding='utf-8')
+          if 'YOUR_PROJECT' in config or 'YOUR_SUPABASE' in config or 'placeholder' in config.lower():
+              raise SystemExit('Supabase configuration contains a placeholder')
+          print('Application files and Supabase config checks passed.')
+          PY
+          node --check /tmp/english-hero-inline.js
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload site files
