@@ -39,29 +39,45 @@
     clearTimeout(timer);
     timer=setTimeout(uploadProgress,900);
   };
+  function mergeProgress(remote){
+    const local=state||{};
+    const r=remote&&typeof remote==='object'&&!Array.isArray(remote)?remote:{};
+    const union=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
+    const object=(v)=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+    const daily={...object(r.daily),...object(local.daily)};
+    for(const day of new Set([...Object.keys(object(r.daily)),...Object.keys(object(local.daily))])) daily[day]={...object(object(r.daily)[day]),...object(object(local.daily)[day])};
+    state={...r,...local,
+      xp:Math.max(0,Number(r.xp)||0,Number(local.xp)||0),
+      best:Math.min(100,Math.max(0,Number(r.best)||0,Number(local.best)||0)),
+      quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
+      streak:Math.max(0,Number(r.streak)||0,Number(local.streak)||0),
+      completed:union(r.completed,local.completed),
+      saved:union(r.saved,local.saved),
+      misses:{...object(r.misses),...object(local.misses)},
+      review:{...object(r.review),...object(local.review)},
+      daily,
+      lastActive:[r.lastActive,local.lastActive].filter(v=>typeof v==='string').sort().pop()||'',
+      theme:local.theme||r.theme||'dark',rate:local.rate||r.rate||0.9
+    };
+    localStorage.setItem('english-hero-academy-3',JSON.stringify(state));
+  }
   async function syncNow(){
     if(!user||!client) return;
     ready=false;setSignedInUI();status('جارٍ مزامنة تقدمك...');
-    const {data,error}=await client.from('learning_progress').select('progress').eq('user_id',user.id).maybeSingle();
-    if(error){status('تعذر قراءة التقدم السحابي. تحقق من SQL وسياسات RLS.');console.error('English Hero cloud load:',error.message);ready=true;setSignedInUI();return;}
-    if(data && data.progress && typeof data.progress==='object' && !Array.isArray(data.progress)){
-      try {
-        // Keep the live page in sync without reloading (which would repeat auth restoration).
-        const remote=data.progress;
-        state={...state,...remote};
-        localStorage.setItem('english-hero-academy-3',JSON.stringify(state));
-        renderStats();renderCourses();renderHome();renderProfile();renderReview();
-        ready=true;setSignedInUI();
-        status('✅ تم استرجاع تقدم حسابك السحابي.');
-        return;
-      } catch(e) {
-        status('تعذر استرجاع التقدم على هذا الجهاز؛ تحقق من مساحة التخزين.');
-        ready=true;setSignedInUI();return;
-      }
+    try {
+      const {data,error}=await client.from('learning_progress').select('progress').eq('user_id',user.id).maybeSingle();
+      if(error) throw error;
+      if(data && data.progress && typeof data.progress==='object' && !Array.isArray(data.progress)) mergeProgress(data.progress);
+      ready=true;setSignedInUI();
+      renderStats();renderCourses();renderHome();renderProfile();renderReview();
+      revision++;
+      await uploadProgress();
+      status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
+    } catch(e) {
+      ready=true;setSignedInUI();
+      status('تعذرت مزامنة التقدم. بقيت بياناتك المحلية محفوظة؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
+      console.error('English Hero cloud sync:',e?.message||e);
     }
-    ready=true;setSignedInUI();
-    await uploadProgress();
-    status('تم حفظ تقدم هذا الجهاز في حسابك.');
   }
   async function init(){
     if(!validConfig()){
