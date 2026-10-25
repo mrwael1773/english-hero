@@ -90,27 +90,65 @@
       console.error('English Hero cloud init:',e.message);
     }
   }
+  const friendlyAuthError = (error, mode) => {
+    const message = String(error?.message || '');
+    const lower = message.toLowerCase();
+    if (lower.includes('invalid login credentials')) return 'بيانات الدخول غير صحيحة، أو أن الحساب لم يُؤكَّد بعد. تأكد من البريد وكلمة المرور وأكّد البريد إذا وصلتك رسالة.';
+    if (lower.includes('email not confirmed')) return 'الحساب موجود لكن البريد غير مؤكّد. افتح رسالة Supabase لتأكيد البريد ثم حاول تسجيل الدخول.';
+    if (lower.includes('user already registered')) return 'هذا البريد مسجّل من قبل. استخدم «تسجيل الدخول» بدل إنشاء حساب جديد.';
+    if (lower.includes('password should be at least')) return 'كلمة المرور أقصر من الحد الذي يطلبه مزوّد الخدمة.';
+    if (lower.includes('email address') && lower.includes('invalid')) return 'صيغة البريد الإلكتروني غير صحيحة.';
+    if (lower.includes('signup is disabled') || lower.includes('signups not allowed')) return 'إنشاء الحسابات معطّل في إعدادات Supabase Auth.';
+    if (lower.includes('rate limit') || lower.includes('too many requests')) return 'محاولات كثيرة خلال وقت قصير. انتظر قليلًا ثم أعد المحاولة.';
+    if (lower.includes('failed to fetch') || lower.includes('network')) return 'تعذّر الاتصال بـ Supabase. تحقق من الإنترنت ومن عنوان المشروع.';
+    console.error('English Hero auth error:', {mode, message, status:error?.status, code:error?.code});
+    return (mode==='signup'?'تعذّر إنشاء الحساب: ':'تعذّر تسجيل الدخول: ') + (message || 'خطأ غير معروف') + ' — راجع إعدادات Authentication في Supabase.';
+  };
   $cloud('cloudAuthForm')?.addEventListener('submit',async e=>{
     e.preventDefault();
-    if(!client){status('المزامنة غير مهيأة بعد. اضبط config.js أولًا.');return;}
+    if(!client){status('تسجيل الدخول غير مهيأ: تعذّر الاتصال بمشروع Supabase.');return;}
     const email=$cloud('cloudEmail').value.trim();
     const password=$cloud('cloudPassword').value;
-    $cloud('cloudSignIn').disabled=true;
-    const {error}=await client.auth.signInWithPassword({email,password});
-    $cloud('cloudSignIn').disabled=false;
-    if(error) status('تعذر تسجيل الدخول. تأكد من البريد وكلمة المرور وإعدادات المصادقة.');
-    else status('تم قبول تسجيل الدخول. جارٍ استرجاع تقدم الحساب...');
+    const button=$cloud('cloudSignIn');
+    button.disabled=true;
+    status('جارٍ التحقق من بيانات الدخول...');
+    try {
+      const {data,error}=await client.auth.signInWithPassword({email,password});
+      if(error){status(friendlyAuthError(error,'signin'));return;}
+      user=data.user||data.session?.user||null;
+      setSignedInUI();
+      status('تم تسجيل الدخول. جارٍ استرجاع تقدم الحساب...');
+      await syncNow();
+    } catch(error) {
+      status(friendlyAuthError(error,'signin'));
+    } finally {
+      button.disabled=!!user;
+    }
   });
   $cloud('cloudSignUp')?.addEventListener('click',async()=>{
-    if(!client){status('المزامنة غير مهيأة بعد. اضبط config.js أولًا.');return;}
+    if(!client){status('إنشاء الحساب غير مهيأ: تعذّر الاتصال بمشروع Supabase.');return;}
     const email=$cloud('cloudEmail').value.trim();
     const password=$cloud('cloudPassword').value;
     if(!email||password.length<8){status('أدخل بريدًا صحيحًا وكلمة مرور من 8 أحرف على الأقل.');return;}
-    $cloud('cloudSignUp').disabled=true;
-    const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
-    $cloud('cloudSignUp').disabled=false;
-    if(error){status('تعذر إنشاء الحساب. تحقق من البريد أو جرّب لاحقًا.');return;}
-    status(data.session?'تم إنشاء الحساب. جارٍ بدء المزامنة...':'تم إرسال رسالة تأكيد إذا كان تأكيد البريد مفعّلًا. افتح بريدك ثم سجّل الدخول.');
+    const button=$cloud('cloudSignUp');
+    button.disabled=true;
+    status('جارٍ إنشاء الحساب...');
+    try {
+      const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+      if(error){status(friendlyAuthError(error,'signup'));return;}
+      if(data.session){
+        user=data.user||data.session.user||null;
+        setSignedInUI();
+        status('تم إنشاء الحساب وتسجيل الدخول. جارٍ مزامنة التقدم...');
+        await syncNow();
+      } else {
+        status('تم إرسال طلب إنشاء الحساب. افتح رسالة التأكيد في بريدك، ثم ارجع وسجّل الدخول. إذا لم تصل الرسالة، افحص Spam وإعدادات SMTP/تأكيد البريد في Supabase.');
+      }
+    } catch(error) {
+      status(friendlyAuthError(error,'signup'));
+    } finally {
+      button.disabled=!!user;
+    }
   });
   $cloud('cloudSignOut')?.addEventListener('click',async()=>{
     if(!client)return;
