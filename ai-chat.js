@@ -5,7 +5,8 @@
   const form=$('chatForm'), input=$('chatInput'), chat=$('chat'), status=$('aiChatStatus');
   if(!form || !input || !chat) return;
   let recognition=null, busy=false, lastReply='';
-  try { const history=typeof state!=='undefined'&&Array.isArray(state.chatHistory)?state.chatHistory:[]; lastReply=[...history].reverse().find(m=>m&&m.who==='bot'&&typeof m.text==='string')?.text||''; } catch(_) {}
+  const initialHistory=(()=>{try{return typeof state!=='undefined'&&Array.isArray(state.chatHistory)?state.chatHistory:[]}catch(_){return []}})();
+  lastReply=[...initialHistory].reverse().find(m=>m&&m.who==='bot'&&typeof m.text==='string')?.text||'';
   const sayStatus = text => { if(status) status.textContent=text; };
   function addBubble(text, who, record=true) {
     const el=document.createElement('div'); el.className='bubble '+who; el.textContent=text;
@@ -20,6 +21,22 @@
     }
     return el;
   }
+  initialHistory.forEach(m=>{if(m&&typeof m.text==='string'&&['me','bot'].includes(m.who))addBubble(m.text,m.who,false)});
+  if(!initialHistory.length)addBubble('Hello! 👋 Let’s practice English together. What would you like to talk about?','bot',false);
+  async function refreshAuthHint(){
+    const hint=$('aiCoachSignInHint');
+    const cfg=window.ENGLISH_HERO_CLOUD_CONFIG;
+    if(!hint)return;
+    if(!cfg||!window.supabase?.createClient){hint.classList.remove('hidden');hint.textContent='إعداد الاتصال غير مكتمل. لا يمكن تشغيل مدرّب الذكاء الاصطناعي حاليًا.';return;}
+    try{
+      const client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+      const {data}=await client.auth.getSession();
+      hint.classList.toggle('hidden',!!data?.session);
+      hint.textContent='تحتاج إلى تسجيل الدخول من «حسابي» لاستخدام مدرّب الذكاء الاصطناعي.';
+      client.auth.onAuthStateChange((_event,session)=>hint.classList.toggle('hidden',!!session));
+    }catch(_){hint.classList.remove('hidden');}
+  }
+  refreshAuthHint();
   function voiceSpeak(text) {
     if(!('speechSynthesis' in window)) { sayStatus('ميزة القراءة الصوتية غير مدعومة في هذا المتصفح.'); return; }
     window.speechSynthesis.cancel();
@@ -78,7 +95,16 @@
     try{recognition.start();}catch(e){recognition=null;sayStatus('تعذر بدء الميكروفون. حاول مرة أخرى.');}
   });
   $('chatSpeak')?.addEventListener('click',()=>{if(lastReply)voiceSpeak(lastReply);else sayStatus('لا يوجد رد جديد لقراءته بعد.');});
-  $('chatReset')?.addEventListener('click',()=>{lastReply=''; if(recognition){recognition.stop();recognition=null;} if('speechSynthesis' in window) window.speechSynthesis.cancel();});
+  $('chatReset')?.addEventListener('click',()=>{
+    if(busy){sayStatus('انتظر حتى ينتهي الرد الحالي قبل بدء محادثة جديدة.');return;}
+    lastReply='';
+    if(recognition){recognition.stop();recognition=null;}
+    if('speechSynthesis' in window)window.speechSynthesis.cancel();
+    try{if(typeof state!=='undefined'){state.chatHistory=[];if(typeof save==='function')save();}}catch(_){}
+    chat.replaceChildren();
+    addBubble('Hello! 👋 Let’s practice English together. What would you like to talk about?','bot',false);
+    sayStatus('بدأت محادثة جديدة. اكتب جملة بالإنجليزية للبدء.');
+  });
   // Replace the old scripted replies with a real AI call; keep prior chat display/history.
   sayStatus('واجهة الصوت جاهزة. خدمة الذكاء الاصطناعي تتطلب نشر وظيفة english-coach وإضافة مفتاح OpenAI الآمن في Supabase.');
 })();
