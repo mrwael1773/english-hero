@@ -1338,7 +1338,9 @@ const questions=[
 ];
 function coach(s){
  const t=s.toLowerCase().trim();
- const error=corrections.find(([re])=>re.test(s));
+ const routine=s.match(/^\\s*i\\s+wake\\s+up\\s+at\\s+(\\d{1,2}(?::\\d{2})?)\\s*,?\\s*go\\s+to\\s+school\\s+at\\s+(\\d{1,2}(?::\\d{2})?)\\s*,?\\s*return\\s+home\\s+at\\s+(\\d{1,2}(?::\\d{2})?)\\s*[.!]?\\s*$/i);
+  if(routine) return '✍️ تصحيح مقترح: I wake up at '+routine[1]+'. I go to school at '+routine[2]+' and return home at '+routine[3]+'.\\nالتوضيح: نضع I قبل go، ونربط الفعلين بـ and، ونبدأ كل جملة بحرف كبير وننهيها بنقطة.';
+  const error=corrections.find(([re])=>re.test(s));
  if(error)return '✍️ تصحيح مقترح: '+error[1]+'\nTry writing the corrected sentence.';
  if(/\b(hello|hi|hey)\b/.test(t))return 'Hello! How are you feeling today?';
  if(/\bhow are you\b/.test(t))return 'I am doing well, thank you! What did you do today?';
