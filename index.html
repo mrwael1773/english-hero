@@ -1442,5 +1442,47 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 }
 </script>
 <script src="./writing-practice.js" defer></script>
+<script>
+/* Privacy-conscious English Hero analytics: anonymous random IDs, no names or email addresses. */
+window.addEventListener('DOMContentLoaded', () => {
+  const cfg = window.ENGLISH_HERO_CLOUD_CONFIG;
+  if (!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
+  const base = cfg.supabaseUrl.replace(/\/$/, '') + '/rest/v1/analytics_events';
+  const storageGet = (storage, key) => { try { return storage.getItem(key); } catch (_) { return null; } };
+  const storageSet = (storage, key, value) => { try { storage.setItem(key, value); } catch (_) {} };
+  const newId = () => {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+    });
+  };
+  let visitorId = storageGet(localStorage, 'englishHeroAnalyticsVisitorV1');
+  if (!visitorId) { visitorId = newId(); storageSet(localStorage, 'englishHeroAnalyticsVisitorV1', visitorId); }
+  let sessionId = storageGet(sessionStorage, 'englishHeroAnalyticsSessionV1');
+  if (!sessionId) { sessionId = newId(); storageSet(sessionStorage, 'englishHeroAnalyticsSessionV1', sessionId); }
+  const send = (eventName, sectionName) => {
+    const payload = {
+      visitor_id: visitorId,
+      session_id: sessionId,
+      event_name: eventName,
+      page_path: location.pathname.slice(0, 200) || '/',
+      section_name: sectionName ? String(sectionName).slice(0, 80) : null,
+      referrer_host: (() => { try { return document.referrer ? new URL(document.referrer).hostname.slice(0, 120) : null; } catch (_) { return null; } })()
+    };
+    fetch(base, {
+      method: 'POST',
+      headers: { apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {});
+  };
+  send('page_view', null);
+  document.addEventListener('click', event => {
+    const control = event.target.closest('[data-page]');
+    if (control) send('section_view', control.getAttribute('data-page') || control.textContent.trim());
+  }, true);
+});
+</script>
 </body>
 </html>
