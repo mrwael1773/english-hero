@@ -16,14 +16,26 @@
       && !/YOUR_PROJECT|YOUR_SUPABASE|placeholder/i.test(c.supabaseUrl+c.supabaseAnonKey);
   };
   const setSignedInUI = () => {
-    if($cloud('cloudUser')) $cloud('cloudUser').textContent=user ? user.email : '';
-    if($cloud('cloudSignIn')) $cloud('cloudSignIn').disabled=!!user;
-    if($cloud('cloudGoogle')) $cloud('cloudGoogle').disabled=!!user||!client;
-    if($cloud('cloudSignUp')) $cloud('cloudSignUp').disabled=!!user;
-    if($cloud('cloudEmail')) $cloud('cloudEmail').disabled=!!user;
-    if($cloud('cloudPassword')) $cloud('cloudPassword').disabled=!!user;
-    if($cloud('cloudSignOut')) $cloud('cloudSignOut').disabled=!user;
-    if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled=!user||!ready;
+    const signedIn = !!user;
+    const authForm = $cloud('cloudAuthForm');
+    const googleButton = $cloud('cloudGoogle');
+    // Keep sign-in controls out of the way once a session is active.
+    if(authForm) authForm.classList.toggle('hidden', signedIn);
+    if(googleButton) {
+      googleButton.disabled = signedIn || !client;
+      const googleRow = googleButton.parentElement;
+      if(googleRow) googleRow.classList.toggle('hidden', signedIn);
+    }
+    if($cloud('cloudUser')) {
+      const label = user?.user_metadata?.full_name || user?.email || '';
+      $cloud('cloudUser').textContent = signedIn ? '✅ مسجل الدخول: ' + label : '';
+    }
+    if($cloud('cloudSignIn')) $cloud('cloudSignIn').disabled = signedIn;
+    if($cloud('cloudSignUp')) $cloud('cloudSignUp').disabled = signedIn;
+    if($cloud('cloudEmail')) $cloud('cloudEmail').disabled = signedIn;
+    if($cloud('cloudPassword')) $cloud('cloudPassword').disabled = signedIn;
+    if($cloud('cloudSignOut')) $cloud('cloudSignOut').disabled = !signedIn;
+    if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled = !signedIn || !ready;
   };
   async function uploadProgress(){
     if(!client||!user||!ready) return false;
