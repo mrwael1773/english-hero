@@ -27,8 +27,13 @@
       if(googleRow) googleRow.classList.toggle('hidden', signedIn);
     }
     if($cloud('cloudUser')) {
-      const label = user?.user_metadata?.full_name || user?.email || '';
-      $cloud('cloudUser').textContent = signedIn ? '✅ مسجل الدخول: ' + label : '';
+      const metadata = user?.user_metadata || {};
+      const emailName = typeof user?.email === 'string' ? user.email.split('@')[0] : '';
+      const displayName = metadata.full_name || metadata.name || metadata.user_name ||
+        metadata.preferred_username || emailName || 'المستخدم';
+      $cloud('cloudUser').textContent = signedIn ? '👋 أهلًا، ' + displayName + ' — تم تسجيل الدخول' : '';
+      $cloud('cloudUser').setAttribute('dir', 'auto');
+      $cloud('cloudUser').style.textAlign = 'start';
     }
     if($cloud('cloudSignIn')) $cloud('cloudSignIn').disabled = signedIn;
     if($cloud('cloudSignUp')) $cloud('cloudSignUp').disabled = signedIn;
