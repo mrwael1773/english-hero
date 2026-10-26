@@ -34,8 +34,11 @@ jobs:
           from pathlib import Path
           import re
           html = Path('index.html').read_text(encoding='utf-8')
-          scripts = re.findall(r'<script(?![^>]*src=)[^>]*>(.*?)</script>', html, re.I | re.S)
-          scripts = [script for script in scripts if script.strip()]
+          scripts = re.findall(r'<script([^>]*)>(.*?)</script>', html, re.I | re.S)
+          scripts = [script for attrs, script in scripts
+                     if 'src=' not in attrs.lower()
+                     and 'application/ld+json' not in attrs.lower()
+                     and script.strip()]
           if not scripts:
               raise SystemExit('No inline application script found')
           Path('/tmp/english-hero-inline.js').write_text(scripts[0], encoding='utf-8')
