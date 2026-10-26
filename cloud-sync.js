@@ -152,9 +152,23 @@
           replaceProgress(remoteProgress||{});
           status(remoteProgress?'تم تحميل تقدم هذا الحساب فقط. لم تُدمج بيانات الحساب السابق.':'حساب جديد على هذا الجهاز؛ سيبدأ بتقدم مستقل.');
         } else if(!localOwner && remoteProgress){
-          // Legacy local data has no owner marker. Do not risk merging another user's
-          // old local state into an existing cloud account.
+          // Existing cloud data is authoritative when this device has no known owner.
+          // This prevents anonymous legacy data from being mixed into an established account.
           replaceProgress(remoteProgress);
+        } else if(!localOwner && !remoteProgress){
+          // The device may have anonymous study progress. Ask before attaching it to a new account.
+          const localState=state||{};
+          const hasLocalProgress=(Number(localState.xp)||0)>0 ||
+            (Array.isArray(localState.completed)&&localState.completed.length>0) ||
+            (Array.isArray(localState.foundationSaved)&&localState.foundationSaved.length>0) ||
+            (Array.isArray(localState.saved)&&localState.saved.length>0) ||
+            (Number(localState.quizzes)||0)>0;
+          const keepLocal=hasLocalProgress && window.confirm('وجدنا تقدمًا محفوظًا على هذا الجهاز. هل تريد دمجه مع حسابك السحابي الجديد؟ اختر «إلغاء» لبدء حساب مستقل؛ سنحتفظ بنسخة محلية من التقدم السابق.');
+          if(hasLocalProgress && !keepLocal){
+            try { localStorage.setItem('english-hero-unclaimed-local-backup',JSON.stringify(localState)); } catch {}
+            replaceProgress(typeof defaults==='function'?defaults():{});
+            status('بدأ الحساب بتقدم مستقل. احتُفظ بنسخة محلية من التقدم السابق على هذا الجهاز.');
+          }
         } else if(remoteProgress){
           mergeProgress(remoteProgress);
         }
