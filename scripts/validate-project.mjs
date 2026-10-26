@@ -43,7 +43,7 @@ try {
 check(privacyPage.includes('<html') && privacyPage.includes('</html>'), 'Privacy page has an HTML document');
 check(contactPage.includes('<html') && contactPage.includes('</html>'), 'Contact page has an HTML document');
 check(iconSvg.includes('<svg') && iconSvg.includes('</svg>'), 'App icon is a valid SVG document');
-for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','grammarLibrary','tensesLibrary','vocabResults','conversation','chat','chatForm','chatInput','chatMic','chatSpeak','chatReset','aiChatStatus']) {
+for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults','conversation','chat','chatForm','chatInput','chatMic','chatSpeak','chatReset','aiChatStatus']) {
   check(html.includes(`id="${id}"`), `Required UI element exists: ${id}`);
 }
 check(/sw\.js\?v=(\d+)/.test(html), 'Service worker registration has a version');
@@ -60,6 +60,7 @@ try { new Function(cloud); check(true, 'Cloud sync JavaScript syntax is valid');
 try { new Function(aiChat); check(true, 'AI chat JavaScript syntax is valid'); } catch (error) { fail.push(`ai-chat.js has a syntax error: ${error.message}`); }
 try { new Function(sw); check(true, 'Service worker JavaScript syntax is valid'); } catch (error) { fail.push(`sw.js has a syntax error: ${error.message}`); }
 check(cloud.includes("english-hero-cloud-owner") && cloud.includes('function replaceProgress') && cloud.includes('localOwner && localOwner!==syncUserId'), 'Local progress is isolated when accounts change on a shared device');
+check(cloud.includes("$cloud('cloudRestoreBackup')?.addEventListener('click'") && cloud.includes('mergeProgress(backup)'), 'Account-specific backup restore is available and merges progress safely');
 check(coach.includes('supabase.auth.getUser(accessToken)') && coach.includes('Deno.env.get("OPENAI_API_KEY")') && coach.includes('https://api.openai.com/v1/responses'), 'AI coach authenticates users and calls OpenAI from the server');
 check(coach.includes('credit_balance_exhausted') && coach.includes('رصيد OpenAI API'), 'AI coach explains exhausted API credits without exposing server details');
 check(!coach.includes('sk-proj-') && !coach.includes('sb_secret_'), 'AI coach source contains no hard-coded API secrets');
