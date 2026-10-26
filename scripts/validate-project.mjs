@@ -53,6 +53,7 @@ check(Boolean(registeredVersion && cacheVersion && registeredVersion === cacheVe
 check(sw.includes("fetch(request)") && sw.includes("request.mode === 'navigate'"), 'Service worker refreshes navigation from network first');
 check(cloud.includes("from('learning_progress')") && cloud.includes('signInWithPassword') && cloud.includes('signUp'), 'Cloud progress and email auth flows are present');
 check(html.includes('data-nav="conversation"') && html.includes('id="conversation"') && html.includes('id="chatForm"'), 'AI conversation screen is connected to navigation and has its form');
+check(html.includes("'weekly'") && html.includes('20 سؤالًا متنوعًا') && html.includes('state.weeklyTestLast'), 'Weekly assessment includes mixed questions and stores its result');
 check(aiChat.includes('client.functions.invoke(\'english-coach\'') && aiChat.includes('refreshAuthHint') && aiChat.includes('chat.replaceChildren()'), 'AI conversation calls the server function and handles login/reset');
 check(aiChat.includes('function offlineCoach') && aiChat.includes('هذا تدريب احتياطي محلي'), 'AI chat keeps a transparent local practice fallback when API credits are exhausted');
 check(cloud.includes("english-hero-account-backup-") && cloud.includes('english-hero-unclaimed-local-backup') && cloud.includes('syncPromiseUserId'), 'Account switching is isolated and local progress can be recovered');
