@@ -80,7 +80,7 @@
   }
   function offlineCoach(text){
     const fixes=[
-      [/\bi\s+like\s+play(?:ing)?\b/i,{sentence:'I like playing football.',reason:'بعد like نستخدم الفعل مع -ing أو to + المصدر.'}],
+      [/\bi\s+like\s+play(?:ing)?\s+([a-z]+)\b/i,{sentence:'I like playing $1',reason:'بعد like نستخدم الفعل مع -ing أو to + المصدر.'}],
       [/\bi\s+(?:am|’m|'m)\s+wake\s+up\b/i,{sentence:'I wake up at 5:30.',reason:'للعادات نستخدم المضارع البسيط، ولا نضع am قبل wake up.'}],
       [/\bi\s+go\s+to\s+school\s+in\s+(\d{1,2}(?::\d{2})?)/i,{sentence:'I go to school at $1.',reason:'نستخدم at مع الساعة.'}],
       [/\bi\s+drink\s+a\s+water\b/i,{sentence:'I drink water.',reason:'كلمة water غير معدودة في هذا الاستخدام، لذلك لا نضع a قبلها.'}],
@@ -101,8 +101,10 @@
       'What did you do yesterday?',
       'What sport do you like playing?'
     ];
-    if(/[\u0600-\u06FF]/.test(text))return 'الوضع الاحتياطي يعمل دون الذكاء الاصطناعي. يمكنك كتابة ما تريد قوله بالعربية، ثم حاول تكوين جملة إنجليزية بسيطة.\nمثال: أحب كرة القدم = I like football.\n\nجرّب: '+prompts[initialHistory.length%prompts.length];
-    return 'وصلت رسالتك. أستطيع الآن فحص بعض الأخطاء الشائعة دون اتصال بخدمة الذكاء الاصطناعي. إذا لم يظهر تصحيح محدد، فذلك لا يعني أن الجملة صحيحة بالكامل.\n\nجرّب الإجابة عن هذا السؤال: '+prompts[initialHistory.length%prompts.length];
+    const historyLength=typeof state!=='undefined'&&Array.isArray(state.chatHistory)?state.chatHistory.length:initialHistory.length;
+    const prompt=prompts[historyLength%prompts.length];
+    if(/[\u0600-\u06FF]/.test(text))return 'الوضع الاحتياطي يعمل دون الذكاء الاصطناعي. يمكنك كتابة ما تريد قوله بالعربية، ثم حاول تكوين جملة إنجليزية بسيطة.\nمثال: أحب كرة القدم = I like football.\n\nجرّب: '+prompt;
+    return 'وصلت رسالتك. أستطيع الآن فحص بعض الأخطاء الشائعة دون اتصال بخدمة الذكاء الاصطناعي. إذا لم يظهر تصحيح محدد، فذلك لا يعني أن الجملة صحيحة بالكامل.\n\nجرّب الإجابة عن هذا السؤال: '+prompt;
   }
   form.onsubmit=async e=>{
     e.preventDefault(); const text=input.value.trim(); if(!text||busy)return;
