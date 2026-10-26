@@ -117,14 +117,19 @@
     } catch(err) {
       waiting.remove();
       const message=err?.message||'تحقق من الاتصال والإعدادات.';
-      if(message.includes('رصيد OpenAI API')){
-        const fallback='⚠️ الرد الذكي غير متاح حاليًا بسبب رصيد الخدمة. هذا تدريب احتياطي محلي وليس ردًا من الذكاء الاصطناعي.\n\n'+offlineCoach(text);
+      const timedOut=message.includes('انتهت مهلة الرد') || message.includes('مهلة رد الذكاء الاصطناعي') || /response took too long|timed out|timeout/i.test(message);
+      if(message.includes('رصيد OpenAI API') || timedOut){
+        const reason=timedOut
+          ? '⚠️ تأخر رد الذكاء الاصطناعي وانتهت مهلة الاتصال. هذا تدريب احتياطي محلي وليس ردًا من الذكاء الاصطناعي. جرّب مرة أخرى لاحقًا.\n\n'
+          : '⚠️ الرد الذكي غير متاح حاليًا بسبب رصيد الخدمة. هذا تدريب احتياطي محلي وليس ردًا من الذكاء الاصطناعي.\n\n';
+        const fallback=reason+offlineCoach(text);
         addBubble(fallback,'bot');lastReply=fallback;
-        sayStatus('خدمة الذكاء الاصطناعي متوقفة مؤقتًا؛ يستمر التدريب الاحتياطي المحلي وبقية الموقع تعمل طبيعيًا.');
+        sayStatus(timedOut
+          ? 'انتهت مهلة الرد؛ انتقلنا إلى تدريب احتياطي محلي حتى لا تتوقف الممارسة.'
+          : 'خدمة الذكاء الاصطناعي متوقفة مؤقتًا؛ يستمر التدريب الاحتياطي المحلي وبقية الموقع تعمل طبيعيًا.');
         if(typeof daily==='function')daily('chat');
       }else{
         addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
-        if(message.includes('انتهت مهلة الرد') || message.includes('مهلة رد الذكاء الاصطناعي') || /response took too long|timed out|timeout/i.test(message)) sayStatus('استغرق الرد وقتًا طويلًا؛ انتهت المحاولة تلقائيًا بعد 18 ثانية. يمكنك إعادة الإرسال.');
         else if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
         else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
         else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
