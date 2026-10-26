@@ -35,7 +35,7 @@
     const {data:{session}}=await client.auth.getSession();
     if(!session) throw new Error('سجّل الدخول أولًا حتى تتمكن من استخدام مدرب الذكاء الاصطناعي.');
     const history=(Array.isArray(state.chatHistory)?state.chatHistory:[])
-      .slice(-12).map(m=>({role:m.who==='me'?'user':'assistant',content:m.text}));
+      .slice(-13,-1).map(m=>({role:m.who==='me'?'user':'assistant',content:m.text}));
     const {data,error}=await client.functions.invoke('english-coach',{body:{message:text,history}});
     if(error) {
       let detail=error.message||'تعذر الاتصال بخدمة الذكاء الاصطناعي.';
