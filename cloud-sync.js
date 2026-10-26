@@ -8,6 +8,7 @@
   let timer = null;
   let revision = 0;
   let syncPromise = null;
+  let syncPromiseUserId = null;
   const status = (message) => { const el=$cloud('cloudStatus'); if(el) el.textContent=message; };
   const validConfig = () => {
     const c=window.ENGLISH_HERO_CLOUD_CONFIG;
@@ -125,10 +126,17 @@
   }
   async function syncNow(){
     if(!user||!client) return;
-    // Avoid overlapping reads/writes when login, reconnect, visibility, and manual sync fire together.
-    if(syncPromise) return syncPromise;
+    const requestedUserId=user.id;
+    // Serialize account changes without allowing an old account's request to block the new one.
+    if(syncPromise){
+      if(syncPromiseUserId===requestedUserId) return syncPromise;
+      try { await syncPromise; } catch {}
+      if(user && client) return syncNow();
+      return;
+    }
+    syncPromiseUserId=requestedUserId;
     syncPromise=(async()=>{
-      const syncUserId=user.id;
+      const syncUserId=requestedUserId;
       ready=false;setSignedInUI();status('جارٍ مزامنة تقدمك...');
       try {
         const {data,error}=await client.from('learning_progress').select('progress').eq('user_id',syncUserId).maybeSingle();
@@ -162,7 +170,10 @@
       }
     })();
     try { return await syncPromise; }
-    finally { syncPromise=null; }
+    finally {
+      if(syncPromiseUserId===requestedUserId){syncPromise=null;syncPromiseUserId=null;}
+      if(user && client && user.id!==requestedUserId) queueMicrotask(()=>syncNow());
+    }
   }
   async function init(){
     if(!validConfig()){
@@ -184,7 +195,17 @@
         user=session?.user||null;
         setSignedInUI();
         if(event==='SIGNED_IN' && user) setTimeout(()=>syncNow(),0);
-        if(event==='SIGNED_OUT'){ready=false;status('تم تسجيل الخروج. التقدم المحلي على هذا الجهاز لم يُحذف.');}
+        if(event==='SIGNED_OUT'){
+          ready=false;
+          clearTimeout(timer);
+          try { if(user) localStorage.setItem('english-hero-account-backup-'+user.id,JSON.stringify(state)); } catch {}
+          try { localStorage.removeItem('english-hero-cloud-owner'); } catch {}
+          if(typeof defaults==='function') replaceProgress(defaults());
+          renderStats();renderCourses();renderHome();renderProfile();renderReview();
+          status('تم تسجيل الخروج. حُفظت نسخة محلية للحساب السابق، وأُعيدت الشاشة إلى تقدم مستقل.');
+          user=null;
+          setSignedInUI();
+        }
       });
     } catch(e) {
       status('تعذر تهيئة تسجيل الدخول. تحقق من إعدادات Supabase والاتصال بالإنترنت.');
@@ -261,8 +282,20 @@
   });
   $cloud('cloudSignOut')?.addEventListener('click',async()=>{
     if(!client)return;
+    const button=$cloud('cloudSignOut');
+    if(button) button.disabled=true;
+    status('جارٍ حفظ آخر تقدم قبل تسجيل الخروج...');
+    if(user && ready){
+      clearTimeout(timer);
+      await uploadProgress();
+      try { localStorage.setItem('english-hero-account-backup-'+user.id,JSON.stringify(state)); } catch {}
+    }
     const {error}=await client.auth.signOut();
-    if(error) status('تعذر تسجيل الخروج. حاول مرة أخرى.');
+    if(error){
+      status('تعذر تسجيل الخروج. بقيت بياناتك محفوظة؛ حاول مرة أخرى.');
+      setSignedInUI();
+      return;
+    }
   });
   $cloud('cloudSyncNow')?.addEventListener('click',syncNow);
   // Retry pending local progress after the connection returns or the learner revisits the tab.
