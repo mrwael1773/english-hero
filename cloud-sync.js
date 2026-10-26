@@ -43,6 +43,13 @@
     if($cloud('cloudPassword')) $cloud('cloudPassword').disabled = signedIn;
     if($cloud('cloudSignOut')) $cloud('cloudSignOut').disabled = !signedIn;
     if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled = !signedIn || !ready;
+    const restoreButton=$cloud('cloudRestoreBackup');
+    if(restoreButton){
+      let hasBackup=false;
+      try { hasBackup=!!(signedIn && localStorage.getItem('english-hero-account-backup-'+user.id)); } catch {}
+      restoreButton.classList.toggle('hidden',!hasBackup);
+      restoreButton.disabled=!signedIn || !ready || !hasBackup;
+    }
   };
   async function uploadProgress(){
     if(!client||!user||!ready) return false;
@@ -313,6 +320,46 @@
     }
   });
   $cloud('cloudSyncNow')?.addEventListener('click',syncNow);
+  $cloud('cloudRestoreBackup')?.addEventListener('click',async()=>{
+    if(!client || !user || !ready) return;
+    const syncUserId=user.id;
+    const backupKey='english-hero-account-backup-'+syncUserId;
+    let backup;
+    try {
+      const raw=localStorage.getItem(backupKey);
+      if(!raw) throw new Error('لا توجد نسخة احتياطية لهذا الحساب على هذا الجهاز.');
+      backup=JSON.parse(raw);
+      if(!backup || typeof backup!=='object' || Array.isArray(backup)) throw new Error('ملف النسخة الاحتياطية غير صالح.');
+    } catch(error) {
+      const message=error?.message||'تعذرت قراءة النسخة الاحتياطية.';
+      const note=$cloud('cloudBackupStatus');
+      if(note) note.textContent=message;
+      return;
+    }
+    if(!window.confirm('سيتم دمج نسخة هذا الحساب المحفوظة على الجهاز مع تقدمه الحالي، مع الاحتفاظ بالتقدم الأحدث قدر الإمكان. هل تريد المتابعة؟')) return;
+    const note=$cloud('cloudBackupStatus');
+    if(note) note.textContent='جارٍ دمج النسخة الاحتياطية...';
+    const button=$cloud('cloudRestoreBackup');
+    if(button) button.disabled=true;
+    try {
+      backup.completed=Array.isArray(backup.completed)?backup.completed.filter(x=>Number.isInteger(x)&&x>=0):[];
+      backup.foundationSaved=Array.isArray(backup.foundationSaved)?backup.foundationSaved.filter(x=>typeof x==='string'):[];
+      backup.saved=Array.isArray(backup.saved)?backup.saved.filter(x=>typeof x==='string'):[];
+      backup.chatHistory=Array.isArray(backup.chatHistory)?backup.chatHistory.filter(x=>x&&typeof x.text==='string'&&['me','bot'].includes(x.who)).slice(-60):[];
+      for(const key of ['misses','review','daily','lessonPositions']) if(!backup[key]||typeof backup[key]!=='object'||Array.isArray(backup[key])) backup[key]={};
+      mergeProgress(backup);
+      if(!user || user.id!==syncUserId) throw new Error('تغيّر الحساب أثناء الاستعادة؛ لم يتم رفع النسخة.');
+      renderStats();renderCourses();renderHome();renderProfile();renderReview();
+      clearTimeout(timer);
+      revision++;
+      const saved=await uploadProgress();
+      if(note) note.textContent=saved?'تم دمج النسخة الاحتياطية لهذا الحساب. أبقينا النسخة محفوظة على الجهاز للرجوع إليها لاحقًا.':'تم دمج النسخة محليًا، لكن تعذّر رفعها الآن؛ ستبقى على الجهاز ويمكنك إعادة المزامنة لاحقًا.';
+    } catch(error) {
+      if(note) note.textContent=error?.message||'تعذرت استعادة النسخة الاحتياطية.';
+    } finally {
+      setSignedInUI();
+    }
+  });
   // Retry pending local progress after the connection returns or the learner revisits the tab.
   // Keep the local copy until the cloud confirms a successful write.
   window.addEventListener('online',()=>{
