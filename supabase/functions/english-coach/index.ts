@@ -3,7 +3,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://mrwael1773.github.io",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
@@ -16,7 +16,15 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  let anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+  if (!anonKey) {
+    // Newer Supabase projects may expose a map of publishable-key env-var names.
+    try {
+      const keyNames = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") || "{}") as Record<string, string>;
+      const keyName = keyNames.default || Object.values(keyNames)[0];
+      if (keyName) anonKey = Deno.env.get(keyName) || undefined;
+    } catch (_) { /* fall through to a clear configuration error */ }
+  }
   const openAIKey = Deno.env.get("OPENAI_API_KEY");
   if (!supabaseUrl || !anonKey) return json({ error: "Supabase function configuration is incomplete." }, 500);
   if (!openAIKey) return json({ error: "OPENAI_API_KEY is not configured in Supabase function secrets." }, 503);
@@ -27,7 +35,8 @@ Deno.serve(async (req: Request) => {
     global: { headers: { Authorization: auth } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const accessToken = auth.slice("Bearer ".length).trim();
+  const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
   if (authError || !user) return json({ error: "Your session is invalid. Please sign in again." }, 401);
 
   let body: { message?: unknown; history?: unknown };
