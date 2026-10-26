@@ -1564,7 +1564,7 @@ const scenarioSkillSets=[
 ];
 moreScenarioThemes.forEach((theme,i)=>{
  const set=scenarioSkillSets[i%scenarioSkillSets.length];
- dailyScenarios.push({title:theme[0],emoji:theme[1],desc:theme[2],qs:set.map((q,j)=>[q[0],q[1],q[2],q[3],q[4]+' (تدرّب على هذه العبارة في موقف: '+theme[0]+'.')])});
+ dailyScenarios.push({title:theme[0],emoji:theme[1],desc:theme[2],qs:set.map((q,j)=>[q[0],q[1],q[2],q[3],q[4]+' (تدرّب على هذه العبارة في موقف: '+theme[0]+'.)'])});
 });
 
 let activeScenario=0,scenarioIndex=0,scenarioCorrect=0,scenarioAnswered=false,scenarioEarned=0;
