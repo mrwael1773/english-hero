@@ -92,6 +92,8 @@
     const r=remote&&typeof remote==='object'&&!Array.isArray(remote)?remote:{};
     const union=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
     const object=(v)=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+    const chatRows=[...(Array.isArray(r.chatHistory)?r.chatHistory:[]),...(Array.isArray(local.chatHistory)?local.chatHistory:[])].filter(m=>m&&typeof m.text==='string'&&['me','bot'].includes(m.who));
+    const chatHistory=[...new Map(chatRows.map(m=>[JSON.stringify(m),m])).values()].slice(-60);
     const daily={...object(r.daily),...object(local.daily)};
     for(const day of new Set([...Object.keys(object(r.daily)),...Object.keys(object(local.daily))])) daily[day]={...object(object(r.daily)[day]),...object(object(local.daily)[day])};
     state={...r,...local,
@@ -103,7 +105,7 @@
       completed:union(r.completed,local.completed),
       foundationSaved:union(r.foundationSaved,local.foundationSaved),
       lessonPositions:{...object(r.lessonPositions),...object(local.lessonPositions)},
-      chatHistory:(Array.isArray(local.chatHistory)&&local.chatHistory.length?local.chatHistory:(Array.isArray(r.chatHistory)?r.chatHistory:[])).slice(-60),
+      chatHistory,
       saved:union(r.saved,local.saved),
       misses:{...object(r.misses),...object(local.misses)},
       review:{...object(r.review),...object(local.review)},
