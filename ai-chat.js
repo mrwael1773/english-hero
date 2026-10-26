@@ -63,6 +63,32 @@
     if(!data || typeof data.reply!=='string' || !data.reply.trim()) throw new Error('وصل رد غير صالح من خدمة الذكاء الاصطناعي.');
     return data.reply.trim();
   }
+  function offlineCoach(text){
+    const fixes=[
+      [/\bi\s+like\s+play(?:ing)?\b/i,{sentence:'I like playing football.',reason:'بعد like نستخدم الفعل مع -ing أو to + المصدر.'}],
+      [/\bi\s+(?:am|’m|'m)\s+wake\s+up\b/i,{sentence:'I wake up at 5:30.',reason:'للعادات نستخدم المضارع البسيط، ولا نضع am قبل wake up.'}],
+      [/\bi\s+go\s+to\s+school\s+in\s+(\d{1,2}(?::\d{2})?)/i,{sentence:'I go to school at $1.',reason:'نستخدم at مع الساعة.'}],
+      [/\bi\s+drink\s+a\s+water\b/i,{sentence:'I drink water.',reason:'كلمة water غير معدودة في هذا الاستخدام، لذلك لا نضع a قبلها.'}],
+      [/\bnodlls\b/i,{sentence:'noodles',reason:'هذه هي التهجئة الصحيحة لكلمة نودلز.'}],
+      [/\bbule\b/i,{sentence:'blue',reason:'هذه هي التهجئة الصحيحة للون الأزرق.'}],
+      [/\bi\s+(?:am|’m|'m)\s+understand\b/i,{sentence:'I understand.',reason:'لا نضع am قبل الفعل understand في المضارع البسيط.'}],
+      [/\bi\s+from\s+yemen\b/i,{sentence:'I am from Yemen.',reason:'نحتاج إلى am في جملة I am from… واسم الدولة يبدأ بحرف كبير.'}],
+      [/\bdidn['’]t\s+went\b/i,{sentence:"didn't go",reason:'بعد did أو didn’t نستخدم الفعل في المصدر.'}],
+      [/\bpeople\s+is\b/i,{sentence:'People are…',reason:'كلمة people جمع، لذلك نستخدم are.'}]
+    ];
+    for(const [pattern,fix] of fixes){
+      if(pattern.test(text))return '✍️ التصحيح المقترح: '+text.replace(pattern,fix.sentence)+'\n📘 السبب: '+fix.reason+'\n\nجرّب كتابة جملة جديدة باستخدام التصحيح.';
+    }
+    const prompts=[
+      'What do you usually do after school?',
+      'What is your favorite food, and why?',
+      'Tell me about your daily routine.',
+      'What did you do yesterday?',
+      'What sport do you like playing?'
+    ];
+    if(/[\u0600-\u06FF]/.test(text))return 'الوضع الاحتياطي يعمل دون الذكاء الاصطناعي. يمكنك كتابة ما تريد قوله بالعربية، ثم حاول تكوين جملة إنجليزية بسيطة.\nمثال: أحب كرة القدم = I like football.\n\nجرّب: '+prompts[initialHistory.length%prompts.length];
+    return 'وصلت رسالتك. أستطيع الآن فحص بعض الأخطاء الشائعة دون اتصال بخدمة الذكاء الاصطناعي. إذا لم يظهر تصحيح محدد، فذلك لا يعني أن الجملة صحيحة بالكامل.\n\nجرّب الإجابة عن هذا السؤال: '+prompts[initialHistory.length%prompts.length];
+  }
   form.onsubmit=async e=>{
     e.preventDefault(); const text=input.value.trim(); if(!text||busy)return;
     busy=true; const send=form.querySelector('button[type="submit"]'); if(send)send.disabled=true;
@@ -76,12 +102,18 @@
     } catch(err) {
       waiting.remove();
       const message=err?.message||'تحقق من الاتصال والإعدادات.';
-      addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
-      if(message.includes('رصيد OpenAI API')) sayStatus('مدرّب الذكاء الاصطناعي متوقف مؤقتًا بسبب نفاد رصيد API. سيعود للعمل بعد تجديد رصيد الخدمة؛ بقية الموقع تعمل بشكل طبيعي.');
-      else if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
+      if(message.includes('رصيد OpenAI API')){
+        const fallback='⚠️ الرد الذكي غير متاح حاليًا بسبب رصيد الخدمة. هذا تدريب احتياطي محلي وليس ردًا من الذكاء الاصطناعي.\n\n'+offlineCoach(text);
+        addBubble(fallback,'bot');lastReply=fallback;
+        sayStatus('خدمة الذكاء الاصطناعي متوقفة مؤقتًا؛ يستمر التدريب الاحتياطي المحلي وبقية الموقع تعمل طبيعيًا.');
+        if(typeof daily==='function')daily('chat');
+      }else{
+        addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
+        if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
       else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
       else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
       else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
+      }
     } finally { busy=false; if(send)send.disabled=false; input.focus(); }
   };
   $('chatMic')?.addEventListener('click',()=>{
