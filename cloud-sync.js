@@ -76,6 +76,7 @@
     const daily={...object(r.daily),...object(local.daily)};
     for(const day of new Set([...Object.keys(object(r.daily)),...Object.keys(object(local.daily))])) daily[day]={...object(object(r.daily)[day]),...object(object(local.daily)[day])};
     state={...r,...local,
+      displayName:String(local.displayName||r.displayName||user?.user_metadata?.full_name||user?.user_metadata?.display_name||'').trim().slice(0,32),
       xp:Math.max(0,Number(r.xp)||0,Number(local.xp)||0),
       best:Math.min(100,Math.max(0,Number(r.best)||0,Number(local.best)||0)),
       quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
