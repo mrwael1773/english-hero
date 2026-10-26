@@ -56,12 +56,12 @@
       .slice(-13,-1).map(m=>({role:m.who==='me'?'user':'assistant',content:m.text}));
     // Abort slow requests so the learner never waits indefinitely for the AI service.
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),20000);
+    const timeout=setTimeout(()=>controller.abort(),30000);
     let result;
     try {
       result=await client.functions.invoke('english-coach',{body:{message:text,history},signal:controller.signal});
     } catch(requestError) {
-      if(controller.signal.aborted) throw new Error('انتهت مهلة الرد بعد 20 ثانية. تحقق من الاتصال وحاول مرة أخرى.');
+      if(controller.signal.aborted) throw new Error('انتهت مهلة الرد بعد 30 ثانية. تحقق من الاتصال وحاول مرة أخرى.');
       throw requestError;
     } finally {
       clearTimeout(timeout);
@@ -124,10 +124,11 @@
         if(typeof daily==='function')daily('chat');
       }else{
         addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
-        if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
+        if(message.includes('انتهت مهلة الرد') || /response took too long|timed out|timeout/i.test(message)) sayStatus('استغرق الرد وقتًا طويلًا؛ انتهت المحاولة تلقائيًا بعد 30 ثانية. يمكنك إعادة الإرسال.');
+        else if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
         else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
         else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
-        else if(message.includes('انتهت مهلة الرد')) sayStatus('استغرق الرد وقتًا طويلًا؛ انتهت المحاولة تلقائيًا. يمكنك إعادة الإرسال.');
+        
         else if(message.includes('حد الطلبات مؤقتًا')) sayStatus('وصلت الخدمة إلى حد الطلبات مؤقتًا. انتظر قليلًا ثم أعد المحاولة.');
         else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
       }
