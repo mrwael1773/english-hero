@@ -58,8 +58,12 @@
       if(typeof daily==='function') daily('chat');
     } catch(err) {
       waiting.remove();
-      addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+(err?.message||'تحقق من الاتصال والإعدادات.'),'bot');
-      sayStatus('خدمة الذكاء الاصطناعي تحتاج إلى إعداد الخادم قبل أن تعمل.');
+      const message=err?.message||'تحقق من الاتصال والإعدادات.';
+      addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
+      if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
+      else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
+      else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
+      else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
     } finally { busy=false; if(send)send.disabled=false; input.focus(); }
   };
   $('chatMic')?.addEventListener('click',()=>{
@@ -74,7 +78,7 @@
     try{recognition.start();}catch(e){recognition=null;sayStatus('تعذر بدء الميكروفون. حاول مرة أخرى.');}
   });
   $('chatSpeak')?.addEventListener('click',()=>{if(lastReply)voiceSpeak(lastReply);else sayStatus('لا يوجد رد جديد لقراءته بعد.');});
-  $('chatReset')?.addEventListener('click',()=>{lastReply=''; if('speechSynthesis' in window) window.speechSynthesis.cancel();});
+  $('chatReset')?.addEventListener('click',()=>{lastReply=''; if(recognition){recognition.stop();recognition=null;} if('speechSynthesis' in window) window.speechSynthesis.cancel();});
   // Replace the old scripted replies with a real AI call; keep prior chat display/history.
   sayStatus('واجهة الصوت جاهزة. خدمة الذكاء الاصطناعي تتطلب نشر وظيفة english-coach وإضافة مفتاح OpenAI الآمن في Supabase.');
 })();
