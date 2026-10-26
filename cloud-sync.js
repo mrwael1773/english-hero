@@ -7,6 +7,7 @@
   let ready = false;
   let timer = null;
   let revision = 0;
+  let syncPromise = null;
   const status = (message) => { const el=$cloud('cloudStatus'); if(el) el.textContent=message; };
   const validConfig = () => {
     const c=window.ENGLISH_HERO_CLOUD_CONFIG;
@@ -94,21 +95,30 @@
   }
   async function syncNow(){
     if(!user||!client) return;
-    ready=false;setSignedInUI();status('جارٍ مزامنة تقدمك...');
-    try {
-      const {data,error}=await client.from('learning_progress').select('progress').eq('user_id',user.id).maybeSingle();
-      if(error) throw error;
-      if(data && data.progress && typeof data.progress==='object' && !Array.isArray(data.progress)) mergeProgress(data.progress);
-      ready=true;setSignedInUI();
-      renderStats();renderCourses();renderHome();renderProfile();renderReview();
-      revision++;
-      const saved=await uploadProgress();
-      if(saved) status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
-    } catch(e) {
-      ready=true;setSignedInUI();
-      status('تعذرت مزامنة التقدم. بقيت بياناتك المحلية محفوظة؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
-      console.error('English Hero cloud sync:',e?.message||e);
-    }
+    // Avoid overlapping reads/writes when login, reconnect, visibility, and manual sync fire together.
+    if(syncPromise) return syncPromise;
+    syncPromise=(async()=>{
+      const syncUserId=user.id;
+      ready=false;setSignedInUI();status('جارٍ مزامنة تقدمك...');
+      try {
+        const {data,error}=await client.from('learning_progress').select('progress').eq('user_id',syncUserId).maybeSingle();
+        if(error) throw error;
+        // If the learner signed out or switched accounts while the request was in flight, do not merge.
+        if(!user||user.id!==syncUserId) return;
+        if(data && data.progress && typeof data.progress==='object' && !Array.isArray(data.progress)) mergeProgress(data.progress);
+        ready=true;setSignedInUI();
+        renderStats();renderCourses();renderHome();renderProfile();renderReview();
+        revision++;
+        const saved=await uploadProgress();
+        if(saved) status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
+      } catch(e) {
+        ready=true;setSignedInUI();
+        status('تعذرت مزامنة التقدم. بقيت بياناتك المحلية محفوظة؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
+        console.error('English Hero cloud sync:',e?.message||e);
+      }
+    })();
+    try { return await syncPromise; }
+    finally { syncPromise=null; }
   }
   async function init(){
     if(!validConfig()){
