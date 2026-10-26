@@ -5,6 +5,7 @@
   const form=$('chatForm'), input=$('chatInput'), chat=$('chat'), status=$('aiChatStatus');
   if(!form || !input || !chat) return;
   let recognition=null, busy=false, lastReply='';
+  try { const history=typeof state!=='undefined'&&Array.isArray(state.chatHistory)?state.chatHistory:[]; lastReply=[...history].reverse().find(m=>m&&m.who==='bot'&&typeof m.text==='string')?.text||''; } catch(_) {}
   const sayStatus = text => { if(status) status.textContent=text; };
   function addBubble(text, who, record=true) {
     const el=document.createElement('div'); el.className='bubble '+who; el.textContent=text;
@@ -73,6 +74,7 @@
     try{recognition.start();}catch(e){recognition=null;sayStatus('تعذر بدء الميكروفون. حاول مرة أخرى.');}
   });
   $('chatSpeak')?.addEventListener('click',()=>{if(lastReply)voiceSpeak(lastReply);else sayStatus('لا يوجد رد جديد لقراءته بعد.');});
+  $('chatReset')?.addEventListener('click',()=>{lastReply=''; if('speechSynthesis' in window) window.speechSynthesis.cancel();});
   // Replace the old scripted replies with a real AI call; keep prior chat display/history.
   sayStatus('واجهة الصوت جاهزة. خدمة الذكاء الاصطناعي تتطلب نشر وظيفة english-coach وإضافة مفتاح OpenAI الآمن في Supabase.');
 })();
