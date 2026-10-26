@@ -56,12 +56,12 @@
       .slice(-13,-1).map(m=>({role:m.who==='me'?'user':'assistant',content:m.text}));
     // Abort slow requests so the learner never waits indefinitely for the AI service.
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),18000);
+    const timeout=setTimeout(()=>controller.abort(),16000);
     let result;
     try {
       result=await client.functions.invoke('english-coach',{body:{message:text,history},signal:controller.signal});
     } catch(requestError) {
-      if(controller.signal.aborted) throw new Error('انتهت مهلة الرد بعد 18 ثانية. تحقق من الاتصال وحاول مرة أخرى.');
+      if(controller.signal.aborted) throw new Error('انتهت مهلة الرد بعد 16 ثانية. تحقق من الاتصال وحاول مرة أخرى.');
       throw requestError;
     } finally {
       clearTimeout(timeout);
@@ -69,7 +69,7 @@
     const {data,error}=result;
     if(error) {
       if(controller.signal.aborted || /abort|timeout/i.test(String(error.message||''))) {
-        throw new Error('انتهت مهلة الرد بعد 20 ثانية. تحقق من الاتصال وحاول مرة أخرى.');
+        throw new Error('انتهت مهلة الرد. تحقق من الاتصال وحاول مرة أخرى.');
       }
       let detail=error.message||'تعذر الاتصال بخدمة الذكاء الاصطناعي.';
       try { const context=error.context; if(context && typeof context.json==='function'){const j=await context.json();if(j.error)detail=j.error;} } catch(_){}
