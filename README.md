@@ -20,6 +20,8 @@ https://mrwael1773.github.io/english-hero/
 - `vocabulary-6000.json`: قائمة الكلمات الشائعة، مرتبة وفق المصدر التكراري وليست تصنيفًا رسميًا لمستويات CEFR.
 - `config.js`: عنوان Supabase والمفتاح العام القابل للنشر فقط.
 - `cloud-sync.js`: تسجيل الدخول ومزامنة تقدم المستخدم.
+- `ai-chat.js`: واجهة مدرب المحادثة الصوتية والنصية.
+- `supabase/functions/english-coach/index.ts`: مصدر وظيفة Edge Function التي تتحقق من جلسة المستخدم ثم تتصل بواجهة OpenAI من الخادم.
 - `sw.js`: التخزين المؤقت وتحديث نسخة التطبيق.
 - `supabase/migrations/`: تغييرات قاعدة البيانات التي يجب أن تتطابق مع سجل migrations في المشروع.
 
@@ -38,6 +40,11 @@ https://mrwael1773.github.io/english-hero/
 ```bash
 node scripts/validate-project.mjs
 ```
+
+## مدرب المحادثة بالذكاء الاصطناعي
+- الوظيفة `english-coach` منشورة في مشروع Supabase، ومصدرها محفوظ داخل `supabase/functions/english-coach/index.ts`.
+- يجب إضافة `OPENAI_API_KEY` من إعدادات أسرار Edge Functions في Supabase؛ لا تضعه في `config.js` أو GitHub أو ملفات الواجهة.
+- يجب اختبار المحادثة بعد النشر بحساب تجريبي، والتأكد من ظهور رد فعلي وعدم كشف أسرار الخادم في سجلات المتصفح.
 
 ## إعدادات إنتاج تحتاج مراجعة في لوحة Supabase
 1. تفعيل حماية كلمات المرور المسرّبة في إعدادات Authentication / Password Security.
