@@ -63,6 +63,7 @@ check(html.includes("'weekly'") && html.includes('20 سؤالًا متنوعًا
 check(aiChat.includes('client.functions.invoke(\'english-coach\'') && aiChat.includes('refreshAuthHint') && aiChat.includes('chat.replaceChildren()'), 'AI conversation calls the server function and handles login/reset');
 check(aiChat.includes('setTimeout(()=>controller.abort(),18000)') && aiChat.includes('انتهت مهلة الرد بعد 18 ثانية') && coach.includes('setTimeout(() => aiController.abort(), 15000)'), 'AI chat and server timeouts are aligned with a clear timeout message');
 check(aiChat.includes('function offlineCoach') && aiChat.includes('هذا تدريب احتياطي محلي'), 'AI chat keeps a transparent local practice fallback when API credits are exhausted');
+check(aiChat.includes('const timedOut=') && aiChat.includes('انتهت مهلة الرد؛ انتقلنا إلى تدريب احتياطي محلي'), 'AI chat falls back to local practice after a request timeout');
 check(cloud.includes("english-hero-account-backup-") && cloud.includes('english-hero-unclaimed-local-backup') && cloud.includes('syncPromiseUserId'), 'Account switching is isolated and local progress can be recovered');
 check(cloud.includes('const chatRows=[...(Array.isArray(r.chatHistory)?r.chatHistory:[])') && cloud.includes('const chatHistory=[...new Map(chatRows.map(m=>[JSON.stringify(m),m])).values()].slice(-60)'), 'Cloud sync preserves and deduplicates local and remote chat history');
 try { new Function(cloud); check(true, 'Cloud sync JavaScript syntax is valid'); } catch (error) { fail.push(`cloud-sync.js has a syntax error: ${error.message}`); }
