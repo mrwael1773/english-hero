@@ -309,16 +309,19 @@
     const button=$cloud('cloudSignOut');
     if(button) button.disabled=true;
     status('جارٍ حفظ آخر تقدم قبل تسجيل الخروج...');
-    if(user && ready){
-      clearTimeout(timer);
-      await uploadProgress();
-      try { localStorage.setItem('english-hero-account-backup-'+user.id,JSON.stringify(state)); } catch {}
-    }
-    const {error}=await client.auth.signOut();
-    if(error){
-      status('تعذر تسجيل الخروج. بقيت بياناتك محفوظة؛ حاول مرة أخرى.');
+    try {
+      if(user && ready){
+        clearTimeout(timer);
+        await uploadProgress();
+        try { localStorage.setItem('english-hero-account-backup-'+user.id,JSON.stringify(state)); } catch {}
+      }
+      const {error}=await client.auth.signOut();
+      if(error) throw error;
+    } catch(error) {
+      status('تعذر تسجيل الخروج. بقيت بياناتك محفوظة؛ تحقق من الاتصال ثم حاول مرة أخرى.');
+      console.error('English Hero sign out:',error?.message||error);
+    } finally {
       setSignedInUI();
-      return;
     }
   });
   $cloud('cloudSyncNow')?.addEventListener('click',syncNow);
