@@ -192,13 +192,14 @@
       if(user) await syncNow();
       else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
       client.auth.onAuthStateChange((event,session)=>{
+        const previousUser=user;
         user=session?.user||null;
         setSignedInUI();
         if(event==='SIGNED_IN' && user) setTimeout(()=>syncNow(),0);
         if(event==='SIGNED_OUT'){
           ready=false;
           clearTimeout(timer);
-          try { if(user) localStorage.setItem('english-hero-account-backup-'+user.id,JSON.stringify(state)); } catch {}
+          try { if(previousUser) localStorage.setItem('english-hero-account-backup-'+previousUser.id,JSON.stringify(state)); } catch {}
           try { localStorage.removeItem('english-hero-cloud-owner'); } catch {}
           if(typeof defaults==='function') replaceProgress(defaults());
           renderStats();renderCourses();renderHome();renderProfile();renderReview();
