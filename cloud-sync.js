@@ -45,13 +45,24 @@
   };
   async function uploadProgress(){
     if(!client||!user||!ready) return false;
+    const syncUserId=user.id;
     const current=revision;
-    const {error}=await client.from('learning_progress').upsert({
-      user_id:user.id, progress:state, updated_at:new Date().toISOString()
-    },{onConflict:'user_id'});
-    if(error){status('تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من إعداد قاعدة البيانات والاتصال.');console.error('English Hero cloud save:',error.message);return false;}
-    if(current===revision) status('✅ تمت مزامنة تقدمك مع حسابك السحابي.');
-    return true;
+    try {
+      const {error}=await client.from('learning_progress').upsert({
+        user_id:syncUserId, progress:state, updated_at:new Date().toISOString()
+      },{onConflict:'user_id'});
+      if(error) throw error;
+      // Never associate this device's local copy with a different account.
+      if(user?.id===syncUserId){
+        try { localStorage.setItem('english-hero-cloud-owner',syncUserId); } catch {}
+        if(current===revision) status('✅ تمت مزامنة تقدمك مع حسابك السحابي.');
+      }
+      return true;
+    } catch(error) {
+      status('تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
+      console.error('English Hero cloud save:',error?.message||error);
+      return false;
+    }
   }
   window.saveCloudDisplayName=async function(name){
     if(!client||!user)return;
@@ -92,7 +103,25 @@
       lastActive:[r.lastActive,local.lastActive].filter(v=>typeof v==='string').sort().pop()||'',
       theme:local.theme||r.theme||'dark',rate:local.rate||r.rate||0.9
     };
-    localStorage.setItem('english-hero-academy-3',JSON.stringify(state));
+    try { localStorage.setItem('english-hero-academy-3',JSON.stringify(state)); } catch {}
+  }
+  function replaceProgress(remote){
+    const r=remote&&typeof remote==='object'&&!Array.isArray(remote)?remote:{};
+    const base=typeof defaults==='function'?defaults():{};
+    state={...base,...r};
+    state.displayName=String(state.displayName||user?.user_metadata?.full_name||user?.user_metadata?.display_name||'').trim().slice(0,32);
+    state.xp=Math.max(0,Number(state.xp)||0);
+    state.best=Math.min(100,Math.max(0,Number(state.best)||0));
+    state.quizzes=Math.max(0,Number(state.quizzes)||0);
+    state.streak=Math.max(0,Number(state.streak)||0);
+    for(const key of ['completed','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
+    for(const key of ['misses','review','daily','lessonPositions']) if(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])) state[key]={};
+    state.completed=[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0))];
+    state.saved=[...new Set(state.saved)];
+    state.foundationSaved=[...new Set(state.foundationSaved.filter(x=>typeof x==='string'))];
+    state.theme=state.theme==='light'?'light':'dark';
+    state.rate=[0.7,0.9,1].includes(Number(state.rate))?Number(state.rate):0.9;
+    try { localStorage.setItem('english-hero-academy-3',JSON.stringify(state)); } catch {}
   }
   async function syncNow(){
     if(!user||!client) return;
@@ -106,7 +135,21 @@
         if(error) throw error;
         // If the learner signed out or switched accounts while the request was in flight, do not merge.
         if(!user||user.id!==syncUserId) return;
-        if(data && data.progress && typeof data.progress==='object' && !Array.isArray(data.progress)) mergeProgress(data.progress);
+        const remoteProgress=data && data.progress && typeof data.progress==='object' && !Array.isArray(data.progress)?data.progress:null;
+        let localOwner='';
+        try { localOwner=localStorage.getItem('english-hero-cloud-owner')||''; } catch {}
+        if(localOwner && localOwner!==syncUserId){
+          // A different account was used on this device: discard its active local copy,
+          // then load only the current account's cloud progress (or a clean state).
+          replaceProgress(remoteProgress||{});
+          status(remoteProgress?'تم تحميل تقدم هذا الحساب فقط. لم تُدمج بيانات الحساب السابق.':'حساب جديد على هذا الجهاز؛ سيبدأ بتقدم مستقل.');
+        } else if(!localOwner && remoteProgress){
+          // Legacy local data has no owner marker. Do not risk merging another user's
+          // old local state into an existing cloud account.
+          replaceProgress(remoteProgress);
+        } else if(remoteProgress){
+          mergeProgress(remoteProgress);
+        }
         ready=true;setSignedInUI();
         renderStats();renderCourses();renderHome();renderProfile();renderReview();
         revision++;
