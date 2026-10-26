@@ -31,7 +31,7 @@ jobs:
           from pathlib import Path
 
           html = Path("index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>", html, re.I)
+          scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
           inline_scripts = []
           for attrs, script in scripts:
               # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
@@ -42,7 +42,6 @@ jobs:
           if not inline_scripts:
               raise SystemExit("No inline JavaScript blocks found in index.html")
           for i, script in enumerate(inline_scripts, 1):
-              Path(f"/tmp/english-hero-inline-{i}.js").write_text(script, encoding="utf-8")
               Path(f"/tmp/english-hero-inline-{i}.js").write_text(script, encoding="utf-8")
           print(f"Extracted {len(inline_scripts)} inline JavaScript block(s).")
           PY
