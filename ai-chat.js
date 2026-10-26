@@ -125,10 +125,11 @@
       }else{
         addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
         if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
-      else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
-      else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
-      else if(message.includes('انتهت مهلة الرد')) sayStatus('استغرق الرد وقتًا طويلًا؛ انتهت المحاولة تلقائيًا. يمكنك إعادة الإرسال.');
-      else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
+        else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
+        else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
+        else if(message.includes('انتهت مهلة الرد')) sayStatus('استغرق الرد وقتًا طويلًا؛ انتهت المحاولة تلقائيًا. يمكنك إعادة الإرسال.');
+        else if(message.includes('حد الطلبات مؤقتًا')) sayStatus('وصلت الخدمة إلى حد الطلبات مؤقتًا. انتظر قليلًا ثم أعد المحاولة.');
+        else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
       }
     } finally { busy=false; if(send)send.disabled=false; input.focus(); }
   };
