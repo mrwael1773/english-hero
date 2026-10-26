@@ -29,7 +29,7 @@
     if($cloud('cloudUser')) {
       const metadata = user?.user_metadata || {};
       const emailName = typeof user?.email === 'string' ? user.email.split('@')[0] : '';
-      const displayName = metadata.full_name || metadata.name || metadata.user_name ||
+      const displayName = (typeof state !== 'undefined' && state.displayName) || metadata.full_name || metadata.name || metadata.user_name ||
         metadata.preferred_username || emailName || 'المستخدم';
       $cloud('cloudUser').textContent = signedIn ? '👋 أهلًا، ' + displayName + ' — تم تسجيل الدخول' : '';
       $cloud('cloudUser').setAttribute('dir', 'auto');
@@ -52,6 +52,15 @@
     if(current===revision) status('✅ تمت مزامنة تقدمك مع حسابك السحابي.');
     return true;
   }
+  window.saveCloudDisplayName=async function(name){
+    if(!client||!user)return;
+    try{
+      const {error}=await client.auth.updateUser({data:{full_name:name,display_name:name}});
+      if(error){status('حُفظ الاسم على هذا الجهاز، لكن تعذّر تحديث اسم الحساب السحابي.');console.error('English Hero display name:',error.message);return;}
+      setSignedInUI();
+      status('✅ تم حفظ الاسم وتحديثه في حسابك.');
+    }catch(error){status('حُفظ الاسم محليًا، لكن تعذّر تحديثه سحابيًا.');console.error('English Hero display name:',error?.message||error);}
+  };
   window.queueCloudSave=function(){
     if(!user||!ready) return;
     revision++;
@@ -172,7 +181,7 @@
     button.disabled=true;
     status('جارٍ إنشاء الحساب...');
     try {
-      const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+      const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{full_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\\s+/g,' ').slice(0,32)),display_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\\s+/g,' ').slice(0,32))}}});
       if(error){status(friendlyAuthError(error,'signup'));return;}
       if(data.session){
         user=data.user||data.session.user||null;
