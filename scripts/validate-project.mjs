@@ -27,6 +27,8 @@ const migration = read(migrationPath);
 
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
+check(html.includes('id="studentDesk"') && html.includes('id="studentTaskForm"') && html.includes('id="studentTaskList"'), 'Student study planner UI exists');
+check(html.includes('englishHeroStudentTasksV1') && html.includes('function renderStudentTasks') && html.includes('studentTaskClearDone'), 'Student planner supports local persistence and task management');
 const idCounts = new Map();
 for (const match of html.matchAll(/\bid=["']([^"']+)["']/g)) idCounts.set(match[1], (idCounts.get(match[1]) || 0) + 1);
 check([...idCounts.values()].every(count => count === 1), 'HTML element IDs are unique');
