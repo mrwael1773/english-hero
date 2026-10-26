@@ -1717,7 +1717,7 @@ installButton?.addEventListener('click', async () => {
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('./sw.js?v=45', { updateViaCache: 'none' });
+      const registration = await navigator.serviceWorker.register('./sw.js?v=46', { updateViaCache: 'none' });
       await registration.update();
     } catch (error) { console.warn('App offline setup failed:', error); }
   });
