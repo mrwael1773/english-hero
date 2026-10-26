@@ -1405,11 +1405,41 @@ theme();renderStats();renderCourses();renderHome();
   <p id="installAppMessage" role="status" style="font-size:13px;color:#9fb2ce;margin:10px 0 0"></p>
 </section>
 <footer style="text-align:center; padding:20px; font-size:14px;">
-  <a href="privacy.html">سياسة الخصوصية</a>
-  |
-  <a href="contact.html">تواصل معنا</a>
+  <button id="copySiteLinkButton" type="button" style="border:1px solid #52628b;border-radius:10px;padding:9px 13px;background:#202d45;color:#f1f6ff;font-weight:700;cursor:pointer">🔗 نسخ رابط الموقع</button>
+  <span id="copySiteLinkStatus" role="status" style="display:block;margin-top:8px;color:#9fb2ce;font-size:12px"></span>
+  <div style="margin-top:10px">
+    <a href="privacy.html">سياسة الخصوصية</a>
+    |
+    <a href="contact.html">تواصل معنا</a>
+  </div>
 </footer>
 <script>
+const copySiteLinkButton = document.getElementById('copySiteLinkButton');
+const copySiteLinkStatus = document.getElementById('copySiteLinkStatus');
+copySiteLinkButton?.addEventListener('click', async () => {
+  const siteUrl = 'https://mrwael1773.github.io/english-hero/';
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(siteUrl);
+    } else {
+      const field = document.createElement('textarea');
+      field.value = siteUrl;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      document.body.appendChild(field);
+      field.select();
+      const copied = document.execCommand('copy');
+      field.remove();
+      if (!copied) throw new Error('copy failed');
+    }
+    if (copySiteLinkStatus) copySiteLinkStatus.textContent = 'تم نسخ رابط الموقع، أرسله لمن تريد.';
+    copySiteLinkButton.textContent = '✅ تم نسخ الرابط';
+    setTimeout(() => { if (copySiteLinkButton) copySiteLinkButton.textContent = '🔗 نسخ رابط الموقع'; }, 2200);
+  } catch (_) {
+    if (copySiteLinkStatus) copySiteLinkStatus.textContent = 'انسخ الرابط يدويًا: ' + siteUrl;
+  }
+});
 let installPromptEvent = null;
 const installButton = document.getElementById('installAppButton');
 const installMessage = document.getElementById('installAppMessage');
