@@ -107,10 +107,34 @@ body.light{background:#edf3fb!important;color:#14243c}
 <div class="row" style="justify-content:center;margin-top:16px"><button class="btn primary" id="scenarioReplay" type="button">🔁 أعد الموقف</button><button class="btn ghost" id="scenarioFinishBack" type="button">كل المواقف</button></div>
 </div>
 </section>
+<section class="view" id="conversation">
+  <div class="row between"><h2>💬 مدرّب المحادثة الإنجليزية</h2><span class="chip">AI English Coach</span></div>
+  <p class="muted">اكتب بالإنجليزية أو استخدم الميكروفون. سيصحّح المدرب الأخطاء الشائعة ويشرحها بالعربية، ثم يساعدك على مواصلة الحديث.</p>
+  <div class="panel" style="padding:14px">
+    <div id="aiCoachSignInHint" class="feedback" role="note">تحتاج إلى تسجيل الدخول من «حسابي» لاستخدام مدرّب الذكاء الاصطناعي.</div>
+    <div id="chat" class="chat" role="log" aria-live="polite" aria-label="سجل المحادثة" style="min-height:220px;max-height:48vh;margin:12px 0"></div>
+    <p id="aiChatStatus" class="muted small" role="status" aria-live="polite">جارٍ تجهيز مدرّب المحادثة…</p>
+    <div class="row" style="flex-wrap:wrap;margin:10px 0">
+      <button class="btn ghost" type="button" data-chat="Hello! My name is Wael.">👋 التعارف</button>
+      <button class="btn ghost" type="button" data-chat="I like playing football.">⚽ الهوايات</button>
+      <button class="btn ghost" type="button" data-chat="What does this word mean?">📘 معنى كلمة</button>
+    </div>
+    <form id="chatForm" style="display:flex;gap:8px;align-items:stretch">
+      <input id="chatInput" class="field" type="text" maxlength="1200" autocomplete="off" placeholder="اكتب جملة بالإنجليزية…" aria-label="رسالتك باللغة الإنجليزية" required style="flex:1;min-width:0">
+      <button class="btn primary" type="submit">إرسال</button>
+    </form>
+    <div class="row" style="flex-wrap:wrap;margin-top:10px">
+      <button class="btn ghost" id="chatMic" type="button">🎙️ تحدث</button>
+      <button class="btn ghost" id="chatSpeak" type="button">🔊 استمع للرد</button>
+      <button class="btn outline" id="chatReset" type="button">بدء محادثة جديدة</button>
+    </div>
+    <p class="muted small">قد لا يعمل التعرف على الصوت في جميع المتصفحات. يمكنك دائمًا كتابة رسالتك. تُرسل الرسائل إلى خدمة الذكاء الاصطناعي عند الضغط على إرسال.</p>
+  </div>
+</section>
 <section class="view" id="review"><div class="row between"><h2>🧠 مختبر الذاكرة</h2><span class="chip" id="reviewCount">0 كلمات</span></div><p class="muted">الكلمات التي تخطئ فيها تعود للمراجعة. ويمكنك حفظ كلمات إضافية يدويًا.</p><div class="panel"><div class="row"><button class="btn primary" id="reviewStart">اختبر كلمات المراجعة</button><button class="btn ghost" id="savedStart">اختبر المحفوظات</button></div><div class="divider"></div><h3>قائمة المراجعة الذكية</h3><p class="muted small">تظهر الكلمات التي تكررت فيها الأخطاء أولًا، ثم الكلمات الأقل تكرارًا.</p><div id="reviewList"></div><h3>الكلمات المحفوظة ☆</h3><div id="savedList"></div></div></section>
 <section class="view" id="profile"><h2>👤 ملف الإنجازات</h2><div class="panel"><div class="stats"><div class="stat">نقاط الخبرة<b id="profileXP">0</b></div><div class="stat">الدروس المكتملة<b id="profileDone">0</b></div><div class="stat">الاختبارات المنجزة<b id="profileQuizzes">0</b></div><div class="stat">سلسلة الأيام<b id="profileStreak">0</b></div></div><h3>🏅 الأوسمة</h3><div id="badges" class="badge-grid"></div><div class="divider"></div><h3>👤 اسمك في الموقع</h3><div class="panel" id="displayNamePanel" style="padding:16px;margin:12px 0;background:var(--surface2)"><div id="displayNameSavedView" class="hidden"><p class="muted small">الاسم الظاهر لك في الموقع</p><div class="row between"><strong id="profileDisplayName" dir="auto" style="font-size:20px"></strong><button class="btn ghost" id="editDisplayName" type="button">تغيير الاسم</button></div></div><div id="displayNameEditor"><label for="displayNameInput">وش تحب نناديك؟</label><p class="muted small">اكتب الاسم اللي تفضّل يظهر لك في الموقع.</p><div class="row" style="margin-top:8px"><input id="displayNameInput" class="field" maxlength="32" autocomplete="nickname" placeholder="مثال: وائل" style="flex:1;min-width:160px"><button class="btn primary" id="saveDisplayName" type="button">حفظ الاسم</button></div><p id="displayNameStatus" class="muted small" role="status" aria-live="polite"></p></div></div><div class="divider"></div><h3>☁️ الحساب والمزامنة</h3><div class="panel" style="padding:16px;margin:12px 0;background:var(--surface2)"><p id="cloudStatus" class="muted small" aria-live="polite">المزامنة السحابية غير مهيأة بعد. يمكنك الاستمرار بالحفظ المحلي.</p><p id="cloudUser" class="small" style="direction:ltr;text-align:left"></p><form id="cloudAuthForm" style="display:grid;gap:10px;max-width:480px"><label for="cloudEmail">البريد الإلكتروني</label><input id="cloudEmail" class="field" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com" dir="ltr"><label for="cloudPassword">كلمة مرور الحساب</label><input id="cloudPassword" class="field" type="password" autocomplete="current-password" minlength="8" maxlength="128" required placeholder="8 أحرف على الأقل" dir="ltr"><div class="row"><button class="btn primary" id="cloudSignIn" type="submit">تسجيل الدخول</button><button class="btn ghost" id="cloudSignUp" type="button">إنشاء حساب</button></div></form><div class="row" style="margin-top:10px"><button class="btn primary" id="cloudGoogle" type="button">المتابعة باستخدام Google</button></div><div class="row" style="margin-top:10px"><button class="btn ghost" id="cloudSyncNow" type="button" disabled>مزامنة الآن</button><button class="btn outline" id="cloudSignOut" type="button" disabled>تسجيل الخروج</button></div><p class="muted small">لأمان حسابك، استخدم كلمة مرور مستقلة عن كلمة مرور بريدك أو Apple. عند إنشاء الحساب، قد تحتاج إلى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.</p></div><div class="divider"></div><h3>⚙️ الإعدادات والبيانات</h3><div class="listrow"><label for="lightMode">الوضع الفاتح</label><input id="lightMode" type="checkbox" style="width:22px;height:22px;accent-color:#7868e8"></div><div class="listrow"><label for="speechRate">سرعة النطق</label><select id="speechRate" class="field" style="width:auto;min-width:130px"><option value="0.7">بطيء</option><option value="0.9">متوسط</option><option value="1">طبيعي</option></select></div><button class="btn ghost" id="testSpeechRate" type="button" style="margin-top:8px">🔊 تجربة سرعة النطق</button><p class="muted small" id="settingsStatus" role="status" aria-live="polite">تُحفظ إعداداتك تلقائيًا على هذا الجهاز.</p><div class="row" style="margin-top:18px"><button class="btn ghost" id="exportData">⬇️ تصدير التقدم</button><button class="btn ghost" id="importData">⬆️ استيراد التقدم</button><input type="file" id="importFile" accept="application/json,.json" hidden><button class="btn outline" id="resetData">حذف التقدم</button></div><p class="muted small">إذا لم تسجّل الدخول، يبقى تقدمك محفوظًا على هذا الجهاز فقط. استخدم التصدير للاحتفاظ بنسخة احتياطية.</p></div></section>
 </main><footer class="center muted small" style="margin-top:30px">English Hero Academy 3.3 • الحفظ المحلي متاح، والمزامنة السحابية اختيارية</footer></div>
-<nav class="nav" aria-label="التنقل الرئيسي"><button data-nav="home" class="active" aria-label="الرئيسية"><span aria-hidden="true">⌂</span><small>الرئيسية</small></button><button data-nav="learningHub" aria-label="التعلّم"><span aria-hidden="true">📚</span><small>التعلّم</small></button><button data-nav="training" aria-label="التحديات والاختبارات"><span aria-hidden="true">🎯</span><small>اختبر نفسك</small></button><button data-nav="practice" aria-label="المواقف اليومية"><span aria-hidden="true">🎭</span><small>مواقف يومية</small></button><button data-nav="review" aria-label="المراجعة"><span aria-hidden="true">🧠</span><small>المراجعة</small></button><button data-nav="profile" aria-label="حسابي"><span aria-hidden="true">👤</span><small>حسابي</small></button></nav><div id="toast" class="toast hidden" role="status"></div>
+<nav class="nav" aria-label="التنقل الرئيسي"><button data-nav="home" class="active" aria-label="الرئيسية"><span aria-hidden="true">⌂</span><small>الرئيسية</small></button><button data-nav="learningHub" aria-label="التعلّم"><span aria-hidden="true">📚</span><small>التعلّم</small></button><button data-nav="training" aria-label="التحديات والاختبارات"><span aria-hidden="true">🎯</span><small>اختبر نفسك</small></button><button data-nav="practice" aria-label="المواقف اليومية"><span aria-hidden="true">🎭</span><small>مواقف يومية</small></button><button data-nav="conversation" aria-label="المحادثة بالإنجليزية"><span aria-hidden="true">💬</span><small>المحادثة</small></button><button data-nav="review" aria-label="المراجعة"><span aria-hidden="true">🧠</span><small>المراجعة</small></button><button data-nav="profile" aria-label="حسابي"><span aria-hidden="true">👤</span><small>حسابي</small></button></nav><div id="toast" class="toast hidden" role="status"></div>
 <script>
 'use strict';
 const lessons=[
@@ -1343,87 +1367,6 @@ const grammar=[['I ___ up at 6:00.','wake','am wake','waking','wakes'],['I ___ E
 ['He enjoys ___ books.','reading','read','reads','to reading'],
 ['Please turn ___ the lights.','off','at','to','over']];let quiz={items:[],index:0,correct:0,mode:'all',answered:false};function startQuiz(mode,pool){let items=[];if(mode==='grammar')items=shuffle(grammar).slice(0,8).map((g,i)=>({id:'g'+i,en:g[0],ar:g[1],options:shuffle(g.slice(1))}));else{let source=pool||((mode==='mistakes')?all.filter(w=>state.misses[w.id]):all);if(!source.length){toast('لا توجد كلمات في هذه القائمة حتى الآن');page('review');return}items=shuffle(source).slice(0,(mode==='daily'||mode==='battle')?5:mode==='lesson'?6:10).map(w=>({...w,options:shuffle([w.ar,...shuffle([...new Set(all.map(x=>x.ar).filter(x=>x!==w.ar))]).slice(0,3)])}))}quiz={items,index:0,correct:0,mode,answered:false};$('quizArea').classList.remove('hidden');$('trainingModes').classList.add('hidden');page('training');drawQuiz()}function drawQuiz(){if(quiz.index>=quiz.items.length){finishQuiz();return}quiz.answered=false;const w=quiz.items[quiz.index];$('quizHeading').textContent=quiz.mode==='battle'?'⚔️ معركة الكلمات':quiz.mode==='grammar'?'📘 اختبار القواعد':quiz.mode==='type'?'✍️ تحدي الكتابة':quiz.mode==='listen'?'🔊 اختبار الاستماع':'📝 تحدي الإنجليزية';$('quizCounter').textContent='السؤال '+(quiz.index+1)+' من '+quiz.items.length;$('quizProgress').style.width=(quiz.index/quiz.items.length*100)+'%';$('question').textContent=quiz.mode==='listen'?'🔊 Listen!':quiz.mode==='type'?w.ar:w.en;$('questionHint').textContent=quiz.mode==='type'?'اكتب الكلمة الإنجليزية (لا يهم اختلاف الحروف الكبيرة والصغيرة)':quiz.mode==='grammar'?'اختر الكلمة المناسبة':'اختر المعنى الصحيح';$('quizFeedback').classList.add('hidden');$('quizNext').classList.add('hidden');const a=$('answerArea');a.replaceChildren();a.className=quiz.mode==='type'?'':'answers';if(quiz.mode==='type'){let input=document.createElement('input');input.className='field';input.dir='ltr';input.placeholder='Your answer...';input.autocomplete='off';let b=makeButton('تحقق من الإجابة',()=>submitAnswer(input.value.trim(),w.en),'btn primary full');a.append(input,b);input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();b.click()}});input.focus()}else{if(quiz.mode==='listen')a.append(makeButton('🔊 تشغيل الكلمة',()=>speak(w.en),'btn ghost full'));w.options.forEach(opt=>a.append(makeButton(opt,()=>submitAnswer(opt,quiz.mode==='grammar'?w.ar:w.ar),'answer')));if(quiz.mode==='listen')speak(w.en)}}function submitAnswer(value,correct){if(quiz.answered||!value)return;quiz.answered=true;const w=quiz.items[quiz.index],ok=value.trim().toLocaleLowerCase()===correct.trim().toLocaleLowerCase();if(ok){quiz.correct++;gain(10);if(w.id&&wordMap[w.id]){delete state.misses[w.id];delete state.review[w.id]}}else if(w.id&&wordMap[w.id]){state.misses[w.id]=true;state.review[w.id]={last:today(),times:(state.review[w.id]?.times||0)+1}}save();$('answerArea').querySelectorAll('button,input').forEach(b=>{b.disabled=true;if(b.textContent===correct)b.classList.add('good');else if(b.textContent===value)b.classList.add('bad')});$('quizFeedback').classList.remove('hidden');$('quizFeedback').textContent=ok?'✅ ممتاز! إجابة صحيحة. +10 XP':'💡 الإجابة الصحيحة: '+correct;$('quizNext').classList.remove('hidden');$('quizNext').textContent=quiz.index===quiz.items.length-1?'عرض النتيجة':'السؤال التالي'}$('quizNext').onclick=()=>{quiz.index++;drawQuiz()};$('quitQuiz').onclick=()=>closeQuiz();function closeQuiz(){$('quizArea').classList.add('hidden');$('trainingModes').classList.remove('hidden')}function finishQuiz(){const pct=Math.round(100*quiz.correct/quiz.items.length);state.best=Math.max(state.best,pct);state.quizzes++;daily('quiz');if(quiz.mode==='daily')daily('daily');if(quiz.mode==='mistakes')daily('review');if(quiz.mode==='battle'){daily('battle');if(pct>=80){gain(20);toast('🏆 مكافأة المعركة: +20 XP إضافية!')}}save();$('quizProgress').style.width='100%';$('quizArea').innerHTML='<div class="center" style="padding:15px"><div style="font-size:60px">🏆</div><h2>انتهى التحدي!</h2><h1 style="font-size:52px;color:var(--mint)">'+pct+'%</h1><p>إجابات صحيحة: '+quiz.correct+' من '+quiz.items.length+'</p><div class="row" style="justify-content:center"><button id="again" class="btn primary">اختبار آخر</button><button id="reviewAfter" class="btn ghost">راجع أخطاءك</button></div></div>';$('again').onclick=()=>{restoreQuiz();startQuiz('all')};$('reviewAfter').onclick=()=>{restoreQuiz();page('review')}}let quizOriginal=$('quizArea').innerHTML;function restoreQuiz(){$('quizArea').innerHTML=quizOriginal;$('quizNext').onclick=()=>{quiz.index++;drawQuiz()};$('quitQuiz').onclick=closeQuiz}const startQuizBase=startQuiz;startQuiz=function(mode,pool){restoreQuiz();startQuizBase(mode,pool)};
 function renderReview(){const miss=Object.keys(state.misses).filter(id=>wordMap[id]).sort((a,b)=>(Number(state.review[b]?.times)||0)-(Number(state.review[a]?.times)||0)),saved=state.saved.filter(id=>wordMap[id]);$('reviewCount').textContent=miss.length+' كلمات';const fill=(id,ids)=>{const e=$(id);e.replaceChildren();if(!ids.length){const x=document.createElement('p');x.className='empty';x.textContent='لا توجد كلمات هنا بعد.';e.append(x)}ids.forEach(k=>{const w=wordMap[k],r=document.createElement('div');r.className='listrow';const t=document.createElement('span');t.textContent=w.en+' — '+w.ar;const b=makeButton('🔊',()=>speak(w.en),'btn ghost');r.append(t,b);e.append(r)})};fill('reviewList',miss);fill('savedList',saved);const e=$('savedList');state.foundationSaved.forEach(word=>{const r=document.createElement('div');r.className='listrow';const t=document.createElement('span');t.textContent=word+' — كلمة من القاموس العام';const b=makeButton('🔊',()=>speak(word),'btn ghost');const remove=makeButton('إزالة',()=>{state.foundationSaved=state.foundationSaved.filter(w=>w!==word);save();renderReview()},'btn ghost');r.append(t,b,remove);e.append(r)})}$('reviewStart').onclick=()=>startQuiz('mistakes');$('savedStart').onclick=()=>{const a=all.filter(w=>state.saved.includes(w.id));if(a.length)startQuiz('saved',a);else toast('احفظ بعض الكلمات من الدروس أولًا')};
-const chat=$('chat');
-// The chat panel is optional; skip its handlers if the panel is absent so the rest of the app still starts.
-if(chat){
-function bubble(s,who,record=true){const d=document.createElement('div');d.className='bubble '+who;d.textContent=s;chat.append(d);chat.scrollTop=chat.scrollHeight;if(record){state.chatHistory.push({who,text:s});state.chatHistory=state.chatHistory.slice(-60);save()}}
-const greeting='Hello! 👋 I am your practice coach. What is your name?';
-if(state.chatHistory.length){state.chatHistory.forEach(m=>bubble(m.text,m.who,false))}else bubble(greeting,'bot');
-const corrections=[
-[/\bi\s*(?:am|'m)\s+wake\s+up\b/i,'I wake up at 5:30. — المضارع البسيط لا يحتاج am.'],
-[/\bi\s*(?:am|'m)\s+understand\b/i,'I understand. — لا نضع am قبل understand.'],
-[/\bi\s+like\s+play\b/i,'I like playing football. — بعد like نستخدم verb-ing أو to + verb.'],
-[/\bi\s+go\s+to\s+school\s+in\s+\d/i,'I go to school at 6:30. — نستخدم at مع الساعة.'],
-[/\bi\s+drink\s+a\s+water\b/i,'I drink water. — water غير معدود هنا.'],
-[/\bbule\b/i,'blue — تهجئة اللون الصحيحة.'],
-[/\bnodlls\b/i,'noodles — التهجئة الصحيحة.'],
-[/\bi\s+am\s+go\b/i,'I am going / I go — اختر الزمن المناسب.']
-];
-const questions=[
-'What do you usually do after school?',
-'What did you eat yesterday?',
-'What is your favorite subject, and why?',
-'Can you describe your best day?',
-'What would you like to learn this week?',
-'Tell me about a place you want to visit.',
-'What are you doing right now?',
-'What did you do last weekend?'
-];
-function coach(s){
- const original=s.trim();
- const t=original.toLowerCase();
- const words=original.split(/\s+/).filter(Boolean);
- const correction=(text,why)=>'✍️ التصحيح المقترح: '+text+'\n📘 السبب: '+why;
- const routine=original.match(/^i\s+wake\s+up\s+at\s+(\d{1,2}(?::\d{2})?)\s*,?\s*go\s+to\s+school\s+at\s+(\d{1,2}(?::\d{2})?)\s*,?\s*return\s+home\s+at\s+(\d{1,2}(?::\d{2})?)\s*[.!]?\s*$/i);
- if(routine) return correction('I wake up at '+routine[1]+'. I go to school at '+routine[2]+' and return home at '+routine[3]+'.','نكرر الفاعل I قبل go، ونربط الفعلين بـ and، ونفصل الجمل بعلامات ترقيم.');
- const typoRules=[
-  [/\bnodlls\b/gi,'noodles','تهجئة الكلمة الصحيحة هي noodles.'],
-  [/\bbule\b/gi,'blue','تهجئة اللون الصحيحة هي blue.'],
-  [/\byamen\b/gi,'Yemen','اسم الدولة يُكتب Yemen ويبدأ بحرف كبير.'],
-  [/\bi\s+(?:am|'m)\s+wake\s+up\b/gi,'I wake up','نستخدم المضارع البسيط للعادات، ولا نضع am قبل wake up.'],
-  [/\bi\s+(?:am|'m)\s+understand\b/gi,'I understand','الفعل understand لا يحتاج am في المضارع البسيط.'],
-  [/\bi\s+like\s+play\b/gi,'I like playing','بعد like يمكن استخدام الفعل مع ing أو to + المصدر.'],
-  [/\bi\s+go\s+to\s+school\s+in\s+(\d{1,2}(?::\d{2})?)/gi,'I go to school at $1','نستخدم at مع الساعة.'],
-  [/\bi\s+drink\s+a\s+water\b/gi,'I drink water','كلمة water غير معدودة في هذا الاستخدام، فلا نضع a قبلها.'],
-  [/\bi\s+am\s+go\b/gi,'I am going','المضارع المستمر يتكوّن من am/is/are + الفعل مع ing.'],
-  [/\bhe\s+go\s+to\b/gi,'he goes to','في المضارع البسيط نضيف s أو es مع he/she/it.'],
-  [/\bshe\s+go\s+to\b/gi,'she goes to','في المضارع البسيط نضيف s أو es مع he/she/it.'],
-  [/\bhe\s+like\b/gi,'he likes','في المضارع البسيط نضيف s مع he/she/it.'],
-  [/\bshe\s+like\b/gi,'she likes','في المضارع البسيط نضيف s مع he/she/it.'],
-  [/\bdidn't\s+went\b/gi,"didn't go",'بعد did أو didn’t نستخدم الفعل في المصدر.'],
-  [/\bdid\s+you\s+went\b/gi,'did you go','بعد did نستخدم الفعل في المصدر.'],
-  [/\bmore better\b/gi,'better','better هي صيغة المقارنة أصلًا، فلا نضيف more قبلها.'],
-  [/\bpeople is\b/gi,'people are','people جمع، لذلك نستخدم are.']
- ];
- for(const [re,replacementText,why] of typoRules){
-   if(re.test(original)){
-     const fixed=original.replace(re,replacementText);
-     return correction(fixed.charAt(0).toUpperCase()+fixed.slice(1),why);
-   }
- }
- const error=corrections.find(([re])=>re.test(original));
- if(error)return '✍️ التصحيح المقترح: '+error[1]+'\n📘 راجع القاعدة، ثم أعد كتابة الجملة الصحيحة بنفسك.';
- if(/^(hello|hi|hey)\b/i.test(t))return 'Hello! How are you feeling today?';
- if(/\bhow are you\b/i.test(t))return 'I am doing well, thank you! What did you do today?';
- if(/\bmy name is\b/i.test(t))return 'Nice to meet you! Where are you from?';
- if(/\bi (?:am|feel) (?:fine|good|great|happy)\b/i.test(t))return 'That is great! What made your day good?';
- if(/\bthank(?:s| you)?\b/i.test(t))return 'You are welcome! '+questions[Math.floor(Math.random()*questions.length)];
- if(/\bi (?:don't|do not) understand\b/i.test(t))return 'No problem! Tell me which word or sentence is difficult, and I will explain it simply.';
- let normalized=original.replace(/\s+/g,' ').replace(/\s+([,.!?])/g,'$1').replace(/([,.!?])([A-Za-z])/g,'$1 $2');
- normalized=normalized.charAt(0).toUpperCase()+normalized.slice(1);
- if(!/[.!?]$/.test(normalized)) normalized+='.';
- const hasSubject=/\b(i|you|we|they|he|she|it|there|this|that|these|those|my name|my favorite|the)\b/i.test(original);
- const hasVerb=/\b(am|is|are|was|were|be|been|being|have|has|had|do|does|did|can|could|will|would|should|must|go|goes|went|come|comes|came|play|plays|played|like|likes|liked|love|loves|study|studies|studied|eat|eats|ate|drink|drinks|drank|want|wants|wanted|need|needs|work|works|live|lives|learn|learns|read|reads|write|writes|watch|watches|watching|playing|studying|learning|eating|sleep|sleeping|make|makes|made|get|gets|got|know|knows|think|thinks|feel|feels|enjoy|enjoys|prefer|prefers|speak|speaks|talk|talks|return|returns|wake|wakes|waking|finished|visited|going|doing|have|has)\b/i.test(original);
- if(words.length<3)return 'Good start! Try writing a complete sentence with a subject and a verb. Example: I play football after school.';
- if(!hasSubject||!hasVerb)return '📝 حاول أن تجعل الجملة تحتوي على فاعل وفعل واضحين. مثال: I study English every day. قد تكون عبارتك صحيحة في سياق معيّن، لذلك أحتاج إلى تفاصيل أكثر للحكم بدقة.';
- if(!/[.!?]$/.test(original)) return '📝 جملتك تبدو مفهومة. أضف علامة ترقيم في النهاية:\n'+normalized+'\n\nاكتب المزيد، وسأساعدك في اكتشاف الأخطاء الشائعة.';
- return '📝 لم أجد خطأً واضحًا من القواعد الشائعة التي أفحصها محليًا. هذا لا يضمن أن الجملة صحيحة تمامًا، لكن يمكنك متابعة التعبير بحرية.\n💬 '+questions[state.chatHistory.filter(m=>m.who==='me').length%questions.length];
-}
-$('chatForm').onsubmit=e=>{e.preventDefault();const input=$('chatInput'),s=input.value.trim();if(!s)return;bubble(s,'me');bubble(coach(s),'bot');input.value='';daily('chat')};
-$('chatReset').onclick=()=>{if(!confirm('بدء محادثة جديدة؟ سيتم حذف سجل المحادثة المحلي.'))return;state.chatHistory=[];chat.replaceChildren();bubble(greeting,'bot')};
-document.querySelectorAll('[data-chat]').forEach(b=>b.onclick=()=>{$('chatInput').value=b.dataset.chat;$('chatForm').requestSubmit()});
-}
-
 /* Offline real-life English scenario simulator */
 const dailyScenarios=[
 {title:'التعارف والتحيات',emoji:'👋',desc:'تعرّف على شخص جديد',qs:[
