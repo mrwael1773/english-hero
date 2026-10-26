@@ -1663,7 +1663,12 @@ installButton?.addEventListener('click', async () => {
     : 'إذا لم يظهر خيار التثبيت، افتح قائمة المتصفح وابحث عن «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».';
 });
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.warn('App offline setup failed:', error)));
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+      await registration.update();
+    } catch (error) { console.warn('App offline setup failed:', error); }
+  });
 }
 </script>
 
