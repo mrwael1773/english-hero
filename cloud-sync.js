@@ -185,5 +185,17 @@
     if(error) status('تعذر تسجيل الخروج. حاول مرة أخرى.');
   });
   $cloud('cloudSyncNow')?.addEventListener('click',syncNow);
+  // Retry pending local progress after the connection returns or the learner revisits the tab.
+  // Keep the local copy until the cloud confirms a successful write.
+  window.addEventListener('online',()=>{
+    if(user && client) syncNow();
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible' && user && client) syncNow();
+    if(document.visibilityState==='hidden' && user && ready && revision>0){
+      clearTimeout(timer);
+      uploadProgress();
+    }
+  });
   init();
 })();
