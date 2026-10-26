@@ -18,7 +18,7 @@
 
 وظيفة `english-coach` منشورة، لكنها لن تجيب حتى تضيف مفتاح OpenAI كسرّ داخل Supabase. لا ترسل المفتاح في المحادثة ولا تحفظه في GitHub أو في `config.js`.
 
-1. افتح [إعدادات أسرار Edge Functions في Supabase](https://supabase.com/dashboard/project/cajevfsdhtbhtzcphbsz/settings/functions).
+1. افتح [أسرار Edge Functions في Supabase](https://supabase.com/dashboard/project/cajevfsdhtbhtzcphbsz/functions/secrets). إذا لم تظهر الصفحة مباشرة، افتح مشروع Supabase ثم **Edge Functions → Secrets**.
 2. أضف secret باسم `OPENAI_API_KEY`، واجعل قيمته مفتاح API الخاص بك من [منصة OpenAI](https://platform.openai.com/api-keys).
 3. احفظ السر. إذا لم تكن لديك صلاحية إضافة الأسرار، افتح المشروع بالحساب الذي يملك صلاحية إدارة الأسرار.
 
