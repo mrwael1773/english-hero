@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE_NAME = 'english-hero-shell-v35';
-const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js', './vocabulary-6000.json'];
+const CACHE_NAME = 'english-hero-shell-v36';
+const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js', './ai-chat.js', './vocabulary-6000.json'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -26,7 +26,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   // Always try the network first for page navigations so published fixes appear promptly.
-  if (request.mode === 'navigate' || /\/(?:config|cloud-sync)\.js$/.test(url.pathname)) {
+  if (request.mode === 'navigate' || /\/(?:config|cloud-sync|ai-chat)\.js$/.test(url.pathname)) {
     event.respondWith(
       fetch(request)
         .then(response => {
