@@ -11,6 +11,8 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: cors });
 
+const requestWindows = new Map<string, { startedAt: number; count: number }>();
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -42,6 +44,28 @@ Deno.serve(async (req: Request) => {
   try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400); }
   const message = typeof body.message === "string" ? body.message.trim().slice(0, 1200) : "";
   if (!message) return json({ error: "Write or say a message first." }, 400);
+  // Best-effort per-user rate limit to reduce accidental loops and API-cost abuse.
+  // This in-memory guard applies per running Edge Function instance.
+  const now = Date.now();
+  const windowMs = 60_000;
+  const maxRequestsPerWindow = 8;
+  for (const [id, window] of requestWindows) {
+    if (now - window.startedAt >= windowMs) requestWindows.delete(id);
+  }
+  let usage = requestWindows.get(user.id);
+  if (!usage || now - usage.startedAt >= windowMs) {
+    usage = { startedAt: now, count: 0 };
+    requestWindows.set(user.id, usage);
+  }
+  if (usage.count >= maxRequestsPerWindow) {
+    return json({ error: "وصلت الخدمة إلى حد الطلبات مؤقتًا. انتظر دقيقة ثم حاول مجددًا." }, 429);
+  }
+  usage.count += 1;
+  if (requestWindows.size > 5000) {
+    const oldest = requestWindows.keys().next().value;
+    if (oldest) requestWindows.delete(oldest);
+  }
+
   const history = Array.isArray(body.history) ? body.history.slice(-10).flatMap((item) => {
     if (!item || typeof item !== "object") return [];
     const row = item as { role?: unknown; content?: unknown };
