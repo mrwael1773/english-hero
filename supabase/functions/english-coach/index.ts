@@ -68,7 +68,15 @@ When the learner writes or says English with a mistake, gently show a corrected 
     });
     const result = await response.json();
     if (!response.ok) {
+      const apiError = result?.error && typeof result.error === "object" ? result.error : {};
+      const errorCode = String(apiError.code || "");
       console.error("OpenAI Responses API error", response.status, JSON.stringify(result).slice(0, 1000));
+      if (response.status === 429 && ["insufficient_quota", "credit_balance_exhausted"].includes(errorCode)) {
+        return json({ error: "خدمة المحادثة متوقفة مؤقتًا لأن رصيد OpenAI API غير كافٍ. يجب تجديد الرصيد من لوحة فوترة OpenAI حتى تعود الردود." }, 503);
+      }
+      if (response.status === 429) {
+        return json({ error: "وصلت خدمة المحادثة إلى حد الطلبات مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى." }, 429);
+      }
       return json({ error: "The AI service could not answer right now. Please try again shortly." }, 502);
     }
     const reply = typeof result.output_text === "string" ? result.output_text.trim() : "";
