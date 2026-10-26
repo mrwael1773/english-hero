@@ -18,6 +18,7 @@
   const setSignedInUI = () => {
     if($cloud('cloudUser')) $cloud('cloudUser').textContent=user ? user.email : '';
     if($cloud('cloudSignIn')) $cloud('cloudSignIn').disabled=!!user;
+    if($cloud('cloudGoogle')) $cloud('cloudGoogle').disabled=!!user||!client;
     if($cloud('cloudSignUp')) $cloud('cloudSignUp').disabled=!!user;
     if($cloud('cloudEmail')) $cloud('cloudEmail').disabled=!!user;
     if($cloud('cloudPassword')) $cloud('cloudPassword').disabled=!!user;
@@ -53,6 +54,9 @@
       quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
       streak:Math.max(0,Number(r.streak)||0,Number(local.streak)||0),
       completed:union(r.completed,local.completed),
+      foundationSaved:union(r.foundationSaved,local.foundationSaved),
+      lessonPositions:{...object(r.lessonPositions),...object(local.lessonPositions)},
+      chatHistory:(Array.isArray(local.chatHistory)&&local.chatHistory.length?local.chatHistory:(Array.isArray(r.chatHistory)?r.chatHistory:[])).slice(-60),
       saved:union(r.saved,local.saved),
       misses:{...object(r.misses),...object(local.misses)},
       review:{...object(r.review),...object(local.review)},
@@ -166,6 +170,14 @@
     } finally {
       button.disabled=!!user;
     }
+  });
+  $cloud('cloudGoogle')?.addEventListener('click',async()=>{
+    if(!client){status('تعذر تهيئة تسجيل الدخول.');return;}
+    status('جارٍ تحويلك إلى Google لتسجيل الدخول...');
+    try {
+      const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+      if(error) status('تعذر تسجيل الدخول عبر Google. تحقق من تفعيل Google في Supabase Auth: '+error.message);
+    }catch(error){status('تعذر بدء تسجيل الدخول عبر Google: '+(error?.message||error));}
   });
   $cloud('cloudSignOut')?.addEventListener('click',async()=>{
     if(!client)return;
