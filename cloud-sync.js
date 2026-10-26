@@ -181,7 +181,7 @@
     button.disabled=true;
     status('جارٍ إنشاء الحساب...');
     try {
-      const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{full_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\\s+/g,' ').slice(0,32)),display_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\\s+/g,' ').slice(0,32))}}});
+      const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{full_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\s+/g,' ').slice(0,32)),display_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\s+/g,' ').slice(0,32))}}});
       if(error){status(friendlyAuthError(error,'signup'));return;}
       if(data.session){
         user=data.user||data.session.user||null;
