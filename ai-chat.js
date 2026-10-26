@@ -77,7 +77,8 @@
       waiting.remove();
       const message=err?.message||'تحقق من الاتصال والإعدادات.';
       addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
-      if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
+      if(message.includes('رصيد OpenAI API')) sayStatus('مدرّب الذكاء الاصطناعي متوقف مؤقتًا بسبب نفاد رصيد API. سيعود للعمل بعد تجديد رصيد الخدمة؛ بقية الموقع تعمل بشكل طبيعي.');
+      else if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
       else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
       else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
       else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
