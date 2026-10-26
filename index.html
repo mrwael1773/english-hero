@@ -1374,24 +1374,24 @@ const installMessage = document.getElementById('installAppMessage');
 window.addEventListener('beforeinstallprompt', event => {
   event.preventDefault();
   installPromptEvent = event;
-  installButton.textContent = 'تثبيت التطبيق الآن';
-  installMessage.textContent = 'جهازك يدعم التثبيت من هذه الصفحة.';
+  if (installButton) installButton.textContent = 'تثبيت التطبيق الآن';
+  if (installMessage) installMessage.textContent = 'جهازك يدعم التثبيت من هذه الصفحة.';
 });
 window.addEventListener('appinstalled', () => {
-  installMessage.textContent = 'تم تثبيت English Hero على جهازك.';
-  installButton.hidden = true;
+  if (installMessage) installMessage.textContent = 'تم تثبيت English Hero على جهازك.';
+  if (installButton) installButton.hidden = true;
   installPromptEvent = null;
 });
-installButton.addEventListener('click', async () => {
+installButton?.addEventListener('click', async () => {
   if (installPromptEvent) {
     installPromptEvent.prompt();
     const result = await installPromptEvent.userChoice;
-    installMessage.textContent = result.outcome === 'accepted' ? 'جارٍ إكمال التثبيت.' : 'يمكنك التثبيت لاحقًا من القائمة.';
+    if (installMessage) installMessage.textContent = result.outcome === 'accepted' ? 'جارٍ إكمال التثبيت.' : 'يمكنك التثبيت لاحقًا من القائمة.';
     installPromptEvent = null;
     return;
   }
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  installMessage.textContent = isIOS
+  if (installMessage) installMessage.textContent = isIOS
     ? 'على الآيفون: اضغط زر المشاركة في Safari، ثم «إضافة إلى الشاشة الرئيسية».'
     : 'إذا لم يظهر خيار التثبيت، افتح قائمة المتصفح وابحث عن «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».';
 });
