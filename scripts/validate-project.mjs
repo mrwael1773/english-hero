@@ -27,6 +27,7 @@ const migration = read(migrationPath);
 
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
+check(html.includes('name="viewport"') && html.includes('@media(max-width:720px)') && html.includes('@media(max-width:360px)') && html.includes('overflow-wrap:anywhere'), 'Responsive layout includes viewport and small-screen overflow safeguards');
 check(html.includes('id="studentDesk"') && html.includes('id="studentTaskForm"') && html.includes('id="studentTaskList"'), 'Student study planner UI exists');
 check(html.includes('id="wordDetective"') && html.includes('id="detectiveAnswers"') && html.includes('const detectiveCases=['), 'No-currency English detective learning game is present');
 check(html.includes('data-page="wordDetective"') && html.includes('detectiveHint') && html.includes('detectiveFeedback'), 'Detective game is reachable and provides hints and explanations');
