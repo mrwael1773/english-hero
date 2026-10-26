@@ -1280,14 +1280,14 @@ function bubble(s,who,record=true){const d=document.createElement('div');d.class
 const greeting='Hello! 👋 I am your practice coach. What is your name?';
 if(state.chatHistory.length){state.chatHistory.forEach(m=>bubble(m.text,m.who,false))}else bubble(greeting,'bot');
 const corrections=[
-[/\\bi\\s*(?:am|'m)\\s+wake\\s+up\\b/i,'I wake up at 5:30. — المضارع البسيط لا يحتاج am.'],
-[/\\bi\\s*(?:am|'m)\\s+understand\\b/i,'I understand. — لا نضع am قبل understand.'],
-[/\\bi\\s+like\\s+play\\b/i,'I like playing football. — بعد like نستخدم verb-ing أو to + verb.'],
-[/\\bi\\s+go\\s+to\\s+school\\s+in\\s+\\d/i,'I go to school at 6:30. — نستخدم at مع الساعة.'],
-[/\\bi\\s+drink\\s+a\\s+water\\b/i,'I drink water. — water غير معدود هنا.'],
-[/\\bbule\\b/i,'blue — تهجئة اللون الصحيحة.'],
-[/\\bnodlls\\b/i,'noodles — التهجئة الصحيحة.'],
-[/\\bi\\s+am\\s+go\\b/i,'I am going / I go — اختر الزمن المناسب.']
+[/\bi\s*(?:am|'m)\s+wake\s+up\b/i,'I wake up at 5:30. — المضارع البسيط لا يحتاج am.'],
+[/\bi\s*(?:am|'m)\s+understand\b/i,'I understand. — لا نضع am قبل understand.'],
+[/\bi\s+like\s+play\b/i,'I like playing football. — بعد like نستخدم verb-ing أو to + verb.'],
+[/\bi\s+go\s+to\s+school\s+in\s+\d/i,'I go to school at 6:30. — نستخدم at مع الساعة.'],
+[/\bi\s+drink\s+a\s+water\b/i,'I drink water. — water غير معدود هنا.'],
+[/\bbule\b/i,'blue — تهجئة اللون الصحيحة.'],
+[/\bnodlls\b/i,'noodles — التهجئة الصحيحة.'],
+[/\bi\s+am\s+go\b/i,'I am going / I go — اختر الزمن المناسب.']
 ];
 const questions=[
 'What do you usually do after school?',
@@ -1302,14 +1302,14 @@ const questions=[
 function coach(s){
  const t=s.toLowerCase().trim();
  const error=corrections.find(([re])=>re.test(s));
- if(error)return '✍️ تصحيح مقترح: '+error[1]+'\\nTry writing the corrected sentence.';
- if(/\\b(hello|hi|hey)\\b/.test(t))return 'Hello! How are you feeling today?';
- if(/\\bhow are you\\b/.test(t))return 'I am doing well, thank you! What did you do today?';
- if(/\\bmy name is\\b/.test(t))return 'Nice to meet you! Where are you from?';
- if(/\\bi (am|feel) (fine|good|great|happy)\\b/.test(t))return 'That is great! What made your day good?';
- if(/\\bi (don't|do not) understand\\b/.test(t))return 'No problem. Write a short sentence, and I will try to help with common mistakes.';
- if(/\\bthank/.test(t))return 'You are welcome! '+questions[Math.floor(Math.random()*questions.length)];
- if(s.split(/\\s+/).length<3)return 'Good start! Can you write a full sentence? For example: I play football after school.';
+ if(error)return '✍️ تصحيح مقترح: '+error[1]+'\nTry writing the corrected sentence.';
+ if(/\b(hello|hi|hey)\b/.test(t))return 'Hello! How are you feeling today?';
+ if(/\bhow are you\b/.test(t))return 'I am doing well, thank you! What did you do today?';
+ if(/\bmy name is\b/.test(t))return 'Nice to meet you! Where are you from?';
+ if(/\bi (am|feel) (fine|good|great|happy)\b/.test(t))return 'That is great! What made your day good?';
+ if(/\bi (don't|do not) understand\b/.test(t))return 'No problem. Write a short sentence, and I will try to help with common mistakes.';
+ if(/\bthank/.test(t))return 'You are welcome! '+questions[Math.floor(Math.random()*questions.length)];
+ if(s.split(/\s+/).length<3)return 'Good start! Can you write a full sentence? For example: I play football after school.';
  const n=state.chatHistory.filter(m=>m.who==='me').length;
  return 'Thanks for sharing! '+questions[n%questions.length];
 }
