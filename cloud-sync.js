@@ -79,7 +79,7 @@
       }
       return true;
     } catch(error) {
-      status('تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
+      status(String(error?.message||'').includes('انتهت مهلة المزامنة') ? error.message : 'تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
       console.error('English Hero cloud save:',error?.message||error);
       return false;
     }
@@ -200,7 +200,7 @@
         if(saved) status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
       } catch(e) {
         ready=true;setSignedInUI();
-        status('تعذرت مزامنة التقدم. بقيت بياناتك المحلية محفوظة؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
+        status(String(e?.message||'').includes('انتهت مهلة المزامنة') ? e.message : 'تعذرت مزامنة التقدم. بقيت بياناتك المحلية محفوظة؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
         console.error('English Hero cloud sync:',e?.message||e);
       }
     })();
