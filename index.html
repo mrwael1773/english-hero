@@ -1337,20 +1337,54 @@ const questions=[
 'What did you do last weekend?'
 ];
 function coach(s){
- const t=s.toLowerCase().trim();
- const routine=s.match(/^\\s*i\\s+wake\\s+up\\s+at\\s+(\\d{1,2}(?::\\d{2})?)\\s*,?\\s*go\\s+to\\s+school\\s+at\\s+(\\d{1,2}(?::\\d{2})?)\\s*,?\\s*return\\s+home\\s+at\\s+(\\d{1,2}(?::\\d{2})?)\\s*[.!]?\\s*$/i);
-  if(routine) return '✍️ تصحيح مقترح: I wake up at '+routine[1]+'. I go to school at '+routine[2]+' and return home at '+routine[3]+'.\\nالتوضيح: نضع I قبل go، ونربط الفعلين بـ and، ونبدأ كل جملة بحرف كبير وننهيها بنقطة.';
-  const error=corrections.find(([re])=>re.test(s));
- if(error)return '✍️ تصحيح مقترح: '+error[1]+'\nTry writing the corrected sentence.';
- if(/\b(hello|hi|hey)\b/.test(t))return 'Hello! How are you feeling today?';
- if(/\bhow are you\b/.test(t))return 'I am doing well, thank you! What did you do today?';
- if(/\bmy name is\b/.test(t))return 'Nice to meet you! Where are you from?';
- if(/\bi (am|feel) (fine|good|great|happy)\b/.test(t))return 'That is great! What made your day good?';
- if(/\bi (don't|do not) understand\b/.test(t))return 'No problem. Write a short sentence, and I will try to help with common mistakes.';
- if(/\bthank/.test(t))return 'You are welcome! '+questions[Math.floor(Math.random()*questions.length)];
- if(s.split(/\s+/).length<3)return 'Good start! Can you write a full sentence? For example: I play football after school.';
- const n=state.chatHistory.filter(m=>m.who==='me').length;
- return 'Thanks for sharing! '+questions[n%questions.length];
+ const original=s.trim();
+ const t=original.toLowerCase();
+ const words=original.split(/\s+/).filter(Boolean);
+ const correction=(text,why)=>'✍️ التصحيح المقترح: '+text+'\n📘 السبب: '+why;
+ const routine=original.match(/^i\s+wake\s+up\s+at\s+(\d{1,2}(?::\d{2})?)\s*,?\s*go\s+to\s+school\s+at\s+(\d{1,2}(?::\d{2})?)\s*,?\s*return\s+home\s+at\s+(\d{1,2}(?::\d{2})?)\s*[.!]?\s*$/i);
+ if(routine) return correction('I wake up at '+routine[1]+'. I go to school at '+routine[2]+' and return home at '+routine[3]+'.','نكرر الفاعل I قبل go، ونربط الفعلين بـ and، ونفصل الجمل بعلامات ترقيم.');
+ const typoRules=[
+  [/\bnodlls\b/gi,'noodles','تهجئة الكلمة الصحيحة هي noodles.'],
+  [/\bbule\b/gi,'blue','تهجئة اللون الصحيحة هي blue.'],
+  [/\byamen\b/gi,'Yemen','اسم الدولة يُكتب Yemen ويبدأ بحرف كبير.'],
+  [/\bi\s+(?:am|'m)\s+wake\s+up\b/gi,'I wake up','نستخدم المضارع البسيط للعادات، ولا نضع am قبل wake up.'],
+  [/\bi\s+(?:am|'m)\s+understand\b/gi,'I understand','الفعل understand لا يحتاج am في المضارع البسيط.'],
+  [/\bi\s+like\s+play\b/gi,'I like playing','بعد like يمكن استخدام الفعل مع ing أو to + المصدر.'],
+  [/\bi\s+go\s+to\s+school\s+in\s+(\d{1,2}(?::\d{2})?)/gi,'I go to school at $1','نستخدم at مع الساعة.'],
+  [/\bi\s+drink\s+a\s+water\b/gi,'I drink water','كلمة water غير معدودة في هذا الاستخدام، فلا نضع a قبلها.'],
+  [/\bi\s+am\s+go\b/gi,'I am going','المضارع المستمر يتكوّن من am/is/are + الفعل مع ing.'],
+  [/\bhe\s+go\s+to\b/gi,'he goes to','في المضارع البسيط نضيف s أو es مع he/she/it.'],
+  [/\bshe\s+go\s+to\b/gi,'she goes to','في المضارع البسيط نضيف s أو es مع he/she/it.'],
+  [/\bhe\s+like\b/gi,'he likes','في المضارع البسيط نضيف s مع he/she/it.'],
+  [/\bshe\s+like\b/gi,'she likes','في المضارع البسيط نضيف s مع he/she/it.'],
+  [/\bdidn't\s+went\b/gi,"didn't go",'بعد did أو didn’t نستخدم الفعل في المصدر.'],
+  [/\bdid\s+you\s+went\b/gi,'did you go','بعد did نستخدم الفعل في المصدر.'],
+  [/\bmore better\b/gi,'better','better هي صيغة المقارنة أصلًا، فلا نضيف more قبلها.'],
+  [/\bpeople is\b/gi,'people are','people جمع، لذلك نستخدم are.']
+ ];
+ for(const [re,replacementText,why] of typoRules){
+   if(re.test(original)){
+     const fixed=original.replace(re,replacementText);
+     return correction(fixed.charAt(0).toUpperCase()+fixed.slice(1),why);
+   }
+ }
+ const error=corrections.find(([re])=>re.test(original));
+ if(error)return '✍️ التصحيح المقترح: '+error[1]+'\n📘 راجع القاعدة، ثم أعد كتابة الجملة الصحيحة بنفسك.';
+ if(/^(hello|hi|hey)\b/i.test(t))return 'Hello! How are you feeling today?';
+ if(/\bhow are you\b/i.test(t))return 'I am doing well, thank you! What did you do today?';
+ if(/\bmy name is\b/i.test(t))return 'Nice to meet you! Where are you from?';
+ if(/\bi (?:am|feel) (?:fine|good|great|happy)\b/i.test(t))return 'That is great! What made your day good?';
+ if(/\bthank(?:s| you)?\b/i.test(t))return 'You are welcome! '+questions[Math.floor(Math.random()*questions.length)];
+ if(/\bi (?:don't|do not) understand\b/i.test(t))return 'No problem! Tell me which word or sentence is difficult, and I will explain it simply.';
+ let normalized=original.replace(/\s+/g,' ').replace(/\s+([,.!?])/g,'$1').replace(/([,.!?])([A-Za-z])/g,'$1 $2');
+ normalized=normalized.charAt(0).toUpperCase()+normalized.slice(1);
+ if(!/[.!?]$/.test(normalized)) normalized+='.';
+ const hasSubject=/\b(i|you|we|they|he|she|it|there|this|that|these|those|my name|my favorite|the)\b/i.test(original);
+ const hasVerb=/\b(am|is|are|was|were|be|been|being|have|has|had|do|does|did|can|could|will|would|should|must|go|goes|went|come|comes|came|play|plays|played|like|likes|liked|love|loves|study|studies|studied|eat|eats|ate|drink|drinks|drank|want|wants|wanted|need|needs|work|works|live|lives|learn|learns|read|reads|write|writes|watch|watches|watching|playing|studying|learning|eating|sleep|sleeping|make|makes|made|get|gets|got|know|knows|think|thinks|feel|feels|enjoy|enjoys|prefer|prefers|speak|speaks|talk|talks|return|returns|wake|wakes|waking|finished|visited|going|doing|have|has)\b/i.test(original);
+ if(words.length<3)return 'Good start! Try writing a complete sentence with a subject and a verb. Example: I play football after school.';
+ if(!hasSubject||!hasVerb)return '📝 حاول أن تجعل الجملة تحتوي على فاعل وفعل واضحين. مثال: I study English every day. قد تكون عبارتك صحيحة في سياق معيّن، لذلك أحتاج إلى تفاصيل أكثر للحكم بدقة.';
+ if(!/[.!?]$/.test(original)) return '📝 جملتك تبدو مفهومة. أضف علامة ترقيم في النهاية:\n'+normalized+'\n\nاكتب المزيد، وسأساعدك في اكتشاف الأخطاء الشائعة.';
+ return '📝 لم أجد خطأً واضحًا من القواعد الشائعة التي أفحصها محليًا. هذا لا يضمن أن الجملة صحيحة تمامًا، لكن يمكنك متابعة التعبير بحرية.\n💬 '+questions[state.chatHistory.filter(m=>m.who==='me').length%questions.length];
 }
 $('chatForm').onsubmit=e=>{e.preventDefault();const input=$('chatInput'),s=input.value.trim();if(!s)return;bubble(s,'me');bubble(coach(s),'bot');input.value='';daily('chat')};
 $('chatReset').onclick=()=>{if(!confirm('بدء محادثة جديدة؟ سيتم حذف سجل المحادثة المحلي.'))return;state.chatHistory=[];chat.replaceChildren();bubble(greeting,'bot')};
