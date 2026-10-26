@@ -56,16 +56,27 @@ Speak naturally and keep replies short and encouraging. Continue the conversatio
 When the learner writes or says English with a mistake, gently show a corrected version and explain the key correction briefly in Arabic, then ask one simple follow-up question in English. If their English is correct, praise them briefly and continue with one natural question in English. If they write Arabic, help them express it in simple English and invite them to try. Adapt difficulty gradually; never overwhelm the learner with multiple questions. Do not claim to hear audio: you receive a text transcript. `;
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${openAIKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        instructions,
-        input: [...history, { role: "user", content: message }],
-        max_output_tokens: 350,
-      }),
-    });
+    const aiController = new AbortController();
+    const aiTimeout = setTimeout(() => aiController.abort(), 18000);
+    let response: Response;
+    try {
+      response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${openAIKey}`, "Content-Type": "application/json" },
+        signal: aiController.signal,
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          instructions,
+          input: [...history, { role: "user", content: message }],
+          max_output_tokens: 350,
+        }),
+      });
+    } catch (requestError) {
+      if (aiController.signal.aborted) return json({ error: "The AI response took too long. Please try again." }, 504);
+      throw requestError;
+    } finally {
+      clearTimeout(aiTimeout);
+    }
     const result = await response.json();
     if (!response.ok) {
       const apiError = result?.error && typeof result.error === "object" ? result.error : {};
