@@ -57,7 +57,7 @@ When the learner writes or says English with a mistake, gently show a corrected 
 
   try {
     const aiController = new AbortController();
-    const aiTimeout = setTimeout(() => aiController.abort(), 18000);
+    const aiTimeout = setTimeout(() => aiController.abort(), 25000);
     let response: Response;
     try {
       response = await fetch("https://api.openai.com/v1/responses", {
@@ -72,7 +72,7 @@ When the learner writes or says English with a mistake, gently show a corrected 
         }),
       });
     } catch (requestError) {
-      if (aiController.signal.aborted) return json({ error: "The AI response took too long. Please try again." }, 504);
+      if (aiController.signal.aborted) return json({ error: "انتهت مهلة رد الذكاء الاصطناعي بعد 25 ثانية. حاول مرة أخرى." }, 504);
       throw requestError;
     } finally {
       clearTimeout(aiTimeout);
