@@ -56,6 +56,7 @@ check(html.includes('data-nav="conversation"') && html.includes('id="conversatio
 check(aiChat.includes('client.functions.invoke(\'english-coach\'') && aiChat.includes('refreshAuthHint') && aiChat.includes('chat.replaceChildren()'), 'AI conversation calls the server function and handles login/reset');
 check(aiChat.includes('function offlineCoach') && aiChat.includes('هذا تدريب احتياطي محلي'), 'AI chat keeps a transparent local practice fallback when API credits are exhausted');
 check(cloud.includes("english-hero-account-backup-") && cloud.includes('english-hero-unclaimed-local-backup') && cloud.includes('syncPromiseUserId'), 'Account switching is isolated and local progress can be recovered');
+check(cloud.includes('const chatRows=[...(Array.isArray(r.chatHistory)?r.chatHistory:[])') && cloud.includes('const chatHistory=[...new Map(chatRows.map(m=>[JSON.stringify(m),m])).values()].slice(-60)'), 'Cloud sync preserves and deduplicates local and remote chat history');
 try { new Function(cloud); check(true, 'Cloud sync JavaScript syntax is valid'); } catch (error) { fail.push(`cloud-sync.js has a syntax error: ${error.message}`); }
 try { new Function(aiChat); check(true, 'AI chat JavaScript syntax is valid'); } catch (error) { fail.push(`ai-chat.js has a syntax error: ${error.message}`); }
 try { new Function(sw); check(true, 'Service worker JavaScript syntax is valid'); } catch (error) { fail.push(`sw.js has a syntax error: ${error.message}`); }
