@@ -118,24 +118,31 @@
       waiting.remove();
       const message=err?.message||'تحقق من الاتصال والإعدادات.';
       const timedOut=message.includes('انتهت مهلة الرد') || message.includes('مهلة رد الذكاء الاصطناعي') || /response took too long|timed out|timeout/i.test(message);
-      if(message.includes('رصيد OpenAI API') || timedOut){
-        const reason=timedOut
-          ? '⚠️ تأخر رد الذكاء الاصطناعي وانتهت مهلة الاتصال. هذا تدريب احتياطي محلي وليس ردًا من الذكاء الاصطناعي. جرّب مرة أخرى لاحقًا.\n\n'
-          : '⚠️ الرد الذكي غير متاح حاليًا بسبب رصيد الخدمة. هذا تدريب احتياطي محلي وليس ردًا من الذكاء الاصطناعي.\n\n';
-        const fallback=reason+offlineCoach(text);
-        addBubble(fallback,'bot');lastReply=fallback;
-        sayStatus(timedOut
-          ? 'انتهت مهلة الرد؛ انتقلنا إلى تدريب احتياطي محلي حتى لا تتوقف الممارسة.'
-          : 'خدمة الذكاء الاصطناعي متوقفة مؤقتًا؛ يستمر التدريب الاحتياطي المحلي وبقية الموقع تعمل طبيعيًا.');
-        if(typeof daily==='function')daily('chat');
-      }else{
-        addBubble('تعذر الحصول على رد من الذكاء الاصطناعي. '+message,'bot',false);
-        if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
-        else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
-        else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
-        else if(message.includes('حد الطلبات مؤقتًا')) sayStatus('وصلت الخدمة إلى حد الطلبات مؤقتًا. انتظر قليلًا ثم أعد المحاولة.');
-        else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
-      }
+      const noLogin=message.includes('سجّل الدخول') || /sign in first|sign in again/i.test(message);
+      const quota=message.includes('رصيد OpenAI API') || message.includes('حد الطلبات مؤقتًا');
+      const setupIssue=message.includes('OPENAI_API_KEY') || message.includes('نشر وظيفة') || message.includes('إعداد الاتصال غير مكتمل');
+      // Keep English practice available even if authentication or the remote AI service is unavailable.
+      const reason=timedOut
+        ? '⚠️ تأخر رد الذكاء الاصطناعي وانتهت مهلة الاتصال. هذا تدريب احتياطي محلي وليس ردًا من الذكاء الاصطناعي. جرّب مرة أخرى لاحقًا.\\n\\n'
+        : noLogin
+          ? 'ℹ️ المدرب الذكي يحتاج إلى تسجيل الدخول، لكن يمكنك متابعة تدريب محلي دون حساب. هذا ليس ردًا من الذكاء الاصطناعي.\\n\\n'
+          : quota
+            ? '⚠️ الرد الذكي غير متاح حاليًا بسبب حد الطلبات أو رصيد الخدمة. هذا تدريب محلي وليس ردًا من الذكاء الاصطناعي.\\n\\n'
+            : setupIssue
+              ? '⚠️ إعداد خدمة الذكاء الاصطناعي غير مكتمل. يمكنك متابعة التدريب المحلي؛ هذا ليس ردًا من الذكاء الاصطناعي.\\n\\n'
+              : '⚠️ تعذر الوصول إلى خدمة الذكاء الاصطناعي. انتقلنا إلى تدريب محلي حتى لا تتوقف الممارسة؛ هذا ليس ردًا من الذكاء الاصطناعي.\\n\\n';
+      const fallback=reason+offlineCoach(text);
+      addBubble(fallback,'bot');lastReply=fallback;
+      sayStatus(timedOut
+        ? 'انتهت مهلة الرد؛ انتقلنا إلى تدريب احتياطي محلي.'
+        : noLogin
+          ? 'سجّل الدخول لاستخدام الذكاء الاصطناعي؛ التدريب المحلي متاح الآن.'
+          : quota
+            ? 'خدمة الذكاء الاصطناعي محدودة مؤقتًا؛ التدريب المحلي متاح.'
+            : setupIssue
+              ? 'خدمة الذكاء الاصطناعي تحتاج إعدادًا؛ التدريب المحلي متاح.'
+              : 'تعذر الاتصال بالمدرب؛ التدريب المحلي متاح.');
+      if(typeof daily==='function')daily('chat');
     } finally { busy=false; if(send)send.disabled=false; input.focus(); }
   };
   $('chatMic')?.addEventListener('click',()=>{
