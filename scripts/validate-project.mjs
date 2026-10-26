@@ -66,6 +66,7 @@ check(coach.includes('supabase.auth.getUser(accessToken)') && coach.includes('De
 check(coach.includes('credit_balance_exhausted') && coach.includes('رصيد OpenAI API'), 'AI coach explains exhausted API credits without exposing server details');
 check(!coach.includes('sk-proj-') && !coach.includes('sb_secret_'), 'AI coach source contains no hard-coded API secrets');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
+check(privacy.includes('MyMemory') && privacy.includes('OpenAI') && privacy.includes('Supabase'), 'Privacy policy discloses AI, cloud sync, and translation providers');
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
 check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') && migration.includes('(SELECT auth.uid())'), 'Tracked migration contains the security and RLS policy changes');
 check(existsSync(join(root, migrationPath)), 'Applied Supabase migration is tracked in the repository');
