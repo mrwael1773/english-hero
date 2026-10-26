@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE_NAME = 'english-hero-shell-v29';
-const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js', './writing-practice.js', './vocabulary-6000.json'];
+const CACHE_NAME = 'english-hero-shell-v30';
+const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js', './vocabulary-6000.json'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -14,7 +14,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(keys => Promise.all(keys.filter(key => key.startsWith('english-hero-shell-') && key !== CACHE_NAME).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -26,7 +26,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   // Always try the network first for page navigations so published fixes appear promptly.
-  if (request.mode === 'navigate' || /\/(?:config|cloud-sync|writing-practice)\.js$/.test(url.pathname)) {
+  if (request.mode === 'navigate' || /\/(?:config|cloud-sync)\.js$/.test(url.pathname)) {
     event.respondWith(
       fetch(request)
         .then(response => {
@@ -36,7 +36,12 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match('./index.html')))
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          if (request.mode === 'navigate') return (await caches.match('./index.html')) || Response.error();
+          return Response.error();
+        })
     );
     return;
   }
