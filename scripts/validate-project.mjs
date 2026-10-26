@@ -28,7 +28,7 @@ const migration = read(migrationPath);
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
 const idCounts = new Map();
-for (const match of html.matchAll(/\\bid=["']([^"']+)["']/g)) idCounts.set(match[1], (idCounts.get(match[1]) || 0) + 1);
+for (const match of html.matchAll(/\bid=["']([^"']+)["']/g)) idCounts.set(match[1], (idCounts.get(match[1]) || 0) + 1);
 check([...idCounts.values()].every(count => count === 1), 'HTML element IDs are unique');
 for (const path of ['manifest.webmanifest', 'privacy.html', 'contact.html', 'icon.svg']) {
   check(existsSync(join(root, path)), `Required public file exists: ${path}`);
