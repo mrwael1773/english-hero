@@ -10,6 +10,18 @@
   let syncPromise = null;
   let syncPromiseUserId = null;
   const status = (message) => { const el=$cloud('cloudStatus'); if(el) el.textContent=message; };
+  async function cloudRequest(query, timeoutMs=15000){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),timeoutMs);
+    try {
+      return await query.abortSignal(controller.signal);
+    } catch(error) {
+      if(controller.signal.aborted) throw new Error('انتهت مهلة المزامنة بعد 15 ثانية. سيبقى تقدمك محفوظًا على الجهاز؛ تحقق من الاتصال وحاول مجددًا.');
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
   const validConfig = () => {
     const c=window.ENGLISH_HERO_CLOUD_CONFIG;
     return c && /^https:\/\/[^/]+\.supabase\.co$/.test(c.supabaseUrl||'')
@@ -56,9 +68,9 @@
     const syncUserId=user.id;
     const current=revision;
     try {
-      const {error}=await client.from('learning_progress').upsert({
+      const {error}=await cloudRequest(client.from('learning_progress').upsert({
         user_id:syncUserId, progress:state, updated_at:new Date().toISOString()
-      },{onConflict:'user_id'});
+      },{onConflict:'user_id'}));
       if(error) throw error;
       // Never associate this device's local copy with a different account.
       if(user?.id===syncUserId){
@@ -148,7 +160,7 @@
       const syncUserId=requestedUserId;
       ready=false;setSignedInUI();status('جارٍ مزامنة تقدمك...');
       try {
-        const {data,error}=await client.from('learning_progress').select('progress').eq('user_id',syncUserId).maybeSingle();
+        const {data,error}=await cloudRequest(client.from('learning_progress').select('progress').eq('user_id',syncUserId).maybeSingle());
         if(error) throw error;
         // If the learner signed out or switched accounts while the request was in flight, do not merge.
         if(!user||user.id!==syncUserId) return;
