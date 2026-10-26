@@ -65,6 +65,21 @@ body.light{background:#edf3fb!important;color:#14243c}
 .light .tag.gold{background:#fff0d8;color:#81511c}
 .light .divider,.light .listrow{border-color:#d7e1ef}
 .light .toast{background:#fff;color:#14243c;border-color:#b9c9e0}
+
+/* Small-screen resilience: prevent controls and long labels from forcing horizontal overflow. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+img,svg,video,canvas,iframe{max-width:100%}
+input,select,textarea,button{max-width:100%;min-width:0}
+.panel,.tile,.launch-card,.launch-copy,.listrow,.task,.field{min-width:0;overflow-wrap:anywhere}
+@media(max-width:360px){
+  .app{padding-left:10px;padding-right:10px}
+  .panel,.launchpad{padding:14px}
+  .banner{padding:18px}
+  .launch-card{gap:9px;padding:14px 10px}
+  .launch-icon{width:42px;height:42px;flex-basis:42px;font-size:22px}
+  .launch-copy b{font-size:14px}
+  .nav button small{font-size:8px}
+}
 </style></head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
   <div style="text-align:center; padding:12px; margin:10px 0 20px;">
   <a href="privacy.html">سياسة الخصوصية</a>
