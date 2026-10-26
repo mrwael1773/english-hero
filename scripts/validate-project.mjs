@@ -11,6 +11,10 @@ const read = path => {
 };
 
 const html = read('index.html');
+const manifestRaw = read('manifest.webmanifest');
+const privacyPage = read('privacy.html');
+const contactPage = read('contact.html');
+const iconSvg = read('icon.svg');
 const sw = read('sw.js');
 const cloud = read('cloud-sync.js');
 const aiChat = read('ai-chat.js');
@@ -23,6 +27,22 @@ const migration = read(migrationPath);
 
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
+const idCounts = new Map();
+for (const match of html.matchAll(/\\bid=["']([^"']+)["']/g)) idCounts.set(match[1], (idCounts.get(match[1]) || 0) + 1);
+check([...idCounts.values()].every(count => count === 1), 'HTML element IDs are unique');
+for (const path of ['manifest.webmanifest', 'privacy.html', 'contact.html', 'icon.svg']) {
+  check(existsSync(join(root, path)), `Required public file exists: ${path}`);
+}
+try {
+  const manifest = JSON.parse(manifestRaw);
+  check(Boolean(manifest.name && manifest.start_url && manifest.display), 'Web app manifest has required install fields');
+  check(Array.isArray(manifest.icons) && manifest.icons.length > 0, 'Web app manifest declares app icons');
+} catch {
+  fail.push('Web app manifest is valid JSON');
+}
+check(privacyPage.includes('<html') && privacyPage.includes('</html>'), 'Privacy page has an HTML document');
+check(contactPage.includes('<html') && contactPage.includes('</html>'), 'Contact page has an HTML document');
+check(iconSvg.includes('<svg') && iconSvg.includes('</svg>'), 'App icon is a valid SVG document');
 for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','grammarLibrary','tensesLibrary','vocabResults','conversation','chat','chatForm','chatInput','chatMic','chatSpeak','chatReset','aiChatStatus']) {
   check(html.includes(`id="${id}"`), `Required UI element exists: ${id}`);
 }
