@@ -147,13 +147,13 @@
         let localOwner='';
         try { localOwner=localStorage.getItem('english-hero-cloud-owner')||''; } catch {}
         if(localOwner && localOwner!==syncUserId){
-          // A different account was used on this device: discard its active local copy,
-          // then load only the current account's cloud progress (or a clean state).
+          // Preserve the previous account's local snapshot before switching the active state.
+          try { localStorage.setItem('english-hero-account-backup-'+localOwner,JSON.stringify(state)); } catch {}
           replaceProgress(remoteProgress||{});
-          status(remoteProgress?'تم تحميل تقدم هذا الحساب فقط. لم تُدمج بيانات الحساب السابق.':'حساب جديد على هذا الجهاز؛ سيبدأ بتقدم مستقل.');
+          status(remoteProgress?'تم تحميل تقدم هذا الحساب فقط. حُفظت نسخة محلية من الحساب السابق.':'حساب جديد على هذا الجهاز؛ سيبدأ بتقدم مستقل، مع الاحتفاظ بنسخة الحساب السابق.');
         } else if(!localOwner && remoteProgress){
-          // Existing cloud data is authoritative when this device has no known owner.
-          // This prevents anonymous legacy data from being mixed into an established account.
+          // Preserve unclaimed legacy progress before loading an established cloud account.
+          try { localStorage.setItem('english-hero-unclaimed-local-backup',JSON.stringify(state)); } catch {}
           replaceProgress(remoteProgress);
         } else if(!localOwner && !remoteProgress){
           // The device may have anonymous study progress. Ask before attaching it to a new account.
