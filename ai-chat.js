@@ -54,8 +54,23 @@
     if(!session) throw new Error('سجّل الدخول أولًا حتى تتمكن من استخدام مدرب الذكاء الاصطناعي.');
     const history=(Array.isArray(state.chatHistory)?state.chatHistory:[])
       .slice(-13,-1).map(m=>({role:m.who==='me'?'user':'assistant',content:m.text}));
-    const {data,error}=await client.functions.invoke('english-coach',{body:{message:text,history}});
+    // Abort slow requests so the learner never waits indefinitely for the AI service.
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),25000);
+    let result;
+    try {
+      result=await client.functions.invoke('english-coach',{body:{message:text,history},signal:controller.signal});
+    } catch(requestError) {
+      if(controller.signal.aborted) throw new Error('انتهت مهلة الرد بعد 25 ثانية. تحقق من الاتصال وحاول مرة أخرى.');
+      throw requestError;
+    } finally {
+      clearTimeout(timeout);
+    }
+    const {data,error}=result;
     if(error) {
+      if(controller.signal.aborted || /abort|timeout/i.test(String(error.message||''))) {
+        throw new Error('انتهت مهلة الرد بعد 25 ثانية. تحقق من الاتصال وحاول مرة أخرى.');
+      }
       let detail=error.message||'تعذر الاتصال بخدمة الذكاء الاصطناعي.';
       try { const context=error.context; if(context && typeof context.json==='function'){const j=await context.json();if(j.error)detail=j.error;} } catch(_){}
       throw new Error(detail+' تأكد من نشر وظيفة english-coach وضبط OPENAI_API_KEY في Supabase.');
@@ -112,6 +127,7 @@
         if(message.includes('سجّل الدخول')) sayStatus('سجّل الدخول من قسم ملف الإنجازات ثم ارجع للمحادثة.');
       else if(message.includes('OPENAI_API_KEY')) sayStatus('الخادم منشور؛ يلزم إضافة OPENAI_API_KEY إلى أسرار Supabase لتفعيل الردود.');
       else if(message.includes('نشر وظيفة')) sayStatus('تحقق من نشر وظيفة english-coach في Supabase.');
+      else if(message.includes('انتهت مهلة الرد')) sayStatus('استغرق الرد وقتًا طويلًا؛ انتهت المحاولة تلقائيًا. يمكنك إعادة الإرسال.');
       else sayStatus('تعذر الاتصال بالمدرب. تحقق من الإنترنت ثم أعد المحاولة.');
       }
     } finally { busy=false; if(send)send.disabled=false; input.focus(); }
