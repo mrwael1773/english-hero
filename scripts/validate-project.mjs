@@ -74,6 +74,7 @@ check(cloud.includes("english-hero-cloud-owner") && cloud.includes('function rep
 check(cloud.includes("$cloud('cloudRestoreBackup')?.addEventListener('click'") && cloud.includes('mergeProgress(backup)'), 'Account-specific backup restore is available and merges progress safely');
 check(coach.includes('supabase.auth.getUser(accessToken)') && coach.includes('Deno.env.get("OPENAI_API_KEY")') && coach.includes('https://api.openai.com/v1/responses'), 'AI coach authenticates users and calls OpenAI from the server');
 check(coach.includes('insufficient_quota') && coach.includes('رصيد OpenAI API') && coach.includes('aiController.signal.aborted'), 'AI coach handles exhausted API credits and server-side timeouts');
+check(coach.includes('maxRequestsPerWindow = 8') && coach.includes('requestWindows.get(user.id)'), 'AI coach includes a per-user request guard');
 check(!coach.includes('sk-proj-') && !coach.includes('sb_secret_'), 'AI coach source contains no hard-coded API secrets');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('OpenAI') && privacy.includes('Supabase'), 'Privacy policy discloses AI, cloud sync, and translation providers');
