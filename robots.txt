@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mrwael1773.github.io/english-hero/sitemap.xml
