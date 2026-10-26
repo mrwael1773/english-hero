@@ -1526,6 +1526,39 @@ const dailyScenarios=[
 ['You describe your dream job.','تصف وظيفة أحلامك.',['I want to be a doctor.','I want be doctor to.','I am want to doctor.'],0,'نستخدم want to be عند الحديث عن المهنة التي نريدها.'],
 ['You ask about someone’s plans.','تسأل عن خطط شخص.',['What are you going to do tomorrow?','What you are going do tomorrow to?','What did you do tomorrow?'],0,'Are you going to…? للسؤال عن خطة مستقبلية.'],
 ['You promise to call tomorrow.','تعد بالاتصال غدًا.',['I will call you tomorrow.','I will called you tomorrow.','I calls you tomorrow will.'],0,'بعد will نستخدم call بصيغته الأساسية.']]}];
+
+/* Expand the simulator to 60 themed situations using reusable, offline dialogue skills. */
+const moreScenarioThemes=[
+['في السوبرماركت','🛒','ابحث عن المنتجات وادفع الحساب'],['في مكتب البريد','📮','إرسال الرسائل والطرود'],['في صالون الحلاقة','💈','اشرح ما تريده'],['في النادي الرياضي','🏋️','التمارين والاشتراك'],['في ملعب كرة القدم','⚽','تحدث عن المباراة'],['في المتحف','🏛️','اسأل عن المعروضات'],['في الحديقة','🌳','تحدث عن الطبيعة'],['على الشاطئ','🏖️','أنشطة البحر والسلامة'],['في السينما','🎬','احجز تذكرة واختر مقعدًا'],['في معرض الكتب','📖','ابحث عن كتاب جديد'],['في متجر الإلكترونيات','🎧','اسأل عن الأجهزة'],['استئجار سيارة','🚗','الحجز وشروط الاستئجار'],['في مكتب الاستقبال','🛎️','اطلب خدمة أو معلومة'],['في مقابلة بسيطة','💼','عرّف بنفسك ومهاراتك'],['التحدث مع جار جديد','🏡','التعارف بأدب'],['التخطيط لرحلة','🗺️','اتفق على المكان والوقت'],['ترتيب لقاء','📅','حدد الموعد'],['التحدث عن العائلة','👨‍👩‍👧‍👦','صف أفراد العائلة'],['التحدث عن الهوايات','🎨','اشرح ما تحب فعله'],['التحدث عن الطعام','🥗','صف الأكلات المفضلة'],['التحدث عن الدراسة','📒','المواد والواجبات'],['التحدث عن التكنولوجيا','💻','الأجهزة والتطبيقات'],['استخدام الحاسوب','⌨️','اطلب مساعدة تقنية'],['مشكلة في الإنترنت','📶','اشرح مشكلة الاتصال'],['إعادة غرض إلى المتجر','↩️','الاستبدال والاسترجاع'],['فقدان غرض','🔎','اشرح ما فقدته'],['طلب التوضيح','💬','تأكد أنك فهمت'],['التعبير عن الرأي','💡','وافق أو اختلف بأدب'],['تقديم اقتراح','🧠','اقترح فكرة'],['التخطيط لعطلة','🏕️','اختر الأنشطة'],['زيارة مدينة جديدة','🏙️','اسأل عن الأماكن'],['التعرف على ثقافة أخرى','🌍','تحدث باحترام عن الثقافات'],['التطوع','💚','اعرض المساعدة'],['الاعتذار عن خطأ','🙏','اعتذر وصحح الموقف'],['حل سوء فهم','🤝','وضح قصدك بهدوء'],['تقديم نفسك أمام مجموعة','🎤','تحدث بثقة'],['الحديث عن إنجاز','🥇','صف شيئًا تعلمته'],['طلب خدمة من موظف','🧑‍💼','تحدث بأدب ووضوح'],['مراجعة خطة يومك','🗓️','رتب المهام والأوقات']
+];
+const scenarioSkillSets=[
+[
+['Could you help me, please?','هل يمكنك مساعدتي من فضلك؟',['Could you help me, please?','I am help you please.','Could help me you yesterday?'],0,'Could you…? صيغة مهذبة لطلب المساعدة.'],
+['Where can I find it?','أين يمكنني العثور عليه؟',['Where can I find it?','Where I can found it?','When can I find yesterday?'],0,'نستخدم Where للسؤال عن المكان.'],
+['How much does it cost?','كم سعره؟',['How much does it cost?','How much it does costs?','How many cost it?'],0,'بعد does نستخدم الفعل الأساسي cost.'],
+['I would like some information, please.','أريد بعض المعلومات من فضلك.',['I would like some information, please.','I am like information some.','I would some information liked.'],0,'I would like طلب مهذب.'],
+['Thank you for your help.','شكرًا على مساعدتك.',['Thank you for your help.','Thanks you for helps.','I am thank for help.'],0,'Thank you for… تعني شكرًا على…']
+],
+[
+['Excuse me, could you repeat that?','عذرًا، هل يمكنك إعادة ذلك؟',['Excuse me, could you repeat that?','Repeat you me could that?','I repeated you yesterday?'],0,'Could you repeat that? لطلب إعادة الكلام.'],
+['I am looking for this place.','أبحث عن هذا المكان.',['I am looking for this place.','I looking this place am for.','I looked for this place tomorrow.'],0,'I am looking for تعني أبحث عن.'],
+['Is it open today?','هل هو مفتوح اليوم؟',['Is it open today?','Does it open is today?','Are it open yesterday?'],0,'مع it نستخدم Is في هذا السؤال.'],
+['What time does it start?','متى يبدأ؟',['What time does it start?','What time it does starts?','When time start it?'],0,'بعد does يأتي الفعل الأساسي start.'],
+['That sounds great!','هذا يبدو رائعًا!',['That sounds great!','That sound are great.','That is sound greatly.'],0,'That sounds great تعبير طبيعي عن الاستحسان.']
+],
+[
+['Could I have a moment, please?','هل يمكن أن تمنحني لحظة؟',['Could I have a moment, please?','I have moment could yesterday?','Can moment I am have?'],0,'Could I have…? صيغة مهذبة.'],
+['I am not sure I understand.','لست متأكدًا أنني أفهم.',['I am not sure I understand.','I not sure am understand.','I am not understand sure.'],0,'بعد I am not sure يمكن أن تأتي جملة كاملة.'],
+['Could you show me how?','هل يمكنك أن تريني كيف؟',['Could you show me how?','Could show me you how yesterday?','You could how showing me?'],0,'Show me how تعني أرني الطريقة.'],
+['Let me check, please.','دعني أتحقق من فضلك.',['Let me check, please.','Let I checking please.','I let check me yesterday.'],0,'بعد Let me نستخدم الفعل الأساسي.'],
+['I appreciate your help.','أقدّر مساعدتك.',['I appreciate your help.','I am appreciate your help.','I appreciates help you.'],0,'الفعل appreciate لا يحتاج إلى am قبله.']
+]
+];
+moreScenarioThemes.forEach((theme,i)=>{
+ const set=scenarioSkillSets[i%scenarioSkillSets.length];
+ dailyScenarios.push({title:theme[0],emoji:theme[1],desc:theme[2],qs:set.map((q,j)=>[q[0],q[1],q[2],q[3],q[4]+' (تدرّب على هذه العبارة في موقف: '+theme[0]+'.')])});
+});
+
 let activeScenario=0,scenarioIndex=0,scenarioCorrect=0,scenarioAnswered=false,scenarioEarned=0;
 const scenarioAr=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 function renderScenarioList(){const root=$('scenarioList');root.replaceChildren(...dailyScenarios.map((sc,i)=>{const b=document.createElement('button');b.className='tile';b.type='button';const done=(()=>{try{return JSON.parse(localStorage.getItem('eh-scenarios-done')||'{}')[i]||0}catch{return 0}})();b.innerHTML='<div class="emoji">'+sc.emoji+'</div><h3>'+sc.title+'</h3><p>'+sc.desc+'</p><span class="tag">'+(done?'أفضل نتيجة: '+done+'/5':'٥ أسئلة • مبتدئ')+'</span>';b.addEventListener('click',()=>startScenario(i));return b}))}
