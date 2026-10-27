@@ -32,7 +32,7 @@
     set('levelIcon',level>=35?'👑':level>=21?'💎':level>=11?'🏆':level>=6?'🚀':level>=3?'📘':'🌱');
     const answered=Math.max(0,Number(state.answerStats&&state.answerStats.answered)||0),correct=Math.max(0,Number(state.answerStats&&state.answerStats.correct)||0);
     set('statQuestions',answered);set('statAccuracy',(answered?Math.round(correct/answered*100):0)+'٪');
-    set('statWordsLearned',lessons.reduce((n,l,i)=>n+(state.completed.includes(i)?l.words.length:0),0));
+    set('statWordsLearned',lessons.reduce((n,l,i)=>n+(state.completed.includes(l.id)?l.words.length:0),0));
     const dayNames=['أحد','اثن','ثلا','أرب','خمي','جمع','سبت'],now=new Date(),days=[];
     for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const values=state.daily&&state.daily[key]||{};const count=Object.values(values).filter(Boolean).length;days.push({key,label:dayNames[d.getDay()],count,active:count>0});}
     set('statActiveDays',days.filter(d=>d.active).length+' / ٧');
