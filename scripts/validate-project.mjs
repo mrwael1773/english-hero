@@ -17,7 +17,6 @@ const contactPage = read('contact.html');
 const iconSvg = read('icon.svg');
 const sw = read('sw.js');
 const cloud = read('cloud-sync.js');
-const aiChat = read('ai-chat.js');
 const config = read('config.js');
 const privacy = read('privacy.html');
 const coach = read('supabase/functions/english-coach/index.ts');
@@ -27,6 +26,7 @@ const migration = read(migrationPath);
 
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
+check(!html.includes('id="conversation"') && !html.includes('data-nav="conversation"') && !html.includes('src="ai-chat.js"'), 'AI chat section and script are disabled');
 check(html.includes('name="viewport"') && html.includes('@media(max-width:720px)') && html.includes('@media(max-width:360px)') && html.includes('overflow-wrap:anywhere'), 'Responsive layout includes viewport and small-screen overflow safeguards');
 check(html.includes('id="studentDesk"') && html.includes('id="studentTaskForm"') && html.includes('id="studentTaskList"'), 'Student study planner UI exists');
 check(html.includes('id="wordDetective"') && html.includes('id="detectiveAnswers"') && html.includes('const detectiveCases=['), 'No-currency English detective learning game is present');
@@ -48,7 +48,7 @@ try {
 check(privacyPage.includes('<html') && privacyPage.includes('</html>'), 'Privacy page has an HTML document');
 check(contactPage.includes('<html') && contactPage.includes('</html>'), 'Contact page has an HTML document');
 check(iconSvg.includes('<svg') && iconSvg.includes('</svg>'), 'App icon is a valid SVG document');
-for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults','conversation','chat','chatForm','chatInput','chatMic','chatSpeak','chatReset','aiChatStatus']) {
+for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults']) {
   check(html.includes(`id="${id}"`), `Required UI element exists: ${id}`);
 }
 check(/sw\.js\?v=(\d+)/.test(html), 'Service worker registration has a version');
@@ -59,23 +59,13 @@ check(sw.includes("fetch(request)") && sw.includes("request.mode === 'navigate'"
 check(cloud.includes("from('learning_progress')") && cloud.includes('signInWithPassword') && cloud.includes('signUp'), 'Cloud progress and email auth flows are present');
 check(cloud.includes('async function cloudRequest(query, timeoutMs=15000)') && cloud.includes('query.abortSignal(controller.signal)'), 'Cloud progress requests abort after a bounded timeout');
 check(cloud.includes("English Hero sign out:") && cloud.includes('finally {\n      setSignedInUI();\n    }'), 'Sign-out failures restore the account UI safely');
-check(html.includes('data-nav="conversation"') && html.includes('id="conversation"') && html.includes('id="chatForm"'), 'AI conversation screen is connected to navigation and has its form');
 check(html.includes("'weekly'") && html.includes('20 سؤالًا متنوعًا') && html.includes('state.weeklyTestLast'), 'Weekly assessment includes mixed questions and stores its result');
-check(aiChat.includes('client.functions.invoke(\'english-coach\'') && aiChat.includes('refreshAuthHint') && aiChat.includes('chat.replaceChildren()'), 'AI conversation calls the server function and handles login/reset');
-check(aiChat.includes('setTimeout(()=>controller.abort(),16000)') && aiChat.includes('انتهت مهلة الرد بعد 16 ثانية') && coach.includes('setTimeout(() => aiController.abort(), 15000)'), 'AI chat and server timeouts are aligned with a clear timeout message');
-check(aiChat.includes('function offlineCoach') && aiChat.includes('هذا تدريب احتياطي محلي'), 'AI chat keeps a transparent local practice fallback when API credits are exhausted');
-check(aiChat.includes("sentence:'I like playing $1'") && aiChat.includes('const historyLength=typeof state'), 'Offline coach preserves the learner\'s sport and rotates practice prompts');
-check(aiChat.includes('const timedOut=') && aiChat.includes('انتهت مهلة الرد؛ انتقلنا إلى تدريب احتياطي محلي'), 'AI chat falls back to local practice after a request timeout');
 check(cloud.includes("english-hero-account-backup-") && cloud.includes('english-hero-unclaimed-local-backup') && cloud.includes('syncPromiseUserId'), 'Account switching is isolated and local progress can be recovered');
 check(cloud.includes('const chatRows=[...(Array.isArray(r.chatHistory)?r.chatHistory:[])') && cloud.includes('const chatHistory=[...new Map(chatRows.map(m=>[JSON.stringify(m),m])).values()].slice(-60)'), 'Cloud sync preserves and deduplicates local and remote chat history');
 try { new Function(cloud); check(true, 'Cloud sync JavaScript syntax is valid'); } catch (error) { fail.push(`cloud-sync.js has a syntax error: ${error.message}`); }
-try { new Function(aiChat); check(true, 'AI chat JavaScript syntax is valid'); } catch (error) { fail.push(`ai-chat.js has a syntax error: ${error.message}`); }
 try { new Function(sw); check(true, 'Service worker JavaScript syntax is valid'); } catch (error) { fail.push(`sw.js has a syntax error: ${error.message}`); }
 check(cloud.includes("english-hero-cloud-owner") && cloud.includes('function replaceProgress') && cloud.includes('localOwner && localOwner!==syncUserId'), 'Local progress is isolated when accounts change on a shared device');
 check(cloud.includes("$cloud('cloudRestoreBackup')?.addEventListener('click'") && cloud.includes('mergeProgress(backup)'), 'Account-specific backup restore is available and merges progress safely');
-check(coach.includes('supabase.auth.getUser(accessToken)') && coach.includes('Deno.env.get("OPENAI_API_KEY")') && coach.includes('https://api.openai.com/v1/responses'), 'AI coach authenticates users and calls OpenAI from the server');
-check(coach.includes('insufficient_quota') && coach.includes('رصيد OpenAI API') && coach.includes('aiController.signal.aborted'), 'AI coach handles exhausted API credits and server-side timeouts');
-check(coach.includes('maxRequestsPerWindow = 8') && coach.includes('requestWindows.get(user.id)'), 'AI coach includes a per-user request guard');
 check(!coach.includes('sk-proj-') && !coach.includes('sb_secret_'), 'AI coach source contains no hard-coded API secrets');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('OpenAI') && privacy.includes('Supabase'), 'Privacy policy discloses AI, cloud sync, and translation providers');
