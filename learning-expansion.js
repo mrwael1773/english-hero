@@ -49,7 +49,7 @@
     const style = document.createElement('style');
     style.id = 'ehExpansionStyles';
     style.textContent = `
-      .eh-rewards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+      .eh-rewards{display:none!important}      .eh-rewards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
       .eh-reward{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--stroke);border-radius:14px;background:var(--surface2);min-width:0}
       .eh-reward.locked{opacity:.58}.eh-reward-icon{font-size:25px;flex:0 0 auto}
       .eh-reward b{display:block;font-size:13px}.eh-reward small{display:block;color:var(--muted);font-size:11px;line-height:1.5;margin-top:3px}
@@ -75,6 +75,10 @@
     document.head.append(style);
   };
   const renderRewards = () => {
+    // Remove legacy expanded reward lists left by older cached builds.
+    document.querySelectorAll('.eh-rewards').forEach(node => node.remove());
+    const oldPanel = $('levelRewardsPanel');
+    if (oldPanel && (!$('levelRewardsToggle') || !$('levelRewardsDetails'))) oldPanel.remove();
     if (!safeState()) return;
     const info = levelInfo(state.xp);
     let panel = $('levelRewardsPanel');
