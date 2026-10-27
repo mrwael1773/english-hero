@@ -20,15 +20,16 @@
     `;
     document.head.append(style);
   };
+  const levelInfo=xpValue=>{const xp=Math.max(0,Math.floor(Number(xpValue)||0));let level=1;const startAt=n=>{const step=Math.max(0,Math.floor(Number(n)||1)-1);return 100*step+25*step*Math.max(0,step-1)};while(level<50&&xp>=startAt(level+1))level++;const start=startAt(level),next=level>=50?start:startAt(level+1);return {xp,level,start,next,into:xp-start,needed:Math.max(0,next-xp),progress:level>=50?100:Math.max(0,Math.min(100,(xp-start)/Math.max(1,next-start)*100))};};
   const renderDashboard=()=>{
     if(typeof state==='undefined'||typeof lessons==='undefined')return;
-    const xp=Math.max(0,Number(state.xp)||0),level=Math.min(50,Math.floor(xp/100)+1),inLevel=xp%100;
+    const info=levelInfo(state.xp),xp=info.xp,level=info.level,inLevel=info.into,needed=info.needed;
     const names=['مبتدئ','مستكشف','متعلّم نشيط','متدرّب','متقدّم','خبير','بطل الإنجليزية'];
     const title=names[Math.min(names.length-1,Math.floor((level-1)/7))];
     const set=(id,value)=>{const el=$(id);if(el)el.textContent=String(value);};
     set('levelTitle','المستوى '+level+' • '+title);
-    set('levelProgressText',inLevel+' / ١٠٠ XP للمستوى التالي');
-    const bar=$('levelProgressBar');if(bar)bar.style.width=inLevel+'%';
+    set('levelProgressText',level>=50?'أعلى مستوى • '+xp+' XP':inLevel+' / '+(info.next-info.start)+' XP • باقي '+needed+' XP');
+    const bar=$('levelProgressBar');if(bar)bar.style.width=info.progress+'%';
     set('levelIcon',level>=35?'👑':level>=21?'💎':level>=11?'🏆':level>=6?'🚀':level>=3?'📘':'🌱');
     const answered=Math.max(0,Number(state.answerStats&&state.answerStats.answered)||0),correct=Math.max(0,Number(state.answerStats&&state.answerStats.correct)||0);
     set('statQuestions',answered);set('statAccuracy',(answered?Math.round(correct/answered*100):0)+'٪');
@@ -48,9 +49,9 @@
   wrap('renderInsights',original=>function(){
     original();
     if(typeof state==='undefined'||typeof lessons==='undefined')return;
-    const xp=Math.max(0,Number(state.xp)||0),level=Math.min(50,Math.floor(xp/100)+1);
+    const info=levelInfo(state.xp),xp=info.xp,level=info.level;
     const el=$('pathLevel');if(el)el.textContent='المستوى '+level+' • '+xp+' XP';
-    const summary=$('pathSummary');if(summary)summary.textContent='أكملت '+state.completed.length+' من '+lessons.length+' درسًا، وأنجزت '+state.quizzes+' اختبارًا. تحتاج '+(level*100-xp)+' XP للمستوى التالي.';
+    const summary=$('pathSummary');if(summary)summary.textContent='أكملت '+state.completed.length+' من '+lessons.length+' درسًا، وأنجزت '+state.quizzes+' اختبارًا. '+(level>=50?'وصلت إلى أعلى مستوى!':'تحتاج '+info.needed+' XP للمستوى التالي.');
     const path=$('learningPathSteps');if(!path)return;
     const stages=[
       ['🌱','الأساسيات','ابدأ بدروس التعارف والروتين',0,0,'courses'],
