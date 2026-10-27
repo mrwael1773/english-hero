@@ -21,6 +21,10 @@
     {level:40, emoji:'🔥', title:'أسطورة التعلّم', detail:'مستوى نخبة المتعلمين'},
     {level:50, emoji:'🌌', title:'بطل English Hero', detail:'أعلى مستوى في الرحلة'}
   ];
+  for (let level = 2; level <= 50; level++) {
+    if (!rewards.some(reward => reward.level === level)) rewards.push({level, emoji:'🎖️', title:'شارة المستوى ' + level, detail:'واصل التعلّم لفتح الجائزة التالية'});
+  }
+  rewards.sort((a, b) => a.level - b.level);
   const levelStart = level => {
     const n = Math.max(1, Math.floor(Number(level) || 1)) - 1;
     return 100 * n + 25 * n * Math.max(0, n - 1);
