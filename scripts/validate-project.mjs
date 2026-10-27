@@ -117,7 +117,7 @@ try {
   fail.push('Grammar academy question bank can be parsed and validated: ' + error.message);
 }
 try {
-  const generalMatch = html.match(/const grammar=([\\s\\S]*?);let quiz=/);
+  const generalMatch = html.match(/const grammar=(\\[[\\s\\S]*?\\]);/);
   if (!generalMatch) throw new Error('General grammar bank declaration not found');
   const bank = new Function('return (' + generalMatch[1] + ')')();
   const prompts = new Set();
