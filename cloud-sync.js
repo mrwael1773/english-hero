@@ -54,7 +54,7 @@
     if($cloud('cloudEmail')) $cloud('cloudEmail').disabled = signedIn;
     if($cloud('cloudPassword')) $cloud('cloudPassword').disabled = signedIn;
     if($cloud('cloudSignOut')) $cloud('cloudSignOut').disabled = !signedIn;
-    if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled = !signedIn || !ready;
+    if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled = !signedIn;
     const restoreButton=$cloud('cloudRestoreBackup');
     if(restoreButton){
       let hasBackup=false;
