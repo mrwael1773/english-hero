@@ -19,6 +19,7 @@ const sw = read('sw.js');
 const cloud = read('cloud-sync.js');
 const progressDashboard = read('pro-dashboard.js');
 const learningExpansion = read('learning-expansion.js');
+const englishHeroPlus = read('english-hero-plus.js');
 const config = read('config.js');
 const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-6000.json');
@@ -122,6 +123,8 @@ check(html.includes('id="proDashboard"') && html.includes('id="weeklyActivity"')
 check(progressDashboard.includes('state.completed.includes(l.id)?l.words.length:0') && !progressDashboard.includes('state.completed.includes(i)?l.words.length:0'), 'Learned-word totals use lesson IDs including extra lessons');
 check(html.includes("age>=0&&age<7") && html.includes("x.mode==='mistakes'"), 'Weekly and review achievements enforce their actual conditions');
 try { new Function(progressDashboard); check(true, 'Professional dashboard JavaScript syntax is valid'); } catch (error) { fail.push(`pro-dashboard.js has a syntax error: ${error.message}`); }
+try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript syntax is valid'); } catch (error) { fail.push(`english-hero-plus.js has a syntax error: ${error.message}`); }
+check(/src=\"english-hero-plus\\.js(?:\\?v=\\d+)?\"/.test(html) && sw.includes(\"'./english-hero-plus.js?v=\"), 'English Hero Plus is linked and cached offline');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
