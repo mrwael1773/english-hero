@@ -254,7 +254,8 @@
     wrap('finishQuiz', original => function () {
       const wasExam = activeExam || (typeof quiz !== 'undefined' && quiz && quiz.mode === 'pro');
       if (examTimer) clearInterval(examTimer); examTimer=null; activeExam=false;
-      if (!wasExam || typeof quiz === 'undefined' || !quiz || quiz.__ehFinished) return original();
+      if (!wasExam || typeof quiz === 'undefined' || !quiz) return original();
+      if (quiz.__ehFinished) return;
       quiz.__ehFinished=true;
       const pct=Math.round(100*(Number(quiz.correct)||0)/Math.max(1,quiz.items.length));
       const result=original();
