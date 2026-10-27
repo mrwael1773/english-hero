@@ -81,18 +81,37 @@ try {
   const banks = new Function('return (' + bankMatch[1] + ')')();
   check(banks.length === 10, 'Grammar academy has a separate bank for all 10 lessons');
   check(banks.every(bank => Array.isArray(bank) && bank.length === 8), 'Every grammar lesson has 8 focused questions');
-  const malformed = banks.some(bank => {
+  // This answer-key snapshot is intentionally independent of the runtime bank:
+  // if a lesson's first (correct) option changes accidentally, CI catches it.
+  const expectedAnswers = [
+    ['I','He','They','She','He','We','We','It'],
+    ['am','is','are','are','is','are','are','am'],
+    ['plays','go','studies','rises','eats','study','watches','eat'],
+    ['is','playing','am','raining','crying','are','writing','are'],
+    ['finished','went','watch','enjoy','visited','bought','made','arrive'],
+    ['will','to','base','are','leave','read','clean','will'],
+    ['What','Where','Why','When','Who','How','Where','Why'],
+    ['on','at','in','under','on','in','in','on'],
+    ['than','cheaper','more','faster','bigger','less','easier','faster'],
+    ['can','practise','leave','cannot','learn','finish','be','swim']
+  ];
+  let malformed = banks.length !== expectedAnswers.length;
+  const allPrompts = new Set();
+  banks.forEach((bank, bankIndex) => {
     const prompts = new Set();
-    return bank.some(q => {
-      if (!Array.isArray(q) || q.length !== 5 || q.some(v => typeof v !== 'string' || !v.trim())) return true;
-      const prompt = q[0].trim().toLowerCase();
-      const options = q.slice(1).map(v => v.trim().toLowerCase());
-      if (prompts.has(prompt) || new Set(options).size !== 4 || !options.includes(q[1].trim().toLowerCase())) return true;
+    if (!Array.isArray(bank) || bank.length !== 8) { malformed = true; return; }
+    bank.forEach((q, questionIndex) => {
+      if (!Array.isArray(q) || q.length !== 5 || q.some(v => typeof v !== 'string' || !v.trim())) { malformed = true; return; }
+      const prompt = q[0].trim().toLocaleLowerCase();
+      const options = q.slice(1).map(v => v.trim().toLocaleLowerCase());
+      const expected = expectedAnswers[bankIndex]?.[questionIndex];
+      if (prompts.has(prompt) || allPrompts.has(prompt) || new Set(options).size !== 4 ||
+          q[1].trim().toLocaleLowerCase() !== String(expected || '').toLocaleLowerCase()) malformed = true;
       prompts.add(prompt);
-      return false;
+      allPrompts.add(prompt);
     });
   });
-  check(!malformed, 'Grammar academy questions have unique prompts and four distinct answer choices');
+  check(!malformed, 'Grammar academy banks match the reviewed answer key, contain no repeated prompts across lessons, and have four distinct choices');
 } catch (error) {
   fail.push('Grammar academy question bank can be parsed and validated: ' + error.message);
 }
