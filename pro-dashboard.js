@@ -81,7 +81,8 @@
     save();
   });
   wrap('finishQuiz',original=>function(){
-    if(typeof quiz!=='undefined'&&quiz&&quiz.items&&quiz.items.length){
+    if(typeof quiz!=='undefined'&&quiz&&quiz.items&&quiz.items.length&&!quiz.__ehHistoryRecorded){
+      quiz.__ehHistoryRecorded=true;
       const pct=Math.round(100*quiz.correct/quiz.items.length),labels={weekly:'الاختبار الأسبوعي',grammar:'اختبار القواعد',daily:'تحدي اليوم',battle:'معركة الكلمات',mistakes:'مراجعة الأخطاء',type:'تحدي الكتابة',listen:'اختبار الاستماع',lesson:'اختبار الدرس',saved:'اختبار الكلمات المحفوظة',all:'اختبار المفردات'};
       state.quizHistory=Array.isArray(state.quizHistory)?state.quizHistory:[];
       state.quizHistory.push({date:today(),mode:quiz.mode,label:labels[quiz.mode]||'اختبار إنجليزي',score:pct,correct:quiz.correct,total:quiz.items.length});state.quizHistory=state.quizHistory.slice(-30);save();
