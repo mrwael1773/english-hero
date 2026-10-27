@@ -269,7 +269,7 @@
         if(typeof save==='function')save();
       }
       const heading=$('quizArea')?.querySelector('h2');
-      if(heading && heading.textContent.includes('الاختبار الأسبوعي'))heading.textContent='انتهى الاختبار الاحترافي!';
+      if(heading)heading.textContent='انتهى الاختبار الاحترافي!';
       const clock=$('professionalExamClock');if(clock)clock.remove();
       return result;
     });
