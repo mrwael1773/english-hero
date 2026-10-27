@@ -17,9 +17,9 @@ const contactPage = read('contact.html');
 const iconSvg = read('icon.svg');
 const sw = read('sw.js');
 const cloud = read('cloud-sync.js');
+const progressDashboard = read('pro-dashboard.js');
 const config = read('config.js');
 const privacy = read('privacy.html');
-const coach = read('supabase/functions/english-coach/index.ts');
 const vocabRaw = read('vocabulary-6000.json');
 const migrationPath = 'supabase/migrations/20261026151420_secure_rls_auto_enable_and_optimize_progress_policies.sql';
 const migration = read(migrationPath);
@@ -66,9 +66,12 @@ try { new Function(cloud); check(true, 'Cloud sync JavaScript syntax is valid');
 try { new Function(sw); check(true, 'Service worker JavaScript syntax is valid'); } catch (error) { fail.push(`sw.js has a syntax error: ${error.message}`); }
 check(cloud.includes("english-hero-cloud-owner") && cloud.includes('function replaceProgress') && cloud.includes('localOwner && localOwner!==syncUserId'), 'Local progress is isolated when accounts change on a shared device');
 check(cloud.includes("$cloud('cloudRestoreBackup')?.addEventListener('click'") && cloud.includes('mergeProgress(backup)'), 'Account-specific backup restore is available and merges progress safely');
-check(!coach.includes('sk-proj-') && !coach.includes('sb_secret_'), 'AI coach source contains no hard-coded API secrets');
+check(!existsSync(join(root, 'ai-chat.js')) && !html.includes('src="ai-chat.js"'), 'Retired AI coach code is absent from the public site');
+check(html.includes('src="pro-dashboard.js"') && sw.includes("'./pro-dashboard.js'"), 'Professional progress dashboard is linked and cached offline');
+check(html.includes('id="proDashboard"') && html.includes('id="weeklyActivity"') && html.includes('id="quizHistoryList"') && html.includes('id="quizMistakesList"'), 'Professional statistics, quiz history, and error review UI exist');
+try { new Function(progressDashboard); check(true, 'Professional dashboard JavaScript syntax is valid'); } catch (error) { fail.push(`pro-dashboard.js has a syntax error: ${error.message}`); }
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
-check(privacy.includes('MyMemory') && privacy.includes('OpenAI') && privacy.includes('Supabase'), 'Privacy policy discloses AI, cloud sync, and translation providers');
+check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
 check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') && migration.includes('(SELECT auth.uid())'), 'Tracked migration contains the security and RLS policy changes');
 check(existsSync(join(root, migrationPath)), 'Applied Supabase migration is tracked in the repository');
