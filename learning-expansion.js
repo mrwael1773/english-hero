@@ -208,7 +208,7 @@
     const root = $('trainingModes');
     if (!root || $('professionalExamButton')) return;
     const card = document.createElement('button'); card.type='button'; card.id='professionalExamButton'; card.className='tile'; card.style.textAlign='right';
-    card.innerHTML='<div class="emoji">⏱️</div><h3>الاختبار الاحترافي الموقّت</h3><p>٢٠ سؤالًا متنوعًا في القواعد والمفردات، بوقت محدد وسجل نتيجة.</p><span class="tag gold">١٢ دقيقة • ٢٠ سؤالًا</span>';
+    card.innerHTML='<div class="emoji">⏱️</div><h3>الاختبار الاحترافي الموقّت</h3><p>حتى ٢٠ سؤالًا متنوعًا في القواعد والمفردات، بوقت محدد وسجل نتيجة.</p><span class="tag gold">١٢ دقيقة • ٢٠ سؤالًا</span>';
     card.addEventListener('click',()=>{if(typeof startQuiz==='function')startQuiz('pro');});
     root.append(card);
   };
@@ -267,9 +267,17 @@
     wrap('renderScenarioList', original => function () { const result=original(); return result; });
     wrap('startQuiz', original => function (mode, pool) {
       if (mode !== 'pro') return original(mode,pool);
-      activeExam = true; examSeconds = 12 * 60;
+      const previousQuiz = typeof quiz !== 'undefined' ? quiz : null;
+      activeExam = false;
+      if (examTimer) clearInterval(examTimer); examTimer = null;
       original('weekly',pool);
-      if (typeof quiz !== 'undefined' && quiz) quiz.mode='pro';
+      if (typeof quiz === 'undefined' || !quiz || quiz === previousQuiz || !Array.isArray(quiz.items) || quiz.items.length === 0) {
+        const clock = $('professionalExamClock'); if (clock) clock.remove();
+        if (typeof toast === 'function') toast('لا توجد أسئلة جديدة متاحة لهذا الاختبار الآن. راجع الأخطاء أو جرّب نوعًا آخر.');
+        return;
+      }
+      activeExam = true; examSeconds = 12 * 60;
+      quiz.mode='pro';
       const heading=$('quizHeading');if(heading)heading.textContent='⏱️ الاختبار الاحترافي';
       let clock=$('professionalExamClock');
       if(!clock){clock=document.createElement('span');clock.id='professionalExamClock';clock.className='eh-exam-clock';const counter=$('quizCounter');if(counter)counter.parentElement.insertBefore(clock,counter);else $('quizArea')?.prepend(clock);}
