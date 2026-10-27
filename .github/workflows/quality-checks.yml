@@ -51,7 +51,6 @@ jobs:
           done
           node --check config.js
           node --check cloud-sync.js
-          node --check ai-chat.js
           node --check sw.js
 
       - name: Validate JSON data and vocabulary count
@@ -82,8 +81,6 @@ jobs:
           test -s sw.js
           test -s config.js
           test -s cloud-sync.js
-          test -s ai-chat.js
-          grep -q 'ai-chat.js' index.html
           test -s manifest.webmanifest
           test -s vocabulary-6000.json
           test -s icon.svg
