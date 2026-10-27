@@ -76,7 +76,7 @@ check(learningExpansion.includes('الاختبار الاحترافي الموق
 check(learningExpansion.includes('grammarAcademyGrid') && learningExpansion.includes('grammarLessons'), 'Progressive grammar academy lessons are present');
 check(learningExpansion.includes('reviewedAcademyQuestions') && learningExpansion.includes('new Set(options).size !== 4'), 'Grammar academy filters malformed and duplicate-choice questions');
 try {
-  const bankMatch = learningExpansion.match(/const academyQuestions = ([\\s\\S]*?);\\s*\\/\\/ Validate every lesson bank/);
+  const bankMatch = learningExpansion.match(/const academyQuestions = ([\s\S]*?);\s*\/\/ Validate every lesson bank/);
   if (!bankMatch) throw new Error('Question bank declaration not found');
   const banks = new Function('return (' + bankMatch[1] + ')')();
   check(banks.length === 10, 'Grammar academy has a separate bank for all 10 lessons');
