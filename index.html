@@ -1653,7 +1653,7 @@ theme();renderStats();renderCourses();renderHome();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="config.js" defer></script>
 <script src="cloud-sync.js" defer></script>
-<script src="pro-dashboard.js?v=2" defer></script>
+<script src="pro-dashboard.js?v=3" defer></script>
 <script src="learning-expansion.js?v=53" defer></script>
 <script src="english-hero-plus.js?v=65" defer></script>
 
@@ -1701,7 +1701,7 @@ installButton?.addEventListener('click', async () => {
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('./sw.js?v=63', { updateViaCache: 'none' });
+      const registration = await navigator.serviceWorker.register('./sw.js?v=64', { updateViaCache: 'none' });
       await registration.update();
     } catch (error) { console.warn('App offline setup failed:', error); }
   });
