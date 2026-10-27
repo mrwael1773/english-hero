@@ -53,6 +53,14 @@
       .eh-reward{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--stroke);border-radius:14px;background:var(--surface2);min-width:0}
       .eh-reward.locked{opacity:.58}.eh-reward-icon{font-size:25px;flex:0 0 auto}
       .eh-reward b{display:block;font-size:13px}.eh-reward small{display:block;color:var(--muted);font-size:11px;line-height:1.5;margin-top:3px}
+      .eh-level-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:right;cursor:pointer}
+      .eh-level-toggle .eh-toggle-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:34px;border:1px solid var(--stroke);border-radius:10px;background:var(--surface2);font-size:18px;transition:transform .18s ease}
+      .eh-level-toggle[aria-expanded="true"] .eh-toggle-icon{transform:rotate(180deg)}
+      .eh-level-current{display:flex;align-items:center;gap:10px;min-width:0}.eh-level-current-copy{min-width:0}
+      .eh-level-current-copy small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+      .eh-level-details{margin-top:12px}.eh-level-details[hidden]{display:none!important}
+      .eh-level-reward-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:300px;overflow:auto;padding:2px}
+      @media(max-width:460px){.eh-level-reward-list{grid-template-columns:1fr}.eh-level-toggle .eh-toggle-icon{flex-basis:32px;width:32px;height:32px}}
       .eh-exam-clock{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--stroke);border-radius:12px;background:var(--surface2);font-weight:900;font-variant-numeric:tabular-nums}
       .eh-exam-clock.urgent{color:var(--red);border-color:var(--red)}
       .eh-grammar-detail{grid-column:1/-1;line-height:1.85;background:var(--surface2);border:1px solid var(--stroke);border-radius:14px;padding:14px;margin-top:8px}
@@ -74,33 +82,34 @@
       const progress = $('levelProgressBar');
       const host = progress && progress.closest('.panel');
       if (!host) return;
-      panel = document.createElement('div');
-      panel.id = 'levelRewardsPanel';
-      panel.className = 'section';
-      const heading = document.createElement('h3');
-      heading.textContent = '🎁 جوائز المستويات';
-      const summary = document.createElement('p');
-      summary.id = 'levelRewardSummary';
-      summary.className = 'muted small';
-      const grid = document.createElement('div');
-      grid.id = 'levelRewardsGrid';
-      grid.className = 'eh-rewards';
-      panel.append(heading, summary, grid);
-      host.append(panel);
+      panel = document.createElement('div'); panel.id = 'levelRewardsPanel'; panel.className = 'section eh-level-rewards';
+      const toggle = document.createElement('button'); toggle.type = 'button'; toggle.id = 'levelRewardsToggle'; toggle.className = 'eh-level-toggle';
+      toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-controls', 'levelRewardsDetails');
+      const current = document.createElement('span'); current.className = 'eh-level-current';
+      const icon = document.createElement('span'); icon.id = 'levelRewardsCurrentIcon'; icon.className = 'eh-reward-icon'; icon.textContent = '🌱';
+      const copy = document.createElement('span'); copy.className = 'eh-level-current-copy';
+      const heading = document.createElement('b'); heading.id = 'levelRewardsCurrentTitle';
+      const subtitle = document.createElement('small'); subtitle.id = 'levelRewardSummary';
+      copy.append(heading, subtitle); current.append(icon, copy);
+      const arrow = document.createElement('span'); arrow.className = 'eh-toggle-icon'; arrow.setAttribute('aria-hidden', 'true'); arrow.textContent = '⌄';
+      toggle.append(current, arrow);
+      const details = document.createElement('div'); details.id = 'levelRewardsDetails'; details.className = 'eh-level-details'; details.hidden = true;
+      const grid = document.createElement('div'); grid.id = 'levelRewardsGrid'; grid.className = 'eh-level-reward-list'; details.append(grid);
+      toggle.addEventListener('click', () => { const expanded = toggle.getAttribute('aria-expanded') !== 'true'; toggle.setAttribute('aria-expanded', String(expanded)); details.hidden = !expanded; });
+      panel.append(toggle, details); host.append(panel);
     }
-    const summary = $('levelRewardSummary');
-    if (summary) summary.textContent = info.level >= 50 ? 'وصلت إلى أعلى مستوى! كل الجوائز مفتوحة.' : 'الجائزة التالية عند المستوى ' + (info.level + 1) + '، وتحتاج إلى ' + info.needed + ' XP. الجوائز رمزية داخل الموقع ولا تمنح نقاطًا إضافية.';
-    const grid = $('levelRewardsGrid');
-    if (!grid) return;
+    const infoText = info.level >= 50 ? '🏆 وصلت إلى أعلى مستوى — كل الجوائز مفتوحة' : 'التالي: المستوى ' + (info.level + 1) + ' • تحتاج ' + info.needed + ' XP';
+    if ($('levelRewardsCurrentTitle')) $('levelRewardsCurrentTitle').textContent = 'المستوى الحالي: ' + info.level + ' من 50';
+    if ($('levelRewardSummary')) $('levelRewardSummary').textContent = infoText;
+    if ($('levelRewardsCurrentIcon')) $('levelRewardsCurrentIcon').textContent = info.level >= 40 ? '🌌' : info.level >= 25 ? '👑' : info.level >= 15 ? '🛡️' : info.level >= 10 ? '🏅' : info.level >= 6 ? '🚀' : info.level >= 3 ? '📘' : '🌱';
+    const grid = $('levelRewardsGrid'); if (!grid) return;
     grid.replaceChildren(...rewards.map(reward => {
       const unlocked = info.level >= reward.level;
-      const card = document.createElement('div');
-      card.className = 'eh-reward' + (unlocked ? '' : ' locked');
+      const card = document.createElement('div'); card.className = 'eh-reward' + (unlocked ? '' : ' locked');
       const icon = document.createElement('span'); icon.className = 'eh-reward-icon'; icon.textContent = unlocked ? reward.emoji : '🔒';
       const copy = document.createElement('div');
-      const title = document.createElement('b'); title.textContent = 'مستوى ' + reward.level + ': ' + reward.title;
-      const detail = document.createElement('small'); detail.textContent = unlocked ? '✓ تم فتح الجائزة — ' + reward.detail : 'تُفتح عند الوصول إلى ' + reward.levelStart;
-      if (!unlocked) detail.textContent = 'تُفتح عند الوصول إلى المستوى ' + reward.level;
+      const title = document.createElement('b'); title.textContent = 'المستوى ' + reward.level + ': ' + reward.title;
+      const detail = document.createElement('small'); detail.textContent = unlocked ? '✓ تم فتح الجائزة — ' + reward.detail : 'تُفتح عند الوصول إلى المستوى ' + reward.level;
       copy.append(title, detail); card.append(icon, copy); return card;
     }));
   };
