@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="google-site-verification" content="E6Q_Nn_ljmg6Qj27eXX5NI3PYK_3mGX29boOowCL0HM">
-  <meta name="description" content="تعلّم الإنجليزية مجانًا من الصفر مع English Hero: كلمات شائعة، قواعد مبسطة، أزمنة، محادثة، نطق واختبارات تفاعلية مع مراجعة للأخطاء.">
+  <meta name="description" content="تعلّم الإنجليزية مجانًا من الصفر مع English Hero: كلمات شائعة، قواعد مبسطة، أزمنة، نطق واختبارات تفاعلية مع مراجعة للأخطاء.">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta property="og:type" content="website">
   <meta property="og:title" content="English Hero | تعلّم الإنجليزية بثقة">
@@ -18,7 +18,7 @@
   <meta name="twitter:title" content="English Hero | تعلم الإنجليزية مجانًا من الصفر">
   <meta name="twitter:description" content="دروس إنجليزية مجانية، كلمات وقواعد ومحادثة واختبارات تفاعلية.">
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"WebSite","name":"English Hero","url":"https://mrwael1773.github.io/english-hero/","inLanguage":"ar","description":"موقع مجاني لتعلم اللغة الإنجليزية من الصفر عبر دروس الكلمات والقواعد والمحادثة والاختبارات التفاعلية.","publisher":{"@type":"Organization","name":"English Hero","url":"https://mrwael1773.github.io/english-hero/"}}
+  {"@context":"https://schema.org","@type":"WebSite","name":"English Hero","url":"https://mrwael1773.github.io/english-hero/","inLanguage":"ar","description":"موقع مجاني لتعلم اللغة الإنجليزية من الصفر عبر دروس الكلمات والقواعد والاختبارات التفاعلية.","publisher":{"@type":"Organization","name":"English Hero","url":"https://mrwael1773.github.io/english-hero/"}}
   </script>
   <meta name="theme-color" content="#090e1b">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -144,34 +144,10 @@ input,select,textarea,button{max-width:100%;min-width:0}
 <div class="row" style="justify-content:center;margin-top:16px"><button class="btn primary" id="scenarioReplay" type="button">🔁 أعد الموقف</button><button class="btn ghost" id="scenarioFinishBack" type="button">كل المواقف</button></div>
 </div>
 </section>
-<section class="view" id="conversation">
-  <div class="row between"><h2>💬 مدرّب المحادثة الإنجليزية</h2><span class="chip">AI English Coach</span></div>
-  <p class="muted">اكتب بالإنجليزية أو استخدم الميكروفون. سيصحّح المدرب الأخطاء الشائعة ويشرحها بالعربية، ثم يساعدك على مواصلة الحديث.</p>
-  <div class="panel" style="padding:14px">
-    <div id="aiCoachSignInHint" class="feedback" role="note">تحتاج إلى تسجيل الدخول من «حسابي» لاستخدام مدرّب الذكاء الاصطناعي.</div>
-    <div id="chat" class="chat" role="log" aria-live="polite" aria-label="سجل المحادثة" style="min-height:220px;max-height:48vh;margin:12px 0"></div>
-    <p id="aiChatStatus" class="muted small" role="status" aria-live="polite">جارٍ تجهيز مدرّب المحادثة…</p>
-    <div class="row" style="flex-wrap:wrap;margin:10px 0">
-      <button class="btn ghost" type="button" data-chat="Hello! My name is Wael.">👋 التعارف</button>
-      <button class="btn ghost" type="button" data-chat="I like playing football.">⚽ الهوايات</button>
-      <button class="btn ghost" type="button" data-chat="What does this word mean?">📘 معنى كلمة</button>
-    </div>
-    <form id="chatForm" style="display:flex;gap:8px;align-items:stretch">
-      <input id="chatInput" class="field" type="text" maxlength="1200" autocomplete="off" placeholder="اكتب جملة بالإنجليزية…" aria-label="رسالتك باللغة الإنجليزية" required style="flex:1;min-width:0">
-      <button class="btn primary" type="submit">إرسال</button>
-    </form>
-    <div class="row" style="flex-wrap:wrap;margin-top:10px">
-      <button class="btn ghost" id="chatMic" type="button">🎙️ تحدث</button>
-      <button class="btn ghost" id="chatSpeak" type="button">🔊 استمع للرد</button>
-      <button class="btn outline" id="chatReset" type="button">بدء محادثة جديدة</button>
-    </div>
-    <p class="muted small">قد لا يعمل التعرف على الصوت في جميع المتصفحات. يمكنك دائمًا كتابة رسالتك. تُرسل الرسائل إلى خدمة الذكاء الاصطناعي عند الضغط على إرسال.</p>
-  </div>
-</section>
 <section class="view" id="review"><div class="row between"><h2>🧠 مختبر الذاكرة</h2><span class="chip" id="reviewCount">0 كلمات</span></div><p class="muted">الكلمات التي تخطئ فيها تعود للمراجعة. ويمكنك حفظ كلمات إضافية يدويًا.</p><div class="panel"><div class="row"><button class="btn primary" id="reviewStart">اختبر كلمات المراجعة</button><button class="btn ghost" id="savedStart">اختبر المحفوظات</button></div><div class="divider"></div><h3>قائمة المراجعة الذكية</h3><p class="muted small">تظهر الكلمات التي تكررت فيها الأخطاء أولًا، ثم الكلمات الأقل تكرارًا.</p><div id="reviewList"></div><h3>الكلمات المحفوظة ☆</h3><div id="savedList"></div></div></section>
 <section class="view" id="profile"><h2>👤 ملف الإنجازات</h2><div class="panel"><div class="stats"><div class="stat">نقاط الخبرة<b id="profileXP">0</b></div><div class="stat">الدروس المكتملة<b id="profileDone">0</b></div><div class="stat">الاختبارات المنجزة<b id="profileQuizzes">0</b></div><div class="stat">سلسلة الأيام<b id="profileStreak">0</b></div></div><h3>🏅 الأوسمة</h3><div id="badges" class="badge-grid"></div><div class="divider"></div><h3>👤 اسمك في الموقع</h3><div class="panel" id="displayNamePanel" style="padding:16px;margin:12px 0;background:var(--surface2)"><div id="displayNameSavedView" class="hidden"><p class="muted small">الاسم الظاهر لك في الموقع</p><div class="row between"><strong id="profileDisplayName" dir="auto" style="font-size:20px"></strong><button class="btn ghost" id="editDisplayName" type="button">تغيير الاسم</button></div></div><div id="displayNameEditor"><label for="displayNameInput">وش تحب نناديك؟</label><p class="muted small">اكتب الاسم اللي تفضّل يظهر لك في الموقع.</p><div class="row" style="margin-top:8px"><input id="displayNameInput" class="field" maxlength="32" autocomplete="nickname" placeholder="مثال: وائل" style="flex:1;min-width:160px"><button class="btn primary" id="saveDisplayName" type="button">حفظ الاسم</button></div><p id="displayNameStatus" class="muted small" role="status" aria-live="polite"></p></div></div><div class="divider"></div><h3>☁️ الحساب والمزامنة</h3><div class="panel" style="padding:16px;margin:12px 0;background:var(--surface2)"><p id="cloudStatus" class="muted small" aria-live="polite">المزامنة السحابية غير مهيأة بعد. يمكنك الاستمرار بالحفظ المحلي.</p><p id="cloudUser" class="small" style="direction:ltr;text-align:left"></p><form id="cloudAuthForm" style="display:grid;gap:10px;max-width:480px"><label for="cloudEmail">البريد الإلكتروني</label><input id="cloudEmail" class="field" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com" dir="ltr"><label for="cloudPassword">كلمة مرور الحساب</label><input id="cloudPassword" class="field" type="password" autocomplete="current-password" minlength="8" maxlength="128" required placeholder="8 أحرف على الأقل" dir="ltr"><div class="row"><button class="btn primary" id="cloudSignIn" type="submit">تسجيل الدخول</button><button class="btn ghost" id="cloudSignUp" type="button">إنشاء حساب</button></div></form><div class="row" style="margin-top:10px"><button class="btn primary" id="cloudGoogle" type="button">المتابعة باستخدام Google</button></div><div class="row" style="margin-top:10px"><button class="btn ghost" id="cloudSyncNow" type="button" disabled>مزامنة الآن</button><button class="btn outline" id="cloudSignOut" type="button" disabled>تسجيل الخروج</button></div><div class="row" style="margin-top:10px"><button class="btn ghost hidden" id="cloudRestoreBackup" type="button" disabled>استعادة نسخة هذا الحساب</button></div><p id="cloudBackupStatus" class="muted small" role="status" aria-live="polite"></p><p class="muted small">لأمان حسابك، استخدم كلمة مرور مستقلة عن كلمة مرور بريدك أو Apple. عند إنشاء الحساب، قد تحتاج إلى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.</p></div><div class="divider"></div><h3>⚙️ الإعدادات والبيانات</h3><div class="listrow"><label for="lightMode">الوضع الفاتح</label><input id="lightMode" type="checkbox" style="width:22px;height:22px;accent-color:#7868e8"></div><div class="listrow"><label for="speechRate">سرعة النطق</label><select id="speechRate" class="field" style="width:auto;min-width:130px"><option value="0.7">بطيء</option><option value="0.9">متوسط</option><option value="1">طبيعي</option></select></div><button class="btn ghost" id="testSpeechRate" type="button" style="margin-top:8px">🔊 تجربة سرعة النطق</button><p class="muted small" id="settingsStatus" role="status" aria-live="polite">تُحفظ إعداداتك تلقائيًا على هذا الجهاز.</p><div class="row" style="margin-top:18px"><button class="btn ghost" id="exportData">⬇️ تصدير التقدم</button><button class="btn ghost" id="importData">⬆️ استيراد التقدم</button><input type="file" id="importFile" accept="application/json,.json" hidden><button class="btn outline" id="resetData">حذف التقدم</button></div><p class="muted small">إذا لم تسجّل الدخول، يبقى تقدمك محفوظًا على هذا الجهاز فقط. استخدم التصدير للاحتفاظ بنسخة احتياطية.</p></div></section>
 </main><footer class="center muted small" style="margin-top:30px">English Hero Academy 3.3 • الحفظ المحلي متاح، والمزامنة السحابية اختيارية</footer></div>
-<nav class="nav" aria-label="التنقل الرئيسي"><button data-nav="home" class="active" aria-label="الرئيسية"><span aria-hidden="true">⌂</span><small>الرئيسية</small></button><button data-nav="learningHub" aria-label="التعلّم"><span aria-hidden="true">📚</span><small>التعلّم</small></button><button data-nav="training" aria-label="التحديات والاختبارات"><span aria-hidden="true">🎯</span><small>اختبر نفسك</small></button><button data-nav="practice" aria-label="المواقف اليومية"><span aria-hidden="true">🎭</span><small>مواقف يومية</small></button><button data-nav="conversation" aria-label="المحادثة بالإنجليزية"><span aria-hidden="true">💬</span><small>المحادثة</small></button><button data-nav="review" aria-label="المراجعة"><span aria-hidden="true">🧠</span><small>المراجعة</small></button><button data-nav="profile" aria-label="حسابي"><span aria-hidden="true">👤</span><small>حسابي</small></button></nav><div id="toast" class="toast hidden" role="status"></div>
+<nav class="nav" aria-label="التنقل الرئيسي"><button data-nav="home" class="active" aria-label="الرئيسية"><span aria-hidden="true">⌂</span><small>الرئيسية</small></button><button data-nav="learningHub" aria-label="التعلّم"><span aria-hidden="true">📚</span><small>التعلّم</small></button><button data-nav="training" aria-label="التحديات والاختبارات"><span aria-hidden="true">🎯</span><small>اختبر نفسك</small></button><button data-nav="practice" aria-label="المواقف اليومية"><span aria-hidden="true">🎭</span><small>مواقف يومية</small></button><button data-nav="review" aria-label="المراجعة"><span aria-hidden="true">🧠</span><small>المراجعة</small></button><button data-nav="profile" aria-label="حسابي"><span aria-hidden="true">👤</span><small>حسابي</small></button></nav><div id="toast" class="toast hidden" role="status"></div>
 <script>
 'use strict';
 const lessons=[
@@ -1671,7 +1647,6 @@ theme();renderStats();renderCourses();renderHome();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="config.js" defer></script>
 <script src="cloud-sync.js" defer></script>
-<script src="ai-chat.js" defer></script>
 
 <section id="installAppPanel" style="max-width:760px;margin:18px auto;padding:18px;border:1px solid #30415c;border-radius:18px;background:#141e32;text-align:center">
   <div style="font-weight:800;font-size:18px;margin-bottom:6px">📲 ثبّت English Hero على جوالك</div>
