@@ -266,7 +266,15 @@
     wrap('renderInsights', original => function () { const result=original(); renderLevel(); renderProfessionalReport(); return result; });
     wrap('renderScenarioList', original => function () { const result=original(); return result; });
     wrap('startQuiz', original => function (mode, pool) {
-      if (mode !== 'pro') return original(mode,pool);
+      if (mode !== 'pro') {
+        // A new ordinary quiz must never inherit the previous timed exam's clock.
+        activeExam = false;
+        if (examTimer) clearInterval(examTimer);
+        examTimer = null;
+        const oldClock = $('professionalExamClock');
+        if (oldClock) oldClock.remove();
+        return original(mode,pool);
+      }
       const previousQuiz = typeof quiz !== 'undefined' ? quiz : null;
       activeExam = false;
       if (examTimer) clearInterval(examTimer); examTimer = null;
