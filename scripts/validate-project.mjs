@@ -74,6 +74,28 @@ check(learningExpansion.includes('100 * n + 25 * n * Math.max(0, n - 1)') && lea
 check(learningExpansion.includes('شارة المستوى ') && learningExpansion.includes('جوائز المستويات'), 'Every progression level has a displayed reward');
 check(learningExpansion.includes('الاختبار الاحترافي الموقّت') && learningExpansion.includes('12 * 60'), 'Professional timed mixed assessment is available');
 check(learningExpansion.includes('grammarAcademyGrid') && learningExpansion.includes('grammarLessons'), 'Progressive grammar academy lessons are present');
+check(learningExpansion.includes('reviewedAcademyQuestions') && learningExpansion.includes('new Set(options).size !== 4'), 'Grammar academy filters malformed and duplicate-choice questions');
+try {
+  const bankMatch = learningExpansion.match(/const academyQuestions = ([\s\S]*?);\s*\/\/ Validate every lesson bank/);
+  if (!bankMatch) throw new Error('Question bank declaration not found');
+  const banks = new Function('return (' + bankMatch[1] + ')')();
+  check(banks.length === 10, 'Grammar academy has a separate bank for all 10 lessons');
+  check(banks.every(bank => Array.isArray(bank) && bank.length === 8), 'Every grammar lesson has 8 focused questions');
+  const malformed = banks.some(bank => {
+    const prompts = new Set();
+    return bank.some(q => {
+      if (!Array.isArray(q) || q.length !== 5 || q.some(v => typeof v !== 'string' || !v.trim())) return true;
+      const prompt = q[0].trim().toLowerCase();
+      const options = q.slice(1).map(v => v.trim().toLowerCase());
+      if (prompts.has(prompt) || new Set(options).size !== 4 || !options.includes(q[1].trim().toLowerCase())) return true;
+      prompts.add(prompt);
+      return false;
+    });
+  });
+  check(!malformed, 'Grammar academy questions have unique prompts and four distinct answer choices');
+} catch (error) {
+  fail.push('Grammar academy question bank can be parsed and validated: ' + error.message);
+}
 check(learningExpansion.includes('ehFontScale') && learningExpansion.includes('ehReduceMotion'), 'Font-size and reduced-motion customization controls are present');
 check(learningExpansion.includes('متوسط نتائج الاختبارات') && learningExpansion.includes('أخطاء تحتاج مراجعة'), 'Progress report includes quiz averages and review needs');
 try { new Function(learningExpansion); check(true, 'Learning expansion JavaScript syntax is valid'); } catch (error) { fail.push(`learning-expansion.js has a syntax error: ${error.message}`); }
