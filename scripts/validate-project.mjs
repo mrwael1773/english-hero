@@ -69,6 +69,8 @@ check(cloud.includes("$cloud('cloudRestoreBackup')?.addEventListener('click'") &
 check(!existsSync(join(root, 'ai-chat.js')) && !html.includes('src="ai-chat.js"'), 'Retired AI coach code is absent from the public site');
 check(html.includes('src="pro-dashboard.js"') && sw.includes("'./pro-dashboard.js'"), 'Professional progress dashboard is linked and cached offline');
 check(html.includes('id="proDashboard"') && html.includes('id="weeklyActivity"') && html.includes('id="quizHistoryList"') && html.includes('id="quizMistakesList"'), 'Professional statistics, quiz history, and error review UI exist');
+check(progressDashboard.includes('state.completed.includes(l.id)?l.words.length:0') && !progressDashboard.includes('state.completed.includes(i)?l.words.length:0'), 'Learned-word totals use lesson IDs including extra lessons');
+check(html.includes("age>=0&&age<7") && html.includes("x.mode==='mistakes'"), 'Weekly and review achievements enforce their actual conditions');
 try { new Function(progressDashboard); check(true, 'Professional dashboard JavaScript syntax is valid'); } catch (error) { fail.push(`pro-dashboard.js has a syntax error: ${error.message}`); }
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
