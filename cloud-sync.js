@@ -199,8 +199,10 @@
         const saved=await uploadProgress();
         if(saved) status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
       } catch(e) {
-        ready=true;setSignedInUI();
-        status(String(e?.message||'').includes('انتهت مهلة المزامنة') ? e.message : 'تعذرت مزامنة التقدم. بقيت بياناتك المحلية محفوظة؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
+        // A failed initial download must not unlock uploads: the local state may
+        // belong to another account, and uploading it could overwrite cloud data.
+        ready=false;setSignedInUI();
+        status(String(e?.message||'').includes('انتهت مهلة المزامنة') ? e.message : 'تعذرت مزامنة التقدم، وأوقفنا الرفع مؤقتًا لحماية بيانات حسابك. بقيت بياناتك محفوظة محليًا؛ حاول المزامنة بعد عودة الاتصال.');
         console.error('English Hero cloud sync:',e?.message||e);
       }
     })();
