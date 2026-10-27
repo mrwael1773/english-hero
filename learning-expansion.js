@@ -292,6 +292,15 @@
       const tick=()=>{if(!activeExam||!clock.isConnected)return;const m=Math.floor(examSeconds/60),sec=examSeconds%60;clock.textContent='الوقت المتبقي '+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');clock.classList.toggle('urgent',examSeconds<=60);if(examSeconds<=0){activeExam=false;if(examTimer)clearInterval(examTimer);examTimer=null;if(typeof finishQuiz==='function')finishQuiz();return;}examSeconds--;};
       if(examTimer)clearInterval(examTimer);tick();examTimer=setInterval(tick,1000);
     });
+    // Quitting a timed exam must cancel its countdown immediately.
+    const quitButton = $('quitQuiz');
+    if (quitButton) quitButton.addEventListener('click', () => {
+      activeExam = false;
+      if (examTimer) clearInterval(examTimer);
+      examTimer = null;
+      const clock = $('professionalExamClock');
+      if (clock) clock.remove();
+    });
     wrap('finishQuiz', original => function () {
       const wasExam = activeExam || (typeof quiz !== 'undefined' && quiz && quiz.mode === 'pro');
       if (examTimer) clearInterval(examTimer); examTimer=null; activeExam=false;
