@@ -58,8 +58,12 @@
       .eh-level-toggle[aria-expanded="true"] .eh-toggle-icon{transform:rotate(180deg)}
       .eh-level-current{display:flex;align-items:center;gap:10px;min-width:0}.eh-level-current-copy{min-width:0}
       .eh-level-current-copy small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
-      .eh-level-details{margin-top:12px}.eh-level-details[hidden]{display:none!important}
-      .eh-level-reward-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:300px;overflow:auto;padding:2px}
+      .eh-level-details{margin-top:12px}
+      .eh-level-details[hidden],.eh-level-reward-list{display:none!important}
+      .eh-level-details:not([hidden]) .eh-level-reward-list{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:300px;overflow:auto;padding:2px}
+      #profile .eh-rewards{display:none!important}
+      #profile .eh-reward{display:none!important}
+      #profile #levelRewardsDetails .eh-reward{display:flex!important}
       @media(max-width:460px){.eh-level-reward-list{grid-template-columns:1fr}.eh-level-toggle .eh-toggle-icon{flex-basis:32px;width:32px;height:32px}}
       .eh-exam-clock{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--stroke);border-radius:12px;background:var(--surface2);font-weight:900;font-variant-numeric:tabular-nums}
       .eh-exam-clock.urgent{color:var(--red);border-color:var(--red)}
@@ -77,6 +81,10 @@
   const renderRewards = () => {
     // Remove legacy expanded reward lists left by older cached builds.
     document.querySelectorAll('.eh-rewards').forEach(node => node.remove());
+    document.querySelectorAll('#profile .eh-reward-list, #profile .level-rewards, #profile .level-list').forEach(node => {
+      if (!node.closest('#levelRewardsDetails')) node.remove();
+    });
+    document.querySelectorAll('#profile #levelRewardsPanel').forEach((node, index) => { if (index > 0) node.remove(); });
     const oldPanel = $('levelRewardsPanel');
     if (oldPanel && (!$('levelRewardsToggle') || !$('levelRewardsDetails'))) oldPanel.remove();
     if (!safeState()) return;
