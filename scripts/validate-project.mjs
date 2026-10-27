@@ -18,6 +18,7 @@ const iconSvg = read('icon.svg');
 const sw = read('sw.js');
 const cloud = read('cloud-sync.js');
 const progressDashboard = read('pro-dashboard.js');
+const learningExpansion = read('learning-expansion.js');
 const config = read('config.js');
 const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-6000.json');
@@ -68,6 +69,14 @@ check(cloud.includes("english-hero-cloud-owner") && cloud.includes('function rep
 check(cloud.includes("$cloud('cloudRestoreBackup')?.addEventListener('click'") && cloud.includes('mergeProgress(backup)'), 'Account-specific backup restore is available and merges progress safely');
 check(!existsSync(join(root, 'ai-chat.js')) && !html.includes('src="ai-chat.js"'), 'Retired AI coach code is absent from the public site');
 check(html.includes('src="pro-dashboard.js"') && sw.includes("'./pro-dashboard.js'"), 'Professional progress dashboard is linked and cached offline');
+check(html.includes('src="learning-expansion.js"') && sw.includes("'./learning-expansion.js'"), 'Learning expansion is linked and cached offline');
+check(learningExpansion.includes('100 * n + 25 * n * Math.max(0, n - 1)') && learningExpansion.includes('level <= 50'), 'XP requirements increase with each level and cap at level 50');
+check(learningExpansion.includes('شارة المستوى ') && learningExpansion.includes('جوائز المستويات'), 'Every progression level has a displayed reward');
+check(learningExpansion.includes('الاختبار الاحترافي الموقّت') && learningExpansion.includes('12 * 60'), 'Professional timed mixed assessment is available');
+check(learningExpansion.includes('grammarAcademyGrid') && learningExpansion.includes('grammarLessons'), 'Progressive grammar academy lessons are present');
+check(learningExpansion.includes('ehFontScale') && learningExpansion.includes('ehReduceMotion'), 'Font-size and reduced-motion customization controls are present');
+check(learningExpansion.includes('متوسط نتائج الاختبارات') && learningExpansion.includes('أخطاء تحتاج مراجعة'), 'Progress report includes quiz averages and review needs');
+try { new Function(learningExpansion); check(true, 'Learning expansion JavaScript syntax is valid'); } catch (error) { fail.push(`learning-expansion.js has a syntax error: ${error.message}`); }
 check(html.includes('id="proDashboard"') && html.includes('id="weeklyActivity"') && html.includes('id="quizHistoryList"') && html.includes('id="quizMistakesList"'), 'Professional statistics, quiz history, and error review UI exist');
 check(progressDashboard.includes('state.completed.includes(l.id)?l.words.length:0') && !progressDashboard.includes('state.completed.includes(i)?l.words.length:0'), 'Learned-word totals use lesson IDs including extra lessons');
 check(html.includes("age>=0&&age<7") && html.includes("x.mode==='mistakes'"), 'Weekly and review achievements enforce their actual conditions');
