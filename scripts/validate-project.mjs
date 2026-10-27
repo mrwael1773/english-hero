@@ -116,6 +116,23 @@ try {
 } catch (error) {
   fail.push('Grammar academy question bank can be parsed and validated: ' + error.message);
 }
+try {
+  const generalMatch = html.match(/const grammar=([\\s\\S]*?);let quiz=/);
+  if (!generalMatch) throw new Error('General grammar bank declaration not found');
+  const bank = new Function('return (' + generalMatch[1] + ')')();
+  const prompts = new Set();
+  let malformed = !Array.isArray(bank) || bank.length < 20;
+  if (Array.isArray(bank)) bank.forEach((q) => {
+    if (!Array.isArray(q) || q.length !== 5 || q.some(v => typeof v !== 'string' || !v.trim())) { malformed = true; return; }
+    const prompt = q[0].trim().toLocaleLowerCase();
+    const options = q.slice(1).map(v => v.trim().toLocaleLowerCase());
+    if (prompts.has(prompt) || new Set(options).size !== 4 || !options.includes(q[1].trim().toLocaleLowerCase())) malformed = true;
+    prompts.add(prompt);
+  });
+  check(!malformed, 'General grammar quiz has unique prompts, four distinct choices, and a valid correct answer for every question');
+} catch (error) {
+  fail.push('General grammar quiz bank can be parsed and validated: ' + error.message);
+}
 check(learningExpansion.includes('ehFontScale') && learningExpansion.includes('ehReduceMotion'), 'Font-size and reduced-motion customization controls are present');
 check(learningExpansion.includes('متوسط نتائج الاختبارات') && learningExpansion.includes('أخطاء تحتاج مراجعة'), 'Progress report includes quiz averages and review needs');
 try { new Function(learningExpansion); check(true, 'Learning expansion JavaScript syntax is valid'); } catch (error) { fail.push(`learning-expansion.js has a syntax error: ${error.message}`); }
