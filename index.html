@@ -1571,10 +1571,19 @@ function speak(s){
   utterance.onerror=event=>{
     if(event.error!=='canceled'&&event.error!=='interrupted')toast('تعذر تشغيل النطق. تحقق من صوت الإنجليزية في إعدادات الجهاز.');
   };
-  // Speak during the original button tap; avoid async voice loading and timer delays.
-  try{synth.cancel()}catch{}
+  // Warm up the platform voice list early; never cancel an idle synthesizer.
+  // On iOS Safari, cancel() immediately before the first speak() can drop that utterance.
+  try{synth.getVoices()}catch{}
   try{synth.resume()}catch{}
-  if(requestId===speechRequestId)synth.speak(utterance);
+  if(requestId!==speechRequestId)return;
+  if(synth.speaking||synth.pending){
+    try{synth.cancel()}catch{}
+    // If replacing active speech, allow iOS Safari to finish cancellation first.
+    setTimeout(()=>{if(requestId===speechRequestId){try{synth.resume()}catch{};synth.speak(utterance)}},80);
+  }else{
+    // First/idle utterance is started synchronously inside the user's tap.
+    synth.speak(utterance);
+  }
 }$('sayWord').onclick=()=>speak(lessons[li].words[wi].en);
 const modes=[['🗓️','اختبار الأسبوع','20 سؤالًا متنوعًا من القواعد والمفردات — جرّبه كل جمعة','weekly'],['⚔️','معركة الكلمات','خمسة أسئلة سريعة واربح نقاطًا إضافية','battle'],['🎲','اختبار شامل','أسئلة اختيار من متعدد','all'],['✍️','تحدي الكتابة','اكتب الكلمة الإنجليزية بنفسك','type'],['🔊','اختبار الاستماع','استمع واختر الإجابة','listen'],['📅','تحدي اليوم','أسئلة قصيرة تتجدد يوميًا','daily'],['📘','قواعد وجمل','اختبر فهم القواعد الأساسية','grammar'],['🧠','اختبار أخطائي','راجع الكلمات التي أخطأت فيها','mistakes']];const m=$('trainingModes');m.replaceChildren(...modes.map(([emoji,title,desc,key])=>{const b=document.createElement('button');b.className='tile';b.innerHTML='<div class="emoji">'+emoji+'</div><h3>'+title+'</h3><p>'+desc+'</p>';b.onclick=()=>startQuiz(key);return b}));
 const grammar=[['I ___ up at 6:00.','wake','am wake','waking','wakes'],['I ___ English.','understand','am understand','understanding','understands'],['She ___ football.','plays','play','playing','is play'],['I like ___ football.','playing','play','plays','played'],['He ___ to school every day.','goes','go','going','gone'],['I am going to ___ English.','learn','learning','learns','learned'],['It ___ sunny today.','is','are','am','be'],['I wake up ___ 5:30.','at','in','on','to'],
