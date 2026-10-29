@@ -161,7 +161,13 @@ input,select,textarea,button{max-width:100%;min-width:0}
 .vocab-focus-nav button:disabled{opacity:.35;cursor:not-allowed}
 @media(max-width:600px){.vocab-focus-stage{min-height:300px;margin:18px 0;padding:24px 16px;border-radius:22px;gap:18px}.vocab-focus-word{font-size:clamp(36px,11vw,56px)}.vocab-focus-actions,.vocab-focus-nav{width:100%}.vocab-focus-actions button,.vocab-focus-nav button{flex:1;min-width:0}}
 
-</style></head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
+</style>
+<style>
+/* Adventure map v1 — local-only progress */
+.eh-world{position:relative;overflow:hidden;border:1px solid #44567e;border-radius:24px;padding:20px;margin-top:16px;background:radial-gradient(ellipse at 85% 8%,#40346a88,transparent 48%),linear-gradient(155deg,#172b46,#121729);box-shadow:0 14px 36px #0003}
+.eh-world-header{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}.eh-world-header h2{margin:5px 0}.eh-world-tag{font-size:12px;color:#b7e8ef}.eh-world-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}.eh-world-node{border:1px solid #46577c;border-radius:18px;padding:14px 10px;min-height:145px;background:#20334dbb;color:inherit;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;transition:transform .2s,box-shadow .2s}.eh-world-node:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 10px 28px #080c1d}.eh-world-node:focus-visible{outline:3px solid #6de6c3;outline-offset:2px}.eh-world-node strong{font-size:14px}.eh-world-node small{color:#b7cbe3;line-height:1.45}.eh-world-node .eh-emoji{font-size:30px}.eh-world-node.done{border-color:#6de6c3;background:#17433f}.eh-world-node.current{border-color:#ffc37a;background:#443a38;box-shadow:0 0 0 2px #ffc37a55}.eh-world-node.locked{opacity:.6;background:#1a263a}.eh-world-progress{height:10px;background:#0a1425;border-radius:99px;overflow:hidden;margin:14px 0 8px}.eh-world-progress>i{display:block;height:100%;background:linear-gradient(90deg,#6de6c3,#9a87ff);border-radius:inherit;transition:width .3s}.eh-world-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.eh-world-foot p{margin:4px 0;color:#c8d7ed;font-size:13px}.eh-world-next{padding:10px 18px;border:0;border-radius:12px;background:#6de6c3;color:#0a1523;font-weight:850}@media(max-width:640px){.eh-world{padding:14px}.eh-world-track{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.eh-world-node{min-height:132px;padding:10px 7px}}
+</style>
+</head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
   <div style="text-align:center; padding:12px; margin:10px 0 20px;">
   <a href="privacy.html">سياسة الخصوصية</a>
   &nbsp; | &nbsp;
@@ -176,7 +182,7 @@ input,select,textarea,button{max-width:100%;min-width:0}
 <button class="launch-card" data-page="practice"><span class="launch-icon">🎭</span><span class="launch-copy"><b>محاكي المواقف اليومية</b><small>تدرّب على الردود الإنجليزية في الحياة اليومية</small></span><span class="launch-arrow">←</span></button>
 <button class="launch-card" data-page="wordDetective"><span class="launch-icon">🕵️</span><span class="launch-copy"><b>مغامرة المحقق الإنجليزي</b><small>حل ألغاز لغوية، اكتشف الأخطاء، وتعلّم من التلميحات بلا عملات أو مشتريات</small></span><span class="launch-arrow">←</span></button>
 </div></div>
-<div class="section" id="studentDesk"><div class="row between"><h2>🎓 مكتب الطالب</h2><span class="chip">خطتك الدراسية</span></div><p class="muted small">رتّب واجباتك ومذاكرتك هنا. تُحفظ مهامك على هذا الجهاز مجانًا.</p><div class="panel"><form id="studentTaskForm" class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:10px"><label class="small">المادة أو المجال<input id="studentSubject" class="field" maxlength="50" placeholder="مثال: الإنجليزي" required></label><label class="small">المهمة المطلوبة<input id="studentTaskText" class="field" maxlength="120" placeholder="مثال: مراجعة 10 كلمات" required></label><button class="btn primary" type="submit">＋ إضافة مهمة</button></form><div class="row between" style="margin-top:16px"><b>مهامي الدراسية</b><span class="chip" id="studentTaskCount">٠ مهام متبقية</span></div><div class="progress" style="margin:12px 0"><i id="studentTaskProgress"></i></div><div id="studentTaskList" aria-live="polite"><p class="empty">ما عندك مهام بعد. أضف أول مهمة لمذاكرتك.</p></div><div class="row" style="margin-top:12px"><button class="btn ghost" type="button" id="studentTaskClearDone">حذف المهام المكتملة</button><button class="btn outline" type="button" id="studentTaskReset">مسح كل المهام</button></div><p class="muted small" id="studentTaskStatus" role="status"></p></div></div><div class="section"><h2>🎯 مهام اليوم</h2><p class="muted small">أنجز المهام لتحافظ على تقدمك اليومي.</p><div class="grid" id="dailyTasks"></div></div><div class="section"><div class="row between"><h2>🧭 مسار تعلّمك</h2><span class="chip" id="pathLevel">المستوى ١</span></div><div class="panel"><p id="pathSummary" class="muted">ابدأ بأول درس وافتح المراحل بالتدريج.</p><div class="progress"><i id="pathProgress"></i></div><div id="learningPathSteps" class="grid" style="margin-top:12px"></div></div></div><div class="section"><div class="row between"><h2>📈 تقرير تقدمك</h2><span class="chip" id="reportPeriod">آخر ٧ أيام</span></div><div class="grid" id="progressReport"></div><p id="reportTip" class="muted small"></p></div><div class="section"><div class="row between"><h2>📚 ابدأ من هنا</h2><button class="btn ghost" data-page="courses">كل الدروس ←</button></div><div class="grid" id="homeCourses"></div></div></section>
+<div class="section" id="studentDesk"><div class="row between"><h2>🎓 مكتب الطالب</h2><span class="chip">خطتك الدراسية</span></div><p class="muted small">رتّب واجباتك ومذاكرتك هنا. تُحفظ مهامك على هذا الجهاز مجانًا.</p><div class="panel"><form id="studentTaskForm" class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:10px"><label class="small">المادة أو المجال<input id="studentSubject" class="field" maxlength="50" placeholder="مثال: الإنجليزي" required></label><label class="small">المهمة المطلوبة<input id="studentTaskText" class="field" maxlength="120" placeholder="مثال: مراجعة 10 كلمات" required></label><button class="btn primary" type="submit">＋ إضافة مهمة</button></form><div class="row between" style="margin-top:16px"><b>مهامي الدراسية</b><span class="chip" id="studentTaskCount">٠ مهام متبقية</span></div><div class="progress" style="margin:12px 0"><i id="studentTaskProgress"></i></div><div id="studentTaskList" aria-live="polite"><p class="empty">ما عندك مهام بعد. أضف أول مهمة لمذاكرتك.</p></div><div class="row" style="margin-top:12px"><button class="btn ghost" type="button" id="studentTaskClearDone">حذف المهام المكتملة</button><button class="btn outline" type="button" id="studentTaskReset">مسح كل المهام</button></div><p class="muted small" id="studentTaskStatus" role="status"></p></div></div><div class="section"><h2>🎯 مهام اليوم</h2><p class="muted small">أنجز المهام لتحافظ على تقدمك اليومي.</p><div class="grid" id="dailyTasks"></div></div><div id="ehAdventureMap" aria-label="خريطة مغامرة الدروس"></div><div class="section"><div class="row between"><h2>🧭 مسار تعلّمك</h2><span class="chip" id="pathLevel">المستوى ١</span></div><div class="panel"><p id="pathSummary" class="muted">ابدأ بأول درس وافتح المراحل بالتدريج.</p><div class="progress"><i id="pathProgress"></i></div><div id="learningPathSteps" class="grid" style="margin-top:12px"></div></div></div><div class="section"><div class="row between"><h2>📈 تقرير تقدمك</h2><span class="chip" id="reportPeriod">آخر ٧ أيام</span></div><div class="grid" id="progressReport"></div><p id="reportTip" class="muted small"></p></div><div class="section"><div class="row between"><h2>📚 ابدأ من هنا</h2><button class="btn ghost" data-page="courses">كل الدروس ←</button></div><div class="grid" id="homeCourses"></div></div></section>
 <section class="view" id="wordDetective">
   <div class="row between"><h2>🕵️ مغامرة المحقق الإنجليزي</h2><span class="chip">٥ ألغاز في كل جولة</span></div>
   <p class="muted">أنت المحقق! اقرأ الدليل، اختر الجملة الصحيحة، واكتشف سبب الخطأ. لا توجد عملات أو مشتريات؛ المكسب الحقيقي هو تعلّم الإنجليزية.</p>
@@ -1950,6 +1956,49 @@ window.addEventListener('DOMContentLoaded', () => {
     if (control) send('section_view', control.getAttribute('data-page') || control.textContent.trim());
   }, true);
 });
+</script>
+
+<script>
+<!-- English Hero Adventure Map v1: offline, zero-API progression -->
+(() => {
+  const mount = document.getElementById('ehAdventureMap');
+  if (!mount || typeof lessons === 'undefined' || typeof state === 'undefined') return;
+  const sanitize = value => String(value == null ? '' : value);
+  function drawAdventure(){
+    const finished = new Set(Array.isArray(state.completed) ? state.completed.map(String) : []);
+    const isDone = index => finished.has(String(index)) || finished.has(String(lessons[index]?.id));
+    const total = lessons.length;
+    const done = lessons.reduce((sum, _, index) => sum + Number(isDone(index)), 0);
+    const next = lessons.findIndex((_,index)=>!isDone(index));
+    mount.replaceChildren();
+    const panel=document.createElement('div'); panel.className='eh-world';
+    const header=document.createElement('div');header.className='eh-world-header';
+    const h=document.createElement('div');const kicker=document.createElement('div');kicker.className='eh-world-tag';kicker.textContent='🗺️ مغامرة English Hero • دون إنترنت';
+    const heading=document.createElement('h2');heading.textContent='عالم الكلمات والمحادثات';
+    h.append(kicker,heading);const count=document.createElement('span');count.className='chip';count.textContent=done+' من '+total+' دروس مكتملة';header.append(h,count);
+    const track=document.createElement('div');track.className='eh-world-track';
+    lessons.forEach((lesson,index)=>{
+      const completed=isDone(index), unlocked=index===0||isDone(index-1)||completed;
+      const btn=document.createElement('button');btn.type='button';btn.className='eh-world-node '+(completed?'done':!unlocked?'locked':index===next?'current':'');btn.disabled=!unlocked;
+      const emoji=document.createElement('span');emoji.className='eh-emoji';emoji.textContent=completed?'✅':unlocked?sanitize(lesson.emoji||'📘'):'🔒';
+      const title=document.createElement('strong');title.textContent='المرحلة '+(index+1)+' · '+sanitize(lesson.title||'درس');
+      const desc=document.createElement('small');desc.textContent=completed?'مكتملة · يمكن مراجعتها':unlocked?'اضغط لدخول الدرس':'أكمل المرحلة السابقة أولًا';
+      btn.append(emoji,title,desc);btn.setAttribute('aria-label',title.textContent+'، '+desc.textContent);
+      if(unlocked)btn.addEventListener('click',()=>openLesson(index));track.append(btn);
+    });
+    const bar=document.createElement('div');bar.className='eh-world-progress';bar.setAttribute('role','progressbar');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(total));bar.setAttribute('aria-valuenow',String(done));const fill=document.createElement('i');fill.style.width=(total?done/total*100:0)+'%';bar.append(fill);
+    const foot=document.createElement('div');foot.className='eh-world-foot';const tip=document.createElement('p');tip.textContent=next<0?'🏆 أحسنت! أكملت جميع المراحل، راجع دروسك أو اختبر نفسك.':'✨ المرحلة التالية: '+sanitize(lessons[next]?.title||'ابدأ التعلّم');
+    const start=document.createElement('button');start.type='button';start.className='eh-world-next';start.textContent=next<0?'🎯 انتقل للتحديات':'🚀 ابدأ المرحلة التالية';start.addEventListener('click',()=>next<0?page('training'):openLesson(next));foot.append(tip,start);
+    panel.append(header,track,bar,foot);mount.append(panel);
+  }
+  drawAdventure();
+  document.addEventListener('click', event=>{if(event.target.closest('[data-nav], [data-page], #nextWord, #finishLesson, #completeLesson, #continueBtn'))queueMicrotask(drawAdventure)},true);
+  window.addEventListener('storage',event=>{if(event.key==='english-hero-academy-3')drawAdventure()});
+  window.addEventListener('pageshow',drawAdventure);
+  // Re-read existing local progress after lessons are marked complete.
+  const observer=new MutationObserver(()=>{if(document.getElementById('home')?.classList.contains('active'))drawAdventure()});
+  observer.observe(document.getElementById('home'),{attributes:true,attributeFilter:['class']});
+})();
 </script>
 </body>
 </html>
