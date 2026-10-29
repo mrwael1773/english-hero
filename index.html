@@ -80,6 +80,23 @@ input,select,textarea,button{max-width:100%;min-width:0}
   .launch-copy b{font-size:14px}
   .nav button small{font-size:8px}
 }
+
+/* Compact vocabulary cards: reduce unnecessary vertical scrolling on phones */
+.vocab-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
+.vocab-card{min-height:0;height:auto;min-width:0;padding:10px;gap:7px;border-radius:13px}
+.vocab-card-word{font-size:clamp(15px,4vw,18px);line-height:1.25;min-height:2.5em;display:flex;align-items:center;overflow-wrap:anywhere}
+.vocab-card-meaning{padding:7px 8px;line-height:1.5;font-size:13px}
+.vocab-card-hint{display:none}
+.vocab-card-actions{justify-content:flex-start;gap:6px;margin-top:0}
+.vocab-icon-btn{min-width:34px;min-height:32px;padding:4px 8px;font-size:16px;border-radius:10px}
+.vocab-card:not(.is-revealed) .vocab-card-word{min-height:2.5em}
+@media(max-width:420px){
+ .vocab-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .vocab-card{padding:9px;gap:6px}
+ .vocab-card-word{font-size:16px;min-height:2.5em}
+ .vocab-icon-btn{min-width:32px;min-height:30px;padding:3px 7px}
+}
+
 </style></head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
   <div style="text-align:center; padding:12px; margin:10px 0 20px;">
   <a href="privacy.html">سياسة الخصوصية</a>
