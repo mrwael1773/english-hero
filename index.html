@@ -1446,7 +1446,7 @@ function renderVocabSearch(){
 const input=$('vocabSearch'),root=$('vocabResults');if(!input||!root)return;
 const q=input.value.trim().toLocaleLowerCase();stopVocabularyObserver();root.replaceChildren();
 if(!q){renderFoundationPage();return;}
-if(state.vocabFocusMode==='searchSelected'&&state.vocabSearchText===q&&foundationWords[state.vocabPosition]&&normalizedVocabulary[state.vocabPosition]?.includes(q)){activeVocabWords=foundationWords;renderFocusedVocabulary(state.vocabPosition);return;}
+if(state.vocabFocusMode==='searchSelected'&&state.vocabSearchText.trim().toLocaleLowerCase()===q&&foundationWords[state.vocabPosition]&&normalizedVocabulary[state.vocabPosition]?.includes(q)){activeVocabWords=foundationWords;renderFocusedVocabulary(state.vocabPosition);return;}
 const results=[];
 for(let i=0;i<foundationWords.length&&results.length<30;i++){if(normalizedVocabulary[i].includes(q))results.push({word:foundationWords[i],index:i});}
 if(!results.length){const p=document.createElement('p');p.className='empty';p.textContent='لم نجد كلمة مطابقة. جرّب كتابة جزء أقصر من الكلمة.';root.append(p);return;}
