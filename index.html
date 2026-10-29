@@ -1335,7 +1335,7 @@ for(let i=0;i<foundationWords.length&&results.length<vocabBatch;i++){if(normaliz
 if(results.length<vocabBatch)results.length=vocabBatch;else{for(const w of all){if(results.length>=vocabBatch)break;if([w.en,w.ar,w.ex||''].some(v=>String(v).toLocaleLowerCase().includes(q)))results.push({type:'lesson',word:w});}}
 if(!results.length){const p=document.createElement('p');p.className='empty';p.textContent='لم نجد كلمة مطابقة. جرّب كتابة جزء أقصر من الكلمة.';root.append(p);return;}
 const note=document.createElement('p');note.className='muted small vocab-grid-note';note.textContent='عرض '+results.length+' نتيجة كحد أقصى. اضغط على البطاقة لإظهار المعنى.';root.append(note);
-const grid=document.createElement('div');grid.className='vocab-card-grid';grid.id='vocabCardGrid';const fragment=document.createDocumentFragment();
+const grid=document.createElement('div');grid.className='vocab-card-grid';grid.setAttribute('id','vocabCardGrid');const fragment=document.createDocumentFragment();
 for(const item of results)fragment.append(createVocabularyRow(item.word,item.index??0,item.type==='lesson'));
 grid.append(fragment);root.append(grid);
 }
@@ -1386,8 +1386,8 @@ stopVocabularyObserver();root.replaceChildren();vocabRenderedCount=0;
 if(!foundationWords.length){const p=document.createElement('p');p.className='muted small';p.textContent='جارٍ تحميل الكلمات التأسيسية…';root.append(p);return;}
 activeVocabWords=vocabLevel==='all'?foundationWords:foundationWords.slice((Number(vocabLevel)-1)*1000,Number(vocabLevel)*1000);
 const note=document.createElement('p');note.className='muted small vocab-grid-note';note.textContent='تصفح الكلمات الشائعة. إجمالي كلمات هذه المجموعة: '+activeVocabWords.length.toLocaleString('ar-SA')+'. اضغط على أي بطاقة لإظهار معناها.';root.append(note);
-const grid=document.createElement('div');grid.className='vocab-card-grid';grid.id='vocabCardGrid';root.append(grid);
-const sentinel=document.createElement('div');sentinel.id='vocabSentinel';sentinel.setAttribute('aria-hidden','true');sentinel.style.height='1px';root.append(sentinel);
+const grid=document.createElement('div');grid.className='vocab-card-grid';grid.setAttribute('id','vocabCardGrid');root.append(grid);
+const sentinel=document.createElement('div');sentinel.setAttribute('id','vocabSentinel');sentinel.setAttribute('aria-hidden','true');sentinel.style.height='1px';root.append(sentinel);
 appendNextVocabularyBatch();
 if(vocabRenderedCount<activeVocabWords.length&&'IntersectionObserver' in window){vocabObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))appendNextVocabularyBatch();},{root:null,rootMargin:'300px 0px',threshold:0});vocabObserver.observe(sentinel);}
 }
