@@ -1501,12 +1501,12 @@ if(meaning.dataset.loaded==='yes'){meaning.hidden=!meaning.hidden;return;}
 meaning.hidden=false;meaning.textContent='جارٍ جلب المعنى…';meaning.dataset.loaded='loading';
 Promise.resolve(translateFoundation(String(word),meaning)).finally(()=>{meaning.dataset.loaded='yes';});
 },'btn primary vocab-focus-reveal');
-const speak=makeButton('🔊 استمع للنطق',()=>speak(String(word)),'btn ghost vocab-focus-action');
+const speakButton=makeButton('🔊 استمع للنطق',()=>window.speak(String(word)),'btn ghost vocab-focus-action');
 const saved=()=>state.foundationSaved.includes(String(word));
 const saveBtn=makeButton(saved()?'★ محفوظة':'☆ حفظ للمراجعة',()=>{
 state.foundationSaved=saved()?state.foundationSaved.filter(w=>w!==String(word)):[...state.foundationSaved,String(word)];save();saveBtn.textContent=saved()?'★ محفوظة':'☆ حفظ للمراجعة';toast(saved()?'حُفظت الكلمة للمراجعة':'أُزيلت من الكلمات المحفوظة');
 },'btn ghost vocab-focus-action');
-actions.append(reveal,speak,saveBtn);
+actions.append(reveal,speakButton,saveBtn);
 const nav=document.createElement('div');nav.className='vocab-focus-nav';
 const prev=makeButton('← السابقة',()=>renderFocusedVocabulary(focusWordIndex-1),'btn ghost');prev.disabled=focusWordIndex===0;
 const next=makeButton('التالية →',()=>renderFocusedVocabulary(focusWordIndex+1),'btn primary');next.disabled=focusWordIndex===activeVocabWords.length-1;
