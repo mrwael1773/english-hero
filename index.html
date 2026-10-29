@@ -97,6 +97,50 @@ input,select,textarea,button{max-width:100%;min-width:0}
  .vocab-icon-btn{min-width:32px;min-height:30px;padding:3px 7px}
 }
 
+
+/* Modern vocabulary wall: editorial bento tiles instead of repetitive stacked cards */
+.vocab-card-grid{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-flow:dense;grid-auto-rows:minmax(76px,auto);
+ gap:12px;align-items:stretch
+}
+.vocab-card{
+ position:relative;isolation:isolate;overflow:hidden;min-width:0;min-height:104px;height:auto;
+ grid-column:span 2;display:flex;flex-direction:column;justify-content:space-between;gap:10px;
+ padding:15px 16px;border:1px solid color-mix(in srgb,var(--accent,#7c83ff) 20%,var(--stroke));
+ border-radius:20px;background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--accent,#7c83ff) 8%,var(--surface)));
+ box-shadow:0 5px 18px #00000008;transition:transform .2s,border-color .2s,box-shadow .2s
+}
+.vocab-card:before{content:"";position:absolute;z-index:-1;width:76px;height:76px;border-radius:50%;right:-25px;top:-28px;background:color-mix(in srgb,var(--accent,#7c83ff) 13%,transparent)}
+.vocab-card:nth-child(7n+1),.vocab-card:nth-child(7n+5){grid-column:span 3;min-height:122px}
+.vocab-card:nth-child(7n+3){grid-column:span 3}
+.vocab-card:hover,.vocab-card:focus-visible{transform:translateY(-2px);border-color:var(--accent,#7c83ff);box-shadow:0 12px 28px #00000012;outline:none}
+.vocab-card-word{position:relative;z-index:1;display:block;width:100%;font-size:clamp(17px,2.2vw,23px);font-weight:800;letter-spacing:-.025em;line-height:1.25;text-align:left;overflow-wrap:anywhere;color:var(--ink)}
+.vocab-card-meaning{position:relative;z-index:1;padding:9px 11px;border-radius:12px;background:color-mix(in srgb,var(--accent,#7c83ff) 9%,var(--surface));line-height:1.55;font-size:14px}
+.vocab-card-hint{font-size:11px;opacity:.66;margin-top:auto;letter-spacing:.01em}
+.vocab-card-actions{position:relative;z-index:2;display:flex;align-items:center;justify-content:flex-start;gap:7px;margin-top:auto}
+.vocab-icon-btn{min-width:34px;min-height:32px;padding:4px 9px;border:1px solid var(--stroke);border-radius:11px;background:color-mix(in srgb,var(--surface) 86%,transparent);font-size:15px}
+.vocab-card.is-revealed{border-color:var(--accent,#7c83ff);background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--accent,#7c83ff) 13%,var(--surface)))}
+.vocab-card.is-revealed .vocab-card-word{color:var(--accent,#7c83ff)}
+.light .vocab-card{background:linear-gradient(145deg,#fff,#f5f7ff);border-color:#e1e6f3}
+.light .vocab-card-meaning{background:#edf1ff}
+.vocab-grid-note{padding:10px 14px;border:1px solid var(--stroke);border-radius:14px;background:var(--surface2);font-size:13px;line-height:1.5}
+@media(max-width:640px){
+ .vocab-card-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(68px,auto);gap:9px}
+ .vocab-card{grid-column:span 2;min-height:106px;padding:12px;border-radius:17px;gap:9px}
+ .vocab-card:nth-child(7n+1),.vocab-card:nth-child(7n+5){grid-column:span 3;min-height:116px}
+ .vocab-card:nth-child(7n+3){grid-column:span 1;min-height:116px;padding:10px}
+ .vocab-card:nth-child(7n+3) .vocab-card-word{font-size:15px}
+ .vocab-card-word{font-size:17px}
+ .vocab-card-hint{font-size:10px}
+ .vocab-icon-btn{min-width:32px;min-height:30px;padding:3px 8px}
+}
+@media(max-width:360px){
+ .vocab-card-grid{gap:7px}
+ .vocab-card{padding:10px;min-height:100px}
+ .vocab-card:nth-child(7n+1),.vocab-card:nth-child(7n+5){min-height:108px}
+ .vocab-card:nth-child(7n+3){padding:8px}
+}
+
 </style></head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
   <div style="text-align:center; padding:12px; margin:10px 0 20px;">
   <a href="privacy.html">سياسة الخصوصية</a>
