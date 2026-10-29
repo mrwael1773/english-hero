@@ -141,6 +141,26 @@ input,select,textarea,button{max-width:100%;min-width:0}
  .vocab-card:nth-child(7n+3){padding:8px}
 }
 
+
+/* Vocabulary presentation: focused reader, not a grid of word cards */
+#vocabResults .vocab-card-grid,#vocabResults .vocab-card{display:none!important}
+.vocab-focus-stage{max-width:760px;margin:28px auto 18px;padding:clamp(22px,5vw,48px);border:0;border-radius:28px;background:radial-gradient(circle at 90% 5%,rgba(105,120,255,.13),transparent 35%),linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--surface) 92%,#8794ff));box-shadow:0 20px 60px #1d2b4d12;min-height:330px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px}
+.vocab-focus-meta{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:12px}
+.vocab-focus-word{font-size:clamp(38px,8vw,76px);font-weight:850;letter-spacing:-.055em;line-height:1.08;overflow-wrap:anywhere;color:var(--ink)}
+.vocab-focus-rule{width:64px;height:4px;border-radius:99px;background:linear-gradient(90deg,#7c83ff,#48c6b5)}
+.vocab-focus-meaning{font-size:18px;line-height:1.7;color:var(--ink);min-height:30px}
+.vocab-focus-meaning:empty{display:none}
+.vocab-focus-actions,.vocab-focus-nav{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px}
+.vocab-focus-actions{margin-top:4px}
+.vocab-focus-track{width:100%;height:4px;background:var(--stroke);border-radius:99px;overflow:hidden;margin-top:8px}
+.vocab-focus-progress{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c83ff,#48c6b5);transition:width .2s}
+.vocab-focus-note{text-align:center;color:var(--muted);font-size:12px;margin:12px 0 22px}
+.vocab-search-results{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:18px 0}
+.vocab-search-result{border:0;border-bottom:1px solid var(--stroke);background:transparent;color:var(--ink);padding:10px 14px;font-size:18px;font-weight:650;cursor:pointer}
+.vocab-search-result:hover{color:#747cf5;border-color:#747cf5}
+.vocab-focus-nav button:disabled{opacity:.35;cursor:not-allowed}
+@media(max-width:600px){.vocab-focus-stage{min-height:300px;margin:18px 0;padding:24px 16px;border-radius:22px;gap:18px}.vocab-focus-word{font-size:clamp(36px,11vw,56px)}.vocab-focus-actions,.vocab-focus-nav{width:100%}.vocab-focus-actions button,.vocab-focus-nav button{flex:1;min-width:0}}
+
 </style></head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
   <div style="text-align:center; padding:12px; margin:10px 0 20px;">
   <a href="privacy.html">سياسة الخصوصية</a>
@@ -1421,15 +1441,14 @@ const input=$('vocabSearch'),root=$('vocabResults');if(!input||!root)return;
 const q=input.value.trim().toLocaleLowerCase();stopVocabularyObserver();root.replaceChildren();
 if(!q){renderFoundationPage();return}
 const results=[];
-for(let i=0;i<foundationWords.length&&results.length<vocabBatch;i++){if(normalizedVocabulary[i].includes(q))results.push({type:'foundation',word:foundationWords[i],index:i});}
-if(results.length<vocabBatch)results.length=vocabBatch;else{for(const w of all){if(results.length>=vocabBatch)break;if([w.en,w.ar,w.ex||''].some(v=>String(v).toLocaleLowerCase().includes(q)))results.push({type:'lesson',word:w});}}
+for(let i=0;i<foundationWords.length&&results.length<30;i++){if(normalizedVocabulary[i].includes(q))results.push({word:foundationWords[i],index:i});}
 if(!results.length){const p=document.createElement('p');p.className='empty';p.textContent='لم نجد كلمة مطابقة. جرّب كتابة جزء أقصر من الكلمة.';root.append(p);return;}
-const note=document.createElement('p');note.className='muted small vocab-grid-note';note.textContent='عرض '+results.length+' نتيجة كحد أقصى. اضغط على البطاقة لإظهار المعنى.';root.append(note);
-const grid=document.createElement('div');grid.className='vocab-card-grid';grid.setAttribute('id','vocabCardGrid');const fragment=document.createDocumentFragment();
-for(const item of results)fragment.append(createVocabularyRow(item.word,item.index??0,item.type==='lesson'));
-grid.append(fragment);root.append(grid);
+const heading=document.createElement('p');heading.className='vocab-focus-note';heading.textContent='اختر كلمة لفتحها في وضع التركيز';root.append(heading);
+const list=document.createElement('div');list.className='vocab-search-results';
+for(const item of results){const b=makeButton(String(item.word),()=>{activeVocabWords=foundationWords;renderFocusedVocabulary(item.index);},'vocab-search-result');b.dir='ltr';b.lang='en';list.append(b);}
+root.append(list);
 }
-let foundationWords=[],vocabLevel='all';
+let foundationWords=[],vocabLevel='all',focusWordIndex=0;
 const vocabBatch=50;
 let activeVocabWords=[];
 let vocabRenderedCount=0;
@@ -1460,26 +1479,49 @@ const revealMeaning=()=>{if(!meaning.hidden){meaning.hidden=true;reveal.hidden=f
 row.addEventListener('click',revealMeaning);row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();revealMeaning();}});actions.addEventListener('click',e=>e.stopPropagation());
 row.append(en,meaning,reveal,actions);return row;
 }
-function appendNextVocabularyBatch(){
-const root=$('vocabResults');if(!root||$('vocabSearch')?.value.trim())return;
-if(vocabRenderedCount>=activeVocabWords.length){stopVocabularyObserver();return;}
-const grid=$('vocabCardGrid');if(!grid)return;
-const fragment=document.createDocumentFragment();const end=Math.min(vocabRenderedCount+vocabBatch,activeVocabWords.length);
-for(let i=vocabRenderedCount;i<end;i++)fragment.append(createVocabularyRow(activeVocabWords[i],vocabLevel==='all'?i:(Number(vocabLevel)-1)*1000+i));
-vocabRenderedCount=end;grid.append(fragment);
-const label=$('vocabPageLabel');if(label)label.textContent='تم عرض '+vocabRenderedCount.toLocaleString('ar-SA')+' من '+activeVocabWords.length.toLocaleString('ar-SA');
-if(vocabRenderedCount>=activeVocabWords.length)stopVocabularyObserver();
+function appendNextVocabularyBatch(){renderFoundationPage();}
+function renderFocusedVocabulary(index){
+const root=$('vocabResults');if(!root||!activeVocabWords.length)return;
+stopVocabularyObserver();root.replaceChildren();
+focusWordIndex=Math.max(0,Math.min(index,activeVocabWords.length-1));
+const word=activeVocabWords[focusWordIndex];
+const stage=document.createElement('section');stage.className='vocab-focus-stage';
+const meta=document.createElement('div');meta.className='vocab-focus-meta';
+const eyebrow=document.createElement('span');eyebrow.className='eyebrow';eyebrow.textContent='WORD '+String(focusWordIndex+1).padStart(2,'0');
+const total=document.createElement('span');total.className='vocab-focus-total';total.textContent='من '+activeVocabWords.length.toLocaleString('ar-SA')+' كلمة';
+meta.append(eyebrow,total);
+const wordNode=document.createElement('div');wordNode.className='vocab-focus-word';wordNode.dir='ltr';wordNode.lang='en';wordNode.textContent=String(word);
+const meaning=document.createElement('div');meaning.className='vocab-focus-meaning';meaning.textContent='المعنى يظهر عند الطلب';
+const rule=document.createElement('div');rule.className='vocab-focus-rule';
+const progress=document.createElement('div');progress.className='vocab-focus-progress';progress.style.width=((focusWordIndex+1)/activeVocabWords.length*100)+'%';
+const progressTrack=document.createElement('div');progressTrack.className='vocab-focus-track';progressTrack.append(progress);
+const actions=document.createElement('div');actions.className='vocab-focus-actions';
+const reveal=makeButton('إظهار المعنى',()=>{
+if(meaning.dataset.loaded==='yes'){meaning.hidden=!meaning.hidden;return;}
+meaning.hidden=false;meaning.textContent='جارٍ جلب المعنى…';meaning.dataset.loaded='loading';
+Promise.resolve(translateFoundation(String(word),meaning)).finally(()=>{meaning.dataset.loaded='yes';});
+},'btn primary vocab-focus-reveal');
+const speak=makeButton('🔊 استمع للنطق',()=>speakWord(String(word)),'btn ghost vocab-focus-action');
+const saved=()=>state.foundationSaved.includes(String(word));
+const saveBtn=makeButton(saved()?'★ محفوظة':'☆ حفظ للمراجعة',()=>{
+state.foundationSaved=saved()?state.foundationSaved.filter(w=>w!==String(word)):[...state.foundationSaved,String(word)];save();saveBtn.textContent=saved()?'★ محفوظة':'☆ حفظ للمراجعة';toast(saved()?'حُفظت الكلمة للمراجعة':'أُزيلت من الكلمات المحفوظة');
+},'btn ghost vocab-focus-action');
+actions.append(reveal,speak,saveBtn);
+const nav=document.createElement('div');nav.className='vocab-focus-nav';
+const prev=makeButton('← السابقة',()=>renderFocusedVocabulary(focusWordIndex-1),'btn ghost');prev.disabled=focusWordIndex===0;
+const next=makeButton('التالية →',()=>renderFocusedVocabulary(focusWordIndex+1),'btn primary');next.disabled=focusWordIndex===activeVocabWords.length-1;
+nav.append(prev,next);
+stage.append(meta,wordNode,rule,meaning,actions,progressTrack,nav);
+root.append(stage);
+const note=document.createElement('p');note.className='vocab-focus-note';note.textContent='وضع التركيز • كلمة واحدة في كل مرة، بدون شبكة بطاقات';root.append(note);
 }
 function renderFoundationPage(){
 const root=$('vocabResults');if(!root)return;if($('vocabSearch')?.value.trim()){renderVocabSearch();return;}
 stopVocabularyObserver();root.replaceChildren();vocabRenderedCount=0;
 if(!foundationWords.length){const p=document.createElement('p');p.className='muted small';p.textContent='جارٍ تحميل الكلمات التأسيسية…';root.append(p);return;}
 activeVocabWords=vocabLevel==='all'?foundationWords:foundationWords.slice((Number(vocabLevel)-1)*1000,Number(vocabLevel)*1000);
-const note=document.createElement('p');note.className='muted small vocab-grid-note';note.textContent='تصفح الكلمات الشائعة. إجمالي كلمات هذه المجموعة: '+activeVocabWords.length.toLocaleString('ar-SA')+'. اضغط على أي بطاقة لإظهار معناها.';root.append(note);
-const grid=document.createElement('div');grid.className='vocab-card-grid';grid.id='vocabCardGrid';root.append(grid);
-const sentinel=document.createElement('div');sentinel.setAttribute('id','vocabSentinel');sentinel.setAttribute('aria-hidden','true');sentinel.style.height='1px';root.append(sentinel);
-appendNextVocabularyBatch();
-if(vocabRenderedCount<activeVocabWords.length&&'IntersectionObserver' in window){vocabObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))appendNextVocabularyBatch();},{root:null,rootMargin:'300px 0px',threshold:0});vocabObserver.observe(sentinel);}
+const note=document.createElement('p');note.className='muted small vocab-grid-note';note.textContent='إجمالي كلمات هذه المجموعة: '+activeVocabWords.length.toLocaleString('ar-SA')+'. تنقّل بين الكلمات باستخدام السابق والتالي.';root.append(note);
+renderFocusedVocabulary(0);
 }
 async function loadFoundationWords(){
 try{
