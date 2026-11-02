@@ -115,6 +115,9 @@
       quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
       streak:Math.max(0,Number(r.streak)||0,Number(local.streak)||0),
       completed:union(r.completed,local.completed),
+      masteredLessons:union(r.masteredLessons,local.masteredLessons),
+      lessonStarted:union(r.lessonStarted,local.lessonStarted),
+      lessonTrained:union(r.lessonTrained,local.lessonTrained),
       foundationSaved:union(r.foundationSaved,local.foundationSaved),
       lessonPositions:{...object(r.lessonPositions),...object(local.lessonPositions)},
       chatHistory,
@@ -136,7 +139,8 @@
     state.best=Math.min(100,Math.max(0,Number(state.best)||0));
     state.quizzes=Math.max(0,Number(state.quizzes)||0);
     state.streak=Math.max(0,Number(state.streak)||0);
-    for(const key of ['completed','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
+    for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
+    for(const key of ['masteredLessons','lessonStarted','lessonTrained']) state[key]=[...new Set(state[key].filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     for(const key of ['misses','review','daily','lessonPositions']) if(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])) state[key]={};
     state.completed=[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0))];
     state.saved=[...new Set(state.saved)];
