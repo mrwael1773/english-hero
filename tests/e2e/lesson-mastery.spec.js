@@ -274,22 +274,15 @@ test('a full lesson retest moves a previously missed word into delayed retention
   await page.reload();
   await page.evaluate(() => window.page('courses'));
   await page.locator('#courseGrid button').first().click();
+  const translations = new Map();
   for (let i = 0; i < 6; i++) {
+    const en = (await page.locator('#wordEnglish').innerText()).trim();
+    const ar = (await page.locator('#wordArabic').innerText()).trim();
+    translations.set(en, ar);
+    translations.set(ar, en);
     await page.locator('#nextWord').click();
   }
   await expect(page.locator('#quizArea')).toBeVisible();
-  const translations = new Map();
-  const lessonWords = await page.evaluate(() => Array.from(document.querySelectorAll('#wordEnglish')).map(x => x.textContent));
-  const firstLessonTranslations = await page.evaluate(() => {
-    const rows = [];
-    for (let i = 0; i < 6; i++) {
-      const word = document.querySelector('#wordEnglish')?.textContent;
-      const meaning = document.querySelector('#wordArabic')?.textContent;
-      if (word && meaning) rows.push([word, meaning]);
-    }
-    return rows;
-  });
-  for (const [en, ar] of firstLessonTranslations) { translations.set(en, ar); translations.set(ar, en); }
   // The lesson words are available from the app's visible content before the quiz starts.
   for (let i = 0; i < 18; i++) {
     const question = (await page.locator('#question').innerText()).trim();
