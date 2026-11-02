@@ -90,6 +90,7 @@ const normalizePilotRecords=value=>{
   return [{code,pre,post,delay,attendance,sessions,updated_at:Number.isFinite(timestamp)?new Date(timestamp).toISOString():new Date(0).toISOString()}];
  });
 };
+const readPilotLocal=key=>{try{return normalizePilotRecords(JSON.parse(localStorage.getItem(key)||'[]'));}catch{return[];}};
 let data={started:false,trained:[],attempts:0,mastered:false,lastAttempt:null,reviewDue:null,wrong:[]};
 let pilot=[];
 try{data=normalizeMastery(JSON.parse(localStorage.getItem(KEY)||'{}'));}catch{data=normalizeMastery({});}
@@ -122,19 +123,19 @@ async function loadPilotCloud(){
  try{
   const owner=localStorage.getItem(PILOT_OWNER)||'';
   if(owner&&owner!==uid){
-   const previousLocal=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));
+   const previousLocal=readPilotLocal(PILOT);
    // Do not overwrite a previous teacher's scoped backup with the empty cache left by sign-out.
    if(previousLocal.length)localStorage.setItem(pilotAccountKey(owner),JSON.stringify(previousLocal));
-   try{pilot=normalizePilotRecords(JSON.parse(localStorage.getItem(pilotAccountKey(uid))||'[]'));}catch{pilot=[];}
+   pilot=readPilotLocal(pilotAccountKey(uid));
    localStorage.setItem(PILOT_OWNER,uid);savePilot(false);renderPilot();
   }else if(!owner){
-   const legacy=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));
+   const legacy=readPilotLocal(PILOT);
    if(legacy.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(legacy));
-   try{pilot=normalizePilotRecords(JSON.parse(localStorage.getItem(pilotAccountKey(uid))||'[]'));}catch{pilot=[];}
+   pilot=readPilotLocal(pilotAccountKey(uid));
    localStorage.setItem(PILOT_OWNER,uid);savePilot(false);renderPilot();
   }else{
    const scoped=localStorage.getItem(pilotAccountKey(uid));
-   if(scoped){try{pilot=normalizePilotRecords(JSON.parse(scoped));}catch{pilot=[];}savePilot(false);renderPilot();}
+   if(scoped){pilot=readPilotLocal(pilotAccountKey(uid));savePilot(false);renderPilot();}
    else{pilot=[];localStorage.setItem(pilotAccountKey(uid),'[]');savePilot(false);renderPilot();}
   }
   const {data,error}=await cloudClient.from('teacher_pilot_results').select('code,pre_score,post_score,retention_score,sessions_attended,session_log,learning_note,updated_at').eq('user_id',uid);
@@ -154,7 +155,7 @@ async function initPilotCloud(){
   cloudClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data,error}=await cloudClient.auth.getSession();if(error)throw error;
   cloudUser=data.session?.user||null;cloudReady=false;setCloudUI();
-  if(cloudUser)await loadPilotCloud();else{const legacy=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));if(legacy.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(legacy));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('سجّل الدخول بحساب المعلم قبل عرض أو إدخال أو تصدير بيانات الطلاب. السجلات المحلية القديمة غير المرتبطة بحساب تبقى مخفية ولا تُنقل تلقائيًا.');}
+  if(cloudUser)await loadPilotCloud();else{const legacy=readPilotLocal(PILOT);if(legacy.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(legacy));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('سجّل الدخول بحساب المعلم قبل عرض أو إدخال أو تصدير بيانات الطلاب. السجلات المحلية القديمة غير المرتبطة بحساب تبقى مخفية ولا تُنقل تلقائيًا.');}
   cloudClient.auth.onAuthStateChange((event,session)=>{
    const previousUser=cloudUser;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;
    cloudUser=session?.user||null;cloudReady=false;setCloudUI();
