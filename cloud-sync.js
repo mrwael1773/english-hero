@@ -114,8 +114,8 @@
       best:Math.min(100,Math.max(0,Number(r.best)||0,Number(local.best)||0)),
       quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
       streak:Math.max(0,Number(r.streak)||0,Number(local.streak)||0),
-      completed:union(r.completed,local.completed),
-      masteredLessons:union(r.masteredLessons,local.masteredLessons),
+      completed:union(r.completed,local.completed).filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length),
+      masteredLessons:typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(union(r.masteredLessons,local.masteredLessons)):union(r.masteredLessons,local.masteredLessons),
       lessonStarted:union(r.lessonStarted,local.lessonStarted),
       lessonTrained:union(r.lessonTrained,local.lessonTrained),
       foundationSaved:union(r.foundationSaved,local.foundationSaved),
@@ -140,9 +140,9 @@
     state.quizzes=Math.max(0,Number(state.quizzes)||0);
     state.streak=Math.max(0,Number(state.streak)||0);
     for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
-    for(const key of ['masteredLessons','lessonStarted','lessonTrained']) state[key]=[...new Set(state[key].filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
+    state.masteredLessons=typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(state.masteredLessons):[...new Set(state.masteredLessons.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];for(const key of ['lessonStarted','lessonTrained']) state[key]=[...new Set(state[key].filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     for(const key of ['misses','review','daily','lessonPositions']) if(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])) state[key]={};
-    state.completed=[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0))];
+    state.completed=[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     state.saved=[...new Set(state.saved)];
     state.foundationSaved=[...new Set(state.foundationSaved.filter(x=>typeof x==='string'))];
     state.theme=state.theme==='light'?'light':'dark';
