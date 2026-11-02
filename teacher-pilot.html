@@ -126,7 +126,7 @@ async function initPilotCloud(){
   cloudClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data,error}=await cloudClient.auth.getSession();if(error)throw error;
   cloudUser=data.session?.user||null;setCloudUI();
-  if(cloudUser)await loadPilotCloud();else{const owner=localStorage.getItem(PILOT_OWNER)||'';if(owner&&pilot.length)localStorage.setItem(pilotAccountKey(owner),JSON.stringify(pilot));else if(pilot.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(pilot));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('سجّل الدخول بحساب المعلم لعرض سجله ومزامنة النتائج.');}
+  if(cloudUser)await loadPilotCloud();else{const owner=localStorage.getItem(PILOT_OWNER)||'';if(owner&&pilot.length)localStorage.setItem(pilotAccountKey(owner),JSON.stringify(pilot));else if(pilot.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(pilot));if(!owner){try{pilot=JSON.parse(localStorage.getItem(PILOT+'-unclaimed')||'[]');if(!Array.isArray(pilot))pilot=[];}catch{pilot=[];}}else{pilot=[];}localStorage.setItem(PILOT,JSON.stringify(pilot));renderPilot();cloudStatus('سجّل الدخول بحساب المعلم لمزامنة النتائج. السجل المحلي غير المرتبط سيبقى على هذا الجهاز حتى تختار ربطه بحسابك.');}
   cloudClient.auth.onAuthStateChange((event,session)=>{
    const previousUser=cloudUser;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;
    cloudUser=session?.user||null;setCloudUI();
