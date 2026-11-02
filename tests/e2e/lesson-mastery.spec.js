@@ -122,3 +122,68 @@ test('legacy completed records do not count as mastery or unlock later lessons',
   await expect(page.locator('#done')).toHaveText(/^0\/\d+$/);
   await expect(page.locator('#courseGrid button').nth(1)).toBeDisabled();
 });
+
+
+test('legacy completions and broken mastery records cannot inflate progress or skip lessons', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      completed: [0, 1, 2, 3],
+      masteredLessons: [0, 2, 3],
+      saved: []
+    }));
+  });
+  await page.reload();
+  await expect(page.locator('#done')).toHaveText(/^1\\/\\d+$/);
+  await page.evaluate(() => window.page('courses'));
+  await expect(page.locator('#courseGrid button').nth(1)).toBeEnabled();
+  await expect(page.locator('#courseGrid button').nth(2)).toBeDisabled();
+  await page.evaluate(() => window.page('profile'));
+  await expect(page.locator('#profileDone')).toHaveText('1');
+  await expect(page.locator('#badges .badgeitem').first()).not.toHaveClass(/locked/);
+  await page.locator('#continueBtn').click();
+  await expect(page.locator('#lessonTag')).toContainText('الدرس 2');
+});
+
+test('imported progress normalizes mastery to a continuous verified path', async ({ page }) => {
+  await page.goto('/');
+  page.on('dialog', dialog => dialog.accept());
+  const backup = {
+    version: 3,
+    data: {
+      completed: [0, 1, 2],
+      masteredLessons: [0, 2],
+      lessonStarted: [0, 2],
+      lessonTrained: [],
+      saved: []
+    }
+  };
+  await page.locator('#importFile').setInputFiles({
+    name: 'english-hero-backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(backup))
+  });
+  await expect(page.locator('#done')).toHaveText(/^1\\/\\d+$/);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.masteredLessons).toEqual([0]);
+  await page.evaluate(() => window.page('courses'));
+  await expect(page.locator('#courseGrid button').nth(1)).toBeEnabled();
+  await expect(page.locator('#courseGrid button').nth(2)).toBeDisabled();
+});
+
+test('continue button shows completion instead of reopening lesson one when all lessons are mastered', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.page('courses'));
+  const totalLessons = await page.locator('#courseGrid button').count();
+  await page.evaluate(total => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      completed: Array.from({length: total}, (_, i) => i),
+      masteredLessons: Array.from({length: total}, (_, i) => i),
+      saved: []
+    }));
+  }, totalLessons);
+  await page.reload();
+  await page.locator('#continueBtn').click();
+  await expect(page.locator('#toast')).toContainText('أتقنت جميع الدروس');
+  await expect(page.locator('#lessonTag')).toBeHidden();
+});
