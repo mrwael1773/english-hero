@@ -23,10 +23,10 @@ async function openFirstLesson(page) {
   return translations;
 }
 
-async function answerAll(page, translations, shouldPass, wrongIndex = -1) {
+async function answerAll(page, translations, shouldPass, wrongIndices = []) {\n  const wrongSet = new Set(Array.isArray(wrongIndices) ? wrongIndices : Number.isInteger(wrongIndices) && wrongIndices >= 0 ? [wrongIndices] : []);
   for (let i = 0; i < 18; i++) {
     const question = (await page.locator('#question').innerText()).trim();
-    const passThis = shouldPass && i !== wrongIndex;
+    const passThis = shouldPass && !wrongSet.has(i);
     const input = page.locator('#answerArea input');
     if (await input.count()) {
       const correct = translations.get(question);
@@ -79,7 +79,23 @@ test('a score above 80% records mastery and unlocks the next lesson', async ({ p
 });
 
 
-test('a word missed in one part remains in review even if its other answers are correct', async ({ page }) => {
+
+test('14 of 18 correct stays below the 80% mastery threshold', async ({ page }) => {
+  const translations = await openFirstLesson(page);
+  await answerAll(page, translations, true, [0, 1, 2, 3]);
+  await expect(page.locator('#quizArea')).toContainText('لم يتحقق الإتقان بعد');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.masteredLessons || []).not.toContain(0);
+});
+
+test('15 of 18 correct passes the 80% mastery threshold', async ({ page }) => {
+  const translations = await openFirstLesson(page);
+  await answerAll(page, translations, true, [0, 1, 2]);
+  await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.masteredLessons || []).toContain(0);
+});
+\ntest('a word missed in one part remains in review even if its other answers are correct', async ({ page }) => {
   const translations = await openFirstLesson(page);
   await answerAll(page, translations, true, 0);
   await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
