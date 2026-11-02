@@ -10,6 +10,7 @@ create table if not exists public.learning_progress (
 );
 
 alter table public.learning_progress enable row level security;
+alter table public.learning_progress force row level security;
 
 -- A signed-in user can access only their own row.
 drop policy if exists "Users can read own learning progress" on public.learning_progress;
@@ -31,6 +32,7 @@ create policy "Users can update own learning progress"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
--- Do not grant anonymous access. Supabase's authenticated role uses the policies above.
-grant select, insert, update on public.learning_progress to authenticated;
-revoke all on public.learning_progress from anon;
+-- Grant only the browser operations required by cloud progress sync.
+-- TRUNCATE, REFERENCES, TRIGGER, DELETE, and anonymous access are not needed.
+revoke all privileges on table public.learning_progress from public, anon, authenticated;
+grant select, insert, update on table public.learning_progress to authenticated;
