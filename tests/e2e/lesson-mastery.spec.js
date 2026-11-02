@@ -209,7 +209,7 @@ test('correctly practising a missed word schedules a three-day retention retest'
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
   expect(saved.misses?.['0-0']).toBeUndefined();
   expect(saved.review?.['0-0']?.stage).toBe('retention');
-  expect(saved.review?.['0-0']?.due).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+  expect(saved.review?.['0-0']?.due).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
   await page.evaluate(() => window.page('review'));
   await expect(page.locator('#reviewStart')).toBeDisabled();
   await expect(page.locator('#reviewStart')).toHaveText('لا توجد مراجعات مستحقة الآن');
@@ -256,5 +256,5 @@ test('a missed retention retest returns the word to immediate practice', async (
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
   expect(saved.misses?.['0-0']).toBe(true);
   expect(saved.review?.['0-0']?.stage).toBe('practice');
-  expect(saved.review?.['0-0']?.due).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+  expect(saved.review?.['0-0']?.due).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
 });
