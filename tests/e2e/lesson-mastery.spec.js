@@ -105,6 +105,8 @@ test('a word missed in one part remains in review even if its other answers are 
   expect(Object.keys(saved.misses || {})).toHaveLength(1);
   const missedId = Object.keys(saved.misses)[0];
   expect(saved.review?.[missedId]?.due).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  expect(saved.review?.[missedId]?.stage).toBe('practice');
+  expect(saved.review?.[missedId]?.times).toBe(1);
 });
 
 test('legacy completed records do not count as mastery or unlock later lessons', async ({ page }) => {
@@ -257,4 +259,58 @@ test('a missed retention retest returns the word to immediate practice', async (
   expect(saved.misses?.['0-0']).toBe(true);
   expect(saved.review?.['0-0']?.stage).toBe('practice');
   expect(saved.review?.['0-0']?.due).toMatch(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+});
+
+
+test('a full lesson retest moves a previously missed word into delayed retention', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      misses: {'0-0': true},
+      review: {'0-0': {last: '2026-10-30', due: '2026-11-02', stage: 'practice', times: 1}},
+      saved: []
+    }));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('courses'));
+  await page.locator('#courseGrid button').first().click();
+  for (let i = 0; i < 6; i++) {
+    await page.locator('#nextWord').click();
+  }
+  await expect(page.locator('#quizArea')).toBeVisible();
+  const translations = new Map();
+  const lessonWords = await page.evaluate(() => Array.from(document.querySelectorAll('#wordEnglish')).map(x => x.textContent));
+  const firstLessonTranslations = await page.evaluate(() => {
+    const rows = [];
+    for (let i = 0; i < 6; i++) {
+      const word = document.querySelector('#wordEnglish')?.textContent;
+      const meaning = document.querySelector('#wordArabic')?.textContent;
+      if (word && meaning) rows.push([word, meaning]);
+    }
+    return rows;
+  });
+  for (const [en, ar] of firstLessonTranslations) { translations.set(en, ar); translations.set(ar, en); }
+  // The lesson words are available from the app's visible content before the quiz starts.
+  for (let i = 0; i < 18; i++) {
+    const question = (await page.locator('#question').innerText()).trim();
+    const input = page.locator('#answerArea input');
+    if (await input.count()) {
+      await input.fill(translations.get(question) || 'hello');
+      await page.locator('#answerArea button').click();
+    } else {
+      let correct;
+      if (question.includes('Listen and choose')) {
+        const label = await page.locator('#quizListenButton').getAttribute('aria-label');
+        correct = label?.replace('استمع إلى نطق ', '').trim();
+      } else {
+        correct = translations.get(question);
+      }
+      const options = page.locator('#answerArea button.answer');
+      await options.filter({hasText: correct || 'مرحبًا'}).first().click();
+    }
+    await page.locator('#quizNext').click();
+  }
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.misses?.['0-0']).toBeUndefined();
+  expect(saved.review?.['0-0']?.stage).toBe('retention');
 });
