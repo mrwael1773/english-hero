@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.beforeEach(async ({ page }, testInfo) => {
-  if (testInfo.title.includes('isolates local records between teacher accounts')) return;
+test.beforeEach(async ({ page }) => {
   await page.goto('/teacher-pilot.html');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
@@ -32,34 +31,20 @@ test('pilot lesson can complete all six training words and advance through all 1
     }
     await expect(page.locator('#nextQuestion')).toBeVisible();
     await expect(page.locator('#nextQuestion')).toBeEnabled();
-    if (i < 17) await page.locator('#nextQuestion').click();
-    else await page.locator('#nextQuestion').click();
+    await page.locator('#nextQuestion').click();
   }
   await expect(page.locator('#resultArea')).toContainText('٪');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
   expect(saved.attempts).toBe(1);
   expect(saved.lastAttempt.total).toBe(18);
+  expect(saved.reviewDue).toBeTruthy();
 });
 
-test('school pilot validates anonymous participant data and exports a CSV file', async ({ page }) => {
+test('attendance records 16 individual sessions, updates a participant, and exports weekly CSV data', async ({ page }) => {
   await page.locator('[data-tab="pilot"]').click();
+
   await page.locator('#pCode').fill('STUDENT NAME');
   await page.locator('#pPre').fill('70');
-  await page.locator('#pPost').fill('85');
-  await page.locator('#pAttendance').fill('16');
-  await page.locator('#addParticipant').click();
-  await expect(page.locator('#pilotMessage')).toContainText('تحقق');
-  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
-
-  await page.locator('#pCode').fill('P02');
-  await page.locator('#pPre').fill('');
-  await page.locator('#pPost').fill('85');
-  await page.locator('#addParticipant').click();
-  await expect(page.locator('#pilotMessage')).toContainText('تحقق');
-  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
-
-  await page.locator('#pCode').fill('P02');
-  await page.locator('#pPre').fill('70.5');
   await page.locator('#pPost').fill('85');
   await page.locator('#addParticipant').click();
   await expect(page.locator('#pilotMessage')).toContainText('تحقق');
@@ -69,14 +54,80 @@ test('school pilot validates anonymous participant data and exports a CSV file',
   await page.locator('#pPre').fill('70');
   await page.locator('#pPost').fill('85');
   await page.locator('#pDelay').fill('80');
-  await page.locator('#pAttendance').fill('16');
+  for (const session of [1, 3, 5, 9, 16]) {
+    await page.locator('.pilot-session').locator(`[value="${session}"]`).check();
+  }
   await page.locator('#addParticipant').click();
   await expect(page.locator('#pilotRows tr')).toHaveCount(1);
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotCohortV1')));
-  expect(saved[0]).toMatchObject({code: 'P01', pre: 70, post: 85, delay: 80, attendance: 16});
+  let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotCohortV1')));
+  expect(saved[0]).toMatchObject({
+    code: 'P01', pre: 70, post: 85, delay: 80,
+    attendance: 5, sessions: [1, 3, 5, 9, 16],
+  });
+  await expect(page.locator('#pilotRows tr').first()).toContainText('5/16');
+  await expect(page.locator('#pilotRows tr').first()).toContainText('أ1 2، أ2 1، أ3 1، أ4 1');
+
+  // Re-saving the same anonymous code must update, not duplicate, the participant.
+  await page.locator('#pCode').fill('P01');
+  await page.locator('#pPre').fill('72');
+  await page.locator('#pPost').fill('88');
+  await page.locator('#pDelay').fill('83');
+  for (const session of [2, 8, 15]) {
+    await page.locator('.pilot-session').locator(`[value="${session}"]`).check();
+  }
+  await page.locator('#addParticipant').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(1);
+  saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotCohortV1')));
+  expect(saved[0]).toMatchObject({
+    code: 'P01', pre: 72, post: 88, delay: 83,
+    attendance: 3, sessions: [2, 8, 15],
+  });
 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#exportPilot').click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe('english-hero-pilot-results.csv');
+  const stream = await download.createReadStream();
+  let csv = '';
+  for await (const chunk of stream) csv += chunk.toString('utf8');
+  expect(csv).toContain('session_log');
+  expect(csv).toContain('week_1');
+  expect(csv).toContain('week_4');
+  expect(csv).toContain('2|8|15');
+});
+
+test('attendance survives page reload without exposing another teacher account', async ({ page }) => {
+  await page.locator('[data-tab="pilot"]').click();
+  await page.locator('#pCode').fill('P02');
+  await page.locator('#pPre').fill('60');
+  await page.locator('#pPost').fill('75');
+  await page.locator('.pilot-session[value="4"]').check();
+  await page.locator('#addParticipant').click();
+  await page.reload();
+  await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(1);
+  await expect(page.locator('#pilotRows tr').first()).toContainText('P02');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotCohortV1')));
+  expect(saved[0].sessions).toEqual([4]);
+});
+
+test('a seven-day retention quiz remains available even when the first attempt had no mistakes', async ({ page }) => {
+  const due = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  await page.evaluate((reviewDue) => {
+    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+      started: true,
+      trained: [0, 1, 2, 3, 4, 5],
+      attempts: 1,
+      mastered: true,
+      lastAttempt: { date: new Date().toISOString(), score: 100, correct: 18, total: 18 },
+      reviewDue,
+      wrong: [],
+    }));
+  }, due);
+  await page.reload();
+  await page.locator('[data-tab="review"]').click();
+  await expect(page.locator('#reviewList')).toContainText('حان موعد مراجعة الاحتفاظ بالتعلم');
+  await page.locator('#reviewQuiz').click();
+  await expect(page.locator('#testArea')).toBeVisible();
+  await expect(page.locator('#testArea .question')).toContainText('1 / 18');
 });
