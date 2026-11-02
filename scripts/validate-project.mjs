@@ -25,6 +25,9 @@ const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-20000.json');
 const migrationPath = 'supabase/migrations/20261026151420_secure_rls_auto_enable_and_optimize_progress_policies.sql';
 const migration = read(migrationPath);
+const schoolHardeningMigrationPath = 'supabase/migrations/20261102203921_harden_school_data_table_privileges.sql';
+const schoolHardeningMigration = read(schoolHardeningMigrationPath);
+const setupSql = read('supabase-setup.sql');
 
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
@@ -150,6 +153,10 @@ check(!html.includes('analytics_events') && !html.includes('englishHeroAnalytics
 check(html.includes('navigator.serviceWorker.register'), 'Main page registers the service worker');
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
 check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') && migration.includes('(SELECT auth.uid())'), 'Tracked migration contains the security and RLS policy changes');
+check(schoolHardeningMigration.includes('REVOKE ALL PRIVILEGES ON TABLE public.learning_progress') && schoolHardeningMigration.includes('FORCE ROW LEVEL SECURITY') && schoolHardeningMigration.includes('REVOKE ALL PRIVILEGES ON TABLE public.analytics_events'), 'School hardening migration removes broad client grants and forces RLS');
+check(existsSync(join(root, schoolHardeningMigrationPath)), 'School data hardening migration is tracked in the repository');
+check(setupSql.includes('force row level security') && setupSql.includes('revoke all privileges on table public.learning_progress from public, anon, authenticated'), 'Fresh Supabase setup grants only the minimum learner-progress permissions');
+check(!cloud.includes("student_progress") && !html.includes("student_progress"), 'Legacy student_progress table is not used by public application code');
 check(existsSync(join(root, migrationPath)), 'Applied Supabase migration is tracked in the repository');
 
 let vocabulary;
