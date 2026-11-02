@@ -5,13 +5,15 @@
   "description": "Android wrapper build for the English Hero learning website",
   "scripts": {
     "build:android": "npx cap sync android",
-    "open:android": "npx cap open android"
+    "open:android": "npx cap open android",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
     "@capacitor/core": "^7.4.3"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3"
+    "@capacitor/cli": "^7.4.3",
+    "@playwright/test": "^1.56.1"
   }
 }
