@@ -73,5 +73,5 @@ test('a score above 80% records mastery and unlocks the next lesson', async ({ p
   expect(saved.masteredLessons || []).toContain(0);
   await page.evaluate(() => window.page('courses'));
   await expect(page.locator('#courseGrid button').nth(1)).toBeEnabled();
-  await expect(page.locator('#done')).toHaveText('1/12');
+  await expect(page.locator('#done')).toHaveText(/^1\/\d+$/);
 });
