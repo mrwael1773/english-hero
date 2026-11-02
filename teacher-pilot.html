@@ -167,7 +167,7 @@ const buildQuestions=()=>words.flatMap((w,i)=>[
 ]);
 const shuffle=a=>{const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;};
 let qi=0,score=0,answers=[];
-const startTest=(reviewOnly=false)=>{if(data.trained.length!==6)return;const source=buildQuestions();const selected=reviewOnly?source.filter(q=>data.wrong.includes(q.word.en)):source;questions=shuffle(selected.length?selected:source).map(q=>{if(q.type==='write')return q;const distractors=words.filter(x=>x.en!==q.word.en).map(x=>q.type==='meaning'?x.ar:x.en).filter((value,index,array)=>array.indexOf(value)===index);return {...q,options:shuffle([q.answer,...distractors.slice(0,3)])};});qi=0;score=0;answers=[];$('resultArea').textContent='';renderQuestion();};
+const startTest=(reviewOnly=false)=>{if(data.trained.length!==6)return;if(reviewOnly)showTab('path');const source=buildQuestions();const selected=reviewOnly?source.filter(q=>data.wrong.includes(q.word.en)):source;questions=shuffle(selected.length?selected:source).map(q=>{if(q.type==='write')return q;const distractors=words.filter(x=>x.en!==q.word.en).map(x=>q.type==='meaning'?x.ar:x.en).filter((value,index,array)=>array.indexOf(value)===index);return {...q,options:shuffle([q.answer,...distractors.slice(0,3)])};});qi=0;score=0;answers=[];$('resultArea').textContent='';renderQuestion();};
 const renderQuestion=()=>{
 const area=$('testArea');area.classList.remove('hidden');
 if(qi>=questions.length){finishTest();return;}
