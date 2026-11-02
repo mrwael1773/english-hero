@@ -137,7 +137,7 @@ check(learningExpansion.includes('ehFontScale') && learningExpansion.includes('e
 check(learningExpansion.includes('متوسط نتائج الاختبارات') && learningExpansion.includes('أخطاء تحتاج مراجعة'), 'Progress report includes quiz averages and review needs');
 try { new Function(learningExpansion); check(true, 'Learning expansion JavaScript syntax is valid'); } catch (error) { fail.push(`learning-expansion.js has a syntax error: ${error.message}`); }
 check(html.includes('id="proDashboard"') && html.includes('id="weeklyActivity"') && html.includes('id="quizHistoryList"') && html.includes('id="quizMistakesList"'), 'Professional statistics, quiz history, and error review UI exist');
-check(progressDashboard.includes('state.completed.includes(l.id)?l.words.length:0') && !progressDashboard.includes('state.completed.includes(i)?l.words.length:0'), 'Learned-word totals use lesson IDs including extra lessons');
+check(progressDashboard.includes('state.masteredLessons.includes(l.id)?l.words.length:0') && !progressDashboard.includes('state.masteredLessons.includes(i)?l.words.length:0'), 'Mastered-word totals use lesson IDs including extra lessons');
 check(html.includes("age>=0&&age<7") && html.includes("x.mode==='mistakes'"), 'Weekly and review achievements enforce their actual conditions');
 try { new Function(progressDashboard); check(true, 'Professional dashboard JavaScript syntax is valid'); } catch (error) { fail.push(`pro-dashboard.js has a syntax error: ${error.message}`); }
 try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript syntax is valid'); } catch (error) { fail.push(`english-hero-plus.js has a syntax error: ${error.message}`); }

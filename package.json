@@ -9,11 +9,16 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/core": "^7.4.3"
+    "@capacitor/android": "7.6.10",
+    "@capacitor/core": "7.6.10"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3",
+    "@capacitor/cli": "7.6.10",
     "@playwright/test": "^1.56.1"
+  },
+  "overrides": {
+    "glob": "14.0.2",
+    "minimatch": "11.0.3",
+    "rimraf": "6.1.3"
   }
 }

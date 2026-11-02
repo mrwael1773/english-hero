@@ -33,7 +33,7 @@
     set('levelIcon',level>=35?'👑':level>=21?'💎':level>=11?'🏆':level>=6?'🚀':level>=3?'📘':'🌱');
     const answered=Math.max(0,Number(state.answerStats&&state.answerStats.answered)||0),correct=Math.max(0,Number(state.answerStats&&state.answerStats.correct)||0);
     set('statQuestions',answered);set('statAccuracy',(answered?Math.round(correct/answered*100):0)+'٪');
-    set('statWordsLearned',lessons.reduce((n,l,i)=>n+(state.completed.includes(l.id)?l.words.length:0),0));
+    set('statWordsLearned',lessons.reduce((n,l,i)=>n+(state.masteredLessons.includes(l.id)?l.words.length:0),0));
     const dayNames=['أحد','اثن','ثلا','أرب','خمي','جمع','سبت'],now=new Date(),days=[];
     for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const values=state.daily&&state.daily[key]||{};const count=Object.values(values).filter(Boolean).length;days.push({key,label:dayNames[d.getDay()],count,active:count>0});}
     set('statActiveDays',days.filter(d=>d.active).length+' / ٧');
@@ -51,7 +51,7 @@
     if(typeof state==='undefined'||typeof lessons==='undefined')return;
     const info=levelInfo(state.xp),xp=info.xp,level=info.level;
     const el=$('pathLevel');if(el)el.textContent='المستوى '+level+' • '+xp+' XP';
-    const summary=$('pathSummary');if(summary)summary.textContent='أكملت '+state.completed.length+' من '+lessons.length+' درسًا، وأنجزت '+state.quizzes+' اختبارًا. '+(level>=50?'وصلت إلى أعلى مستوى!':'تحتاج '+info.needed+' XP للمستوى التالي.');
+    const summary=$('pathSummary');if(summary)summary.textContent='أكملت '+state.masteredLessons.length+' من '+lessons.length+' درسًا، وأنجزت '+state.quizzes+' اختبارًا. '+(level>=50?'وصلت إلى أعلى مستوى!':'تحتاج '+info.needed+' XP للمستوى التالي.');
     const path=$('learningPathSteps');if(!path)return;
     const stages=[
       ['🌱','الأساسيات','ابدأ بدروس التعارف والروتين',0,0,'courses'],
@@ -62,7 +62,7 @@
       ['🏆','الإتقان','أكمل 15 درسًا وارفع نتيجتك',800,15,'training']
     ];
     path.replaceChildren(...stages.map(([emoji,label,desc,requiredXP,requiredLessons,target])=>{
-      const open=xp>=requiredXP&&state.completed.length>=requiredLessons;
+      const open=xp>=requiredXP&&state.masteredLessons.length>=requiredLessons;
       const card=document.createElement('button');card.type='button';card.className='tile';card.style.textAlign='right';card.disabled=!open;
       const h=document.createElement('h3');h.textContent=emoji+' '+label;
       const p=document.createElement('p');p.textContent=desc;

@@ -23,6 +23,32 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Report dependency security advisories
+        shell: bash
+        run: |
+          npm audit --json > /tmp/english-hero-npm-audit.json || true
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('/tmp/english-hero-npm-audit.json', 'utf8'));
+          const summary = report.metadata?.vulnerabilities || {};
+          console.log('NPM audit summary:', JSON.stringify(summary));
+          for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
+            const via = (item.via || []).map(entry => typeof entry === 'string' ? entry : entry.title).join('; ');
+            console.log(JSON.stringify({
+              package: name,
+              severity: item.severity,
+              direct: item.isDirect,
+              range: item.range,
+              fixAvailable: item.fixAvailable,
+              advisories: via
+            }));
+          }
+          const blocking = (summary.moderate || 0) + (summary.high || 0) + (summary.critical || 0);
+          if (blocking > 0) {
+            console.error(`Dependency audit failed: ${blocking} moderate/high/critical advisories remain.`);
+            process.exit(1);
+          }
+          JS
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: Run browser tests

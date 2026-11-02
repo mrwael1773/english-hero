@@ -114,13 +114,16 @@
       best:Math.min(100,Math.max(0,Number(r.best)||0,Number(local.best)||0)),
       quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
       streak:Math.max(0,Number(r.streak)||0,Number(local.streak)||0),
-      completed:union(r.completed,local.completed),
+      completed:union(r.completed,local.completed).filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length),
+      masteredLessons:typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(union(r.masteredLessons,local.masteredLessons)):union(r.masteredLessons,local.masteredLessons),
+      lessonStarted:union(r.lessonStarted,local.lessonStarted).filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length),
+      lessonTrained:union(r.lessonTrained,local.lessonTrained).filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length),
       foundationSaved:union(r.foundationSaved,local.foundationSaved),
       lessonPositions:{...object(r.lessonPositions),...object(local.lessonPositions)},
       chatHistory,
       saved:union(r.saved,local.saved),
-      misses:{...object(r.misses),...object(local.misses)},
-      review:{...object(r.review),...object(local.review)},
+      review:mergeReviewProgress(r.review,local.review,r.misses,local.misses),
+      misses:reconcileReviewMisses(r.misses,local.misses,mergeReviewProgress(r.review,local.review,r.misses,local.misses)),
       daily,
       lastActive:[r.lastActive,local.lastActive].filter(v=>typeof v==='string').sort().pop()||'',
       theme:local.theme||r.theme||'dark',rate:local.rate||r.rate||0.9
@@ -136,9 +139,12 @@
     state.best=Math.min(100,Math.max(0,Number(state.best)||0));
     state.quizzes=Math.max(0,Number(state.quizzes)||0);
     state.streak=Math.max(0,Number(state.streak)||0);
-    for(const key of ['completed','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
+    for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
+    state.masteredLessons=typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(state.masteredLessons):[...new Set(state.masteredLessons.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];for(const key of ['lessonStarted','lessonTrained']) state[key]=[...new Set(state[key].filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     for(const key of ['misses','review','daily','lessonPositions']) if(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])) state[key]={};
-    state.completed=[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0))];
+    state.review=mergeReviewProgress({},state.review,{},state.misses);
+    state.misses=reconcileReviewMisses({},state.misses,state.review);
+    state.completed=[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     state.saved=[...new Set(state.saved)];
     state.foundationSaved=[...new Set(state.foundationSaved.filter(x=>typeof x==='string'))];
     state.theme=state.theme==='light'?'light':'dark';

@@ -135,7 +135,7 @@
     if ($('levelProgressBar')) $('levelProgressBar').style.width = info.progress + '%';
     if ($('levelIcon')) $('levelIcon').textContent = info.level >= 40 ? '🌌' : info.level >= 25 ? '👑' : info.level >= 15 ? '🛡️' : info.level >= 10 ? '🏅' : info.level >= 6 ? '🚀' : info.level >= 3 ? '📘' : '🌱';
     if ($('pathLevel')) $('pathLevel').textContent = 'المستوى ' + info.level + ' • ' + info.xp + ' XP';
-    if ($('pathSummary') && typeof lessons !== 'undefined') $('pathSummary').textContent = 'أكملت ' + state.completed.length + ' من ' + lessons.length + ' درسًا. كل مستوى يتطلب XP أكثر من السابق، وتُفتح جوائز رمزية عند مستويات محددة.';
+    if ($('pathSummary') && typeof lessons !== 'undefined') $('pathSummary').textContent = 'أكملت ' + state.masteredLessons.length + ' من ' + lessons.length + ' درسًا. كل مستوى يتطلب XP أكثر من السابق، وتُفتح جوائز رمزية عند مستويات محددة.';
     if ($('pathProgress')) $('pathProgress').style.width = info.progress + '%';
     renderRewards();
   };
@@ -151,7 +151,7 @@
         ['📝','اختبارات مسجلة',history.length],
         ['🎯','متوسط نتائج الاختبارات',history.length ? average + '%' : '—'],
         ['✅','إجابات صحيحة مسجلة',correct + ' / ' + count],
-        ['📚','الدروس المكتملة',state.completed.length + (typeof lessons !== 'undefined' ? ' / ' + lessons.length : '')],
+        ['📚','الدروس المتقنة',state.masteredLessons.length + (typeof lessons !== 'undefined' ? ' / ' + lessons.length : '')],
         ['⚡','نقاط الخبرة',state.xp],
         ['🧠','أخطاء تحتاج مراجعة',Object.keys(state.misses || {}).length]
       ];
