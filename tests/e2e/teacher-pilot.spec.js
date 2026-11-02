@@ -1,9 +1,98 @@
 import { test, expect } from '@playwright/test';
 
+const mockSupabaseScript = `(() => {
+  const readUser = () => {
+    try { return JSON.parse(localStorage.getItem('ehMockTeacherAuthUser') || 'null'); }
+    catch { return null; }
+  };
+  const listeners = [];
+  const makeQuery = () => {
+    let action = 'select';
+    let filterUser = null;
+    let payload = [];
+    const query = {
+      select() { action = 'select'; return this; },
+      eq(column, value) { if (column === 'user_id') filterUser = value; return this; },
+      upsert(rows) { action = 'upsert'; payload = rows; return this; },
+      delete() { action = 'delete'; return this; },
+      abortSignal() { return this; },
+      then(resolve, reject) {
+        try {
+          const user = readUser();
+          const uid = filterUser || user?.id || 'none';
+          const key = 'ehMockPilotRows:' + uid;
+          let rows = JSON.parse(localStorage.getItem(key) || '[]');
+          let result;
+          if (action === 'select') {
+            result = { data: rows.filter(row => !filterUser || row.user_id === filterUser), error: null };
+          } else if (action === 'upsert') {
+            for (const row of payload) {
+              const index = rows.findIndex(item => item.user_id === row.user_id && item.code === row.code);
+              if (index >= 0) rows[index] = row;
+              else rows.push(row);
+            }
+            localStorage.setItem(key, JSON.stringify(rows));
+            result = { data: payload, error: null };
+          } else {
+            rows = rows.filter(row => !filterUser || row.user_id !== filterUser);
+            localStorage.setItem(key, JSON.stringify(rows));
+            result = { data: null, error: null };
+          }
+          return Promise.resolve(result).then(resolve, reject);
+        } catch (error) {
+          return Promise.reject(error).then(resolve, reject);
+        }
+      }
+    };
+    return query;
+  };
+  const client = {
+    auth: {
+      async getSession() {
+        const user = readUser();
+        return { data: { session: user ? { user } : null }, error: null };
+      },
+      onAuthStateChange(callback) {
+        listeners.push(callback);
+        return { data: { subscription: { unsubscribe() {} } } };
+      },
+      async signInWithPassword({ email }) {
+        const normalized = String(email || '').toLowerCase();
+        const id = normalized.startsWith('teacher-b') ? 'teacher-b' : 'teacher-a';
+        const user = { id, email: normalized, user_metadata: { full_name: id } };
+        const session = { user };
+        localStorage.setItem('ehMockTeacherAuthUser', JSON.stringify(user));
+        listeners.forEach(callback => callback('SIGNED_IN', session));
+        return { data: { user, session }, error: null };
+      },
+      async signOut() {
+        localStorage.removeItem('ehMockTeacherAuthUser');
+        listeners.forEach(callback => callback('SIGNED_OUT', null));
+        return { error: null };
+      }
+    },
+    from() { return makeQuery(); }
+  };
+  window.supabase = { createClient: () => client };
+})();`;
+
+async function signInTeacher(page, email = 'teacher-a@example.test') {
+  await page.locator('#pilotCloudEmail').fill(email);
+  await page.locator('#pilotCloudPassword').fill('mock-password');
+  await page.locator('#pilotCloudLogin').click();
+  await expect(page.locator('#addParticipant')).toBeEnabled();
+}
+
 test.beforeEach(async ({ page }) => {
+  await page.route('**/@supabase/supabase-js@2*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/javascript',
+    body: mockSupabaseScript,
+  }));
   await page.goto('/teacher-pilot.html');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+  await expect(page.locator('#addParticipant')).toBeDisabled();
 });
 
 test('pilot lesson can complete all six training words and advance through all 18 assessment questions', async ({ page }) => {
@@ -42,7 +131,11 @@ test('pilot lesson can complete all six training words and advance through all 1
 
 test('attendance records 16 individual sessions, updates a participant, and exports weekly CSV data', async ({ page }) => {
   await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#addParticipant')).toBeDisabled();
+  await page.locator('#addParticipant').click();
+  await expect(page.locator('#pilotMessage')).toContainText('تسجيل الدخول');
 
+  await signInTeacher(page);
   await page.locator('#pCode').fill('STUDENT NAME');
   await page.locator('#pPre').fill('70');
   await page.locator('#pPost').fill('85');
@@ -96,19 +189,66 @@ test('attendance records 16 individual sessions, updates a participant, and expo
   expect(csv).toContain('2|8|15');
 });
 
-test('attendance survives page reload without exposing another teacher account', async ({ page }) => {
+test('teacher data stays isolated when two teachers switch accounts on the same device', async ({ page }) => {
+  await signInTeacher(page, 'teacher-a@example.test');
   await page.locator('[data-tab="pilot"]').click();
   await page.locator('#pCode').fill('P02');
   await page.locator('#pPre').fill('60');
   await page.locator('#pPost').fill('75');
   await page.locator('.pilot-session[value="4"]').check();
   await page.locator('#addParticipant').click();
-  await page.reload();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(1);
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('ehMockPilotRows:teacher-a') || '[]').length)).toBe(1);
+
+  await page.locator('#pilotCloudSignOut').click();
+  await expect(page.locator('#addParticipant')).toBeDisabled();
+  await signInTeacher(page, 'teacher-b@example.test');
+  await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
+  const oldTeacherBackup = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotCohortV1-account-teacher-a') || '[]'));
+  expect(oldTeacherBackup).toHaveLength(1);
+  expect(oldTeacherBackup[0].code).toBe('P02');
+
+  await page.locator('#pilotCloudSignOut').click();
+  await signInTeacher(page, 'teacher-a@example.test');
   await page.locator('[data-tab="pilot"]').click();
   await expect(page.locator('#pilotRows tr')).toHaveCount(1);
   await expect(page.locator('#pilotRows tr').first()).toContainText('P02');
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotCohortV1')));
-  expect(saved[0].sessions).toEqual([4]);
+});
+
+test('unclaimed local student records remain hidden until safely associated with a teacher account', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.removeItem('ehTeacherPilotOwnerV1');
+    localStorage.setItem('ehTeacherPilotCohortV1', JSON.stringify([{
+      code: 'P03', pre: 70, post: 80, delay: null, attendance: 1,
+      sessions: [1], updated_at: new Date().toISOString(),
+    }]));
+  });
+  await page.reload();
+  await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
+  await expect(page.locator('#addParticipant')).toBeDisabled();
+  const backup = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotCohortV1-unclaimed') || '[]'));
+  expect(backup).toHaveLength(1);
+  expect(backup[0].code).toBe('P03');
+});
+
+test('tampered local participant values are rejected before rendering', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem('ehMockTeacherAuthUser', JSON.stringify({
+      id: 'teacher-a', email: 'teacher-a@example.test', user_metadata: { full_name: 'teacher-a' },
+    }));
+    localStorage.setItem('ehTeacherPilotOwnerV1', 'teacher-a');
+    localStorage.setItem('ehTeacherPilotCohortV1-account-teacher-a', JSON.stringify([{
+      code: 'P04', pre: '<img src=x onerror=alert(1)>', post: 90,
+      delay: null, attendance: 1, sessions: [1],
+    }]));
+  });
+  await page.reload();
+  await expect(page.locator('#addParticipant')).toBeEnabled();
+  await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
+  await expect(page.locator('#pilotRows img')).toHaveCount(0);
 });
 
 test('a seven-day retention quiz remains available even when the first attempt had no mistakes', async ({ page }) => {
@@ -130,41 +270,6 @@ test('a seven-day retention quiz remains available even when the first attempt h
   await page.locator('#reviewQuiz').click();
   await expect(page.locator('#testArea')).toBeVisible();
   await expect(page.locator('#testArea .question')).toContainText('1 / 18');
-});
-
-test('unclaimed local pilot records are actually cleared and do not reappear after reload', async ({ page }) => {
-  await page.evaluate(() => {
-    localStorage.removeItem('ehTeacherPilotOwnerV1');
-    localStorage.setItem('ehTeacherPilotCohortV1', '[]');
-    localStorage.setItem('ehTeacherPilotCohortV1-unclaimed', JSON.stringify([{
-      code: 'P03', pre: 70, post: 80, delay: null, attendance: 1,
-      sessions: [], updated_at: new Date().toISOString(),
-    }]));
-  });
-  await page.reload();
-  await page.locator('[data-tab="pilot"]').click();
-  await expect(page.locator('#pilotRows tr')).toHaveCount(1);
-  page.once('dialog', dialog => dialog.accept());
-  await page.locator('#clearPilot').click();
-  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
-  await page.reload();
-  await page.locator('[data-tab="pilot"]').click();
-  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
-  const backup = await page.evaluate(() => localStorage.getItem('ehTeacherPilotCohortV1-unclaimed'));
-  expect(backup).toBeNull();
-});
-
-test('tampered local participant values are rejected before rendering', async ({ page }) => {
-  await page.evaluate(() => {
-    localStorage.setItem('ehTeacherPilotCohortV1', JSON.stringify([{
-      code: 'P04', pre: '<img src=x onerror=alert(1)>', post: 90,
-      delay: null, attendance: 1, sessions: [1],
-    }]));
-  });
-  await page.reload();
-  await page.locator('[data-tab="pilot"]').click();
-  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
-  await expect(page.locator('#pilotRows img')).toHaveCount(0);
 });
 
 test('invalid saved lesson state cannot unlock mastery or retention questions', async ({ page }) => {
