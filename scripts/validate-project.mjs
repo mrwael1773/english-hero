@@ -14,6 +14,7 @@ const html = read('index.html');
 const manifestRaw = read('manifest.webmanifest');
 const privacyPage = read('privacy.html');
 const contactPage = read('contact.html');
+const teacherPilot = read('teacher-pilot.html');
 const iconSvg = read('icon.svg');
 const sw = read('sw.js');
 const cloud = read('cloud-sync.js');
@@ -28,6 +29,11 @@ const migration = read(migrationPath);
 
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
+check(html.includes('href="teacher-pilot.html"') && sw.includes("'./teacher-pilot.html'"), 'Teacher pilot and mastery prototype is linked and cached');
+check(teacherPilot.includes('حد النجاح الأولي') && teacherPilot.includes('data.mastered=passed') && teacherPilot.includes('data.reviewDue'), 'Mastery prototype separates training, 80 percent assessment, and spaced review');
+check(teacherPilot.includes('pre_score') && teacherPilot.includes('retention_score') && teacherPilot.includes('english-hero-pilot-results.csv'), 'School pilot tracker supports pre/post/retention results and CSV export');
+try { const pilotScript = teacherPilot.match(/<script>([\s\S]*?)<\/script>/i)?.[1]; if (!pilotScript) throw new Error('Missing inline script'); new Function(pilotScript); check(true, 'Teacher pilot JavaScript syntax is valid'); } catch (error) { fail.push('teacher-pilot.html JavaScript syntax is valid: ' + error.message); }
+
 check(!html.includes('id="conversation"') && !html.includes('data-nav="conversation"') && !html.includes('src="ai-chat.js"'), 'AI chat section and script are disabled');
 check(html.includes('name="viewport"') && html.includes('@media(max-width:720px)') && html.includes('@media(max-width:360px)') && html.includes('overflow-wrap:anywhere'), 'Responsive layout includes viewport and small-screen overflow safeguards');
 check(html.includes('id="studentDesk"') && html.includes('id="studentTaskForm"') && html.includes('id="studentTaskList"'), 'Student study planner UI exists');
@@ -144,7 +150,7 @@ try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript s
 check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./english-hero-plus.js?v="), 'English Hero Plus is linked and cached offline');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
-const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','german.html'].map(read).join('\\n');
+const publicHtml = ['index.html','teacher-pilot.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','german.html'].map(read).join('\\n');
 check(!/(adsbygoogle|googlesyndication|google-adsense-account|googletagmanager)/i.test(publicHtml), 'Public HTML files contain no ad or third-party analytics tags');
 check(html.includes('navigator.serviceWorker.register'), 'Main page registers the service worker');
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
