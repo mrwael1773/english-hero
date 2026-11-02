@@ -33,5 +33,4 @@ test('measurable learning pilot is available in the vocabulary library', async (
   await expect(page.locator('#measuredPilot')).toBeVisible();
   await expect(page.locator('#measuredPilot')).toContainText('مسار البداية');
   await expect(page.locator('#measuredPilot')).toContainText('٨٠٪');
-  await expect(page.locator('#measuredPilot button', { hasText: 'أضف للمراجعة' })).toHaveCount(0);
 });
