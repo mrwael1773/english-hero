@@ -131,3 +131,61 @@ test('a seven-day retention quiz remains available even when the first attempt h
   await expect(page.locator('#testArea')).toBeVisible();
   await expect(page.locator('#testArea .question')).toContainText('1 / 18');
 });
+
+test('unclaimed local pilot records are actually cleared and do not reappear after reload', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.removeItem('ehTeacherPilotOwnerV1');
+    localStorage.setItem('ehTeacherPilotCohortV1', '[]');
+    localStorage.setItem('ehTeacherPilotCohortV1-unclaimed', JSON.stringify([{
+      code: 'P03', pre: 70, post: 80, delay: null, attendance: 1,
+      sessions: [], updated_at: new Date().toISOString(),
+    }]));
+  });
+  await page.reload();
+  await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(1);
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#clearPilot').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
+  await page.reload();
+  await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
+  const backup = await page.evaluate(() => localStorage.getItem('ehTeacherPilotCohortV1-unclaimed'));
+  expect(backup).toBeNull();
+});
+
+test('tampered local participant values are rejected before rendering', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem('ehTeacherPilotCohortV1', JSON.stringify([{
+      code: 'P04', pre: '<img src=x onerror=alert(1)>', post: 90,
+      delay: null, attendance: 1, sessions: [1],
+    }]));
+  });
+  await page.reload();
+  await page.locator('[data-tab="pilot"]').click();
+  await expect(page.locator('#pilotRows tr')).toHaveCount(0);
+  await expect(page.locator('#pilotRows img')).toHaveCount(0);
+});
+
+test('invalid saved lesson state cannot unlock mastery or retention questions', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+      started: true,
+      trained: [99, 100, 101, 102, 103, 104],
+      attempts: 999999,
+      mastered: true,
+      lastAttempt: { date: 'not-a-date', score: 100, correct: 999, total: 999 },
+      reviewDue: 'not-a-date',
+      wrong: ['<img src=x onerror=alert(1)>'],
+    }));
+  });
+  await page.reload();
+  await expect(page.locator('#trainingCount')).toContainText('0 من 6');
+  await expect(page.locator('#startTest')).toBeDisabled();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  expect(saved.mastered).toBe(false);
+  expect(saved.trained).toEqual([]);
+  expect(saved.wrong).toEqual([]);
+  expect(saved.reviewDue).toBeNull();
+  expect(saved.attempts).toBe(10000);
+});
