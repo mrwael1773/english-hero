@@ -4,10 +4,14 @@
 const $=id=>document.getElementById(id),KEY='ehPlusV1';
 let d={known:[],missed:[],quizKnown:[],recentQuestions:[],done:{},streak:0,last:'',points:0,theme:'default',avatar:'🧑‍🎓',title:'متعلّم'};
 try{const stored=JSON.parse(localStorage.getItem(KEY)||'{}');if(stored&&typeof stored==='object'&&!Array.isArray(stored))d=Object.assign(d,stored);}catch(e){}
+
+let tab='words',questions=[],qi=0,correct=0,gameWord=null,scenarioIndex=0,grammarMode=false;
+const words=[
+['Improve','يطوّر','I want to improve my English.'],['Usually','عادةً','I usually wake up early.'],['Choose','يختار','Choose the correct answer.'],['Careful','حذر','Be careful!'],['Although','على الرغم من','Although it was late, I studied.'],['Opportunity','فرصة','This is a great opportunity.'],['Achieve','يحقق','You can achieve your goals.'],['Explain','يشرح','Can you explain this rule?'],['Journey','رحلة','Learning English is a journey.'],['Confident','واثق','I feel confident when I practise.'],['Instead','بدلًا من ذلك','Walk instead of taking the car.'],['Remember','يتذكر','Remember to review your mistakes.'],['Meal','وجبة','Lunch is my favorite meal.'],['Hungry','جائع','I am hungry.'],['Delicious','لذيذ','This food is delicious.'],['Friend','صديق','He is my friend.'],['Practice','يتدرّب','I practise every day.'],['Favorite','مفضّل','My favorite sport is football.'],['Early','مبكرًا','I wake up early.'],['Understand','يفهم','I understand the lesson.']];
 const allowedWords=new Set(words.map(w=>w[0].toLowerCase()));
 const allowedAvatars=new Set(['🧑‍🎓','🦊','🐼','🦁','🐸','🐧','🚀','⭐','👑']);
 const allowedTitles=new Set(['متعلّم','مستكشف','المجتهد','الخبير','بطل الإنجليزية']);
-const validDay=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'));
+const validDay=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'));
 d.known=[...new Set((Array.isArray(d.known)?d.known:[]).filter(x=>typeof x==='string').map(x=>x.toLowerCase()).filter(x=>allowedWords.has(x)))];
 d.missed=[...new Set((Array.isArray(d.missed)?d.missed:[]).filter(x=>typeof x==='string').map(x=>x.toLowerCase()).filter(x=>allowedWords.has(x)))].filter(x=>!d.known.includes(x));
 d.quizKnown=[...new Set((Array.isArray(d.quizKnown)?d.quizKnown:[]).filter(x=>typeof x==='string'&&/^[wg]:.{1,180}$/.test(x)))].slice(-500);
@@ -26,9 +30,6 @@ d.last=validDay(d.last)?d.last:'';
 d.theme=['default','ocean','forest','rose'].includes(d.theme)?d.theme:'default';
 d.avatar=allowedAvatars.has(d.avatar)?d.avatar:'🧑‍🎓';
 d.title=allowedTitles.has(d.title)?d.title:'متعلّم';
-let tab='words',questions=[],qi=0,correct=0,gameWord=null,scenarioIndex=0,grammarMode=false;
-const words=[
-['Improve','يطوّر','I want to improve my English.'],['Usually','عادةً','I usually wake up early.'],['Choose','يختار','Choose the correct answer.'],['Careful','حذر','Be careful!'],['Although','على الرغم من','Although it was late, I studied.'],['Opportunity','فرصة','This is a great opportunity.'],['Achieve','يحقق','You can achieve your goals.'],['Explain','يشرح','Can you explain this rule?'],['Journey','رحلة','Learning English is a journey.'],['Confident','واثق','I feel confident when I practise.'],['Instead','بدلًا من ذلك','Walk instead of taking the car.'],['Remember','يتذكر','Remember to review your mistakes.'],['Meal','وجبة','Lunch is my favorite meal.'],['Hungry','جائع','I am hungry.'],['Delicious','لذيذ','This food is delicious.'],['Friend','صديق','He is my friend.'],['Practice','يتدرّب','I practise every day.'],['Favorite','مفضّل','My favorite sport is football.'],['Early','مبكرًا','I wake up early.'],['Understand','يفهم','I understand the lesson.']];
 const day=()=>{let x=new Date();return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2)};
 const safe=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}try{if(typeof window.save==='function')window.save();}catch(e){}};
