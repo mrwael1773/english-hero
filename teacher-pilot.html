@@ -154,7 +154,7 @@ async function initPilotCloud(){
   cloudClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data,error}=await cloudClient.auth.getSession();if(error)throw error;
   cloudUser=data.session?.user||null;cloudReady=false;setCloudUI();
-  if(cloudUser)await loadPilotCloud();else{pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('سجّل الدخول بحساب المعلم قبل عرض أو إدخال أو تصدير بيانات الطلاب. السجلات المحلية القديمة غير المرتبطة بحساب تبقى مخفية ولا تُنقل تلقائيًا.');}
+  if(cloudUser)await loadPilotCloud();else{const legacy=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));if(legacy.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(legacy));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('سجّل الدخول بحساب المعلم قبل عرض أو إدخال أو تصدير بيانات الطلاب. السجلات المحلية القديمة غير المرتبطة بحساب تبقى مخفية ولا تُنقل تلقائيًا.');}
   cloudClient.auth.onAuthStateChange((event,session)=>{
    const previousUser=cloudUser;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;
    cloudUser=session?.user||null;cloudReady=false;setCloudUI();
