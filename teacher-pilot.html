@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101a2d">
+<title>المسار التجريبي وقياس الإتقان | بطل الإنجليزي</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#17243a;--panel2:#202f49;--line:#354967;--text:#f2f6ff;--muted:#a9bad3;--mint:#70e4c3;--violet:#9b8bff;--red:#ff9baa}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,#30275b,transparent 35%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.7}.wrap{max-width:980px;margin:auto;padding:22px 16px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.eyebrow{color:var(--mint);font-size:12px;font-weight:800;letter-spacing:1px}.panel{background:linear-gradient(160deg,var(--panel),#121d30);border:1px solid var(--line);border-radius:20px;padding:20px;margin:16px 0}.hero{padding:25px;background:linear-gradient(125deg,#352b69,#183c51);border-color:#554d8b}.muted{color:var(--muted)}.small{font-size:13px}.tabs,.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.tabs{margin:18px 0}.btn{border:1px solid var(--line);border-radius:12px;padding:11px 15px;background:var(--panel2);color:var(--text);font:inherit;font-weight:750;cursor:pointer}.btn.primary{background:linear-gradient(110deg,#7868e8,#4e91a0);border:0}.btn:disabled{opacity:.5;cursor:not-allowed}.tab.active{border-color:var(--mint);color:var(--mint)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.word{border:1px solid var(--line);background:var(--panel2);border-radius:15px;padding:15px}.word h3{direction:ltr;text-align:left;font-size:23px;margin:0}.word p{margin:6px 0}.status{font-size:12px;color:var(--mint)}.progress{height:9px;background:#31425d;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--violet))}.question{padding:18px;background:var(--panel2);border:1px solid var(--line);border-radius:16px;margin:14px 0}.options{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-top:14px}.option{min-height:48px;text-align:center}.field{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#0d1728;color:var(--text);font:inherit}.stat{padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}.stat b{display:block;font-size:25px}.hidden{display:none!important}table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:10px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mint)}.notice{padding:12px;border-radius:12px;background:#26374c;color:#dce8fa}.good{color:var(--mint)}.bad{color:var(--red)}a{color:var(--mint)}@media(max-width:520px){.panel{padding:15px}.hero{padding:20px}th,td{padding:8px 5px;font-size:12px}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div><div class="eyebrow">ENGLISH HERO • الإصدار التجريبي</div><h1 style="margin:4px 0">المسار التعليمي وقياس الإتقان</h1></div><a href="./index.html">العودة إلى بطل الإنجليزي ←</a></header>
+<section class="panel hero"><div class="eyebrow">نموذج تجريبي من ٦ كلمات</div><h2>لا نحتسب الدرس متقنًا بمجرد فتحه أو إنهائه</h2><p>يتدرّب الطالب، ثم يختبر الاستماع وفهم المعنى وكتابة الكلمة. حد النجاح الأولي ٨٠٪، وهو قابل لمراجعة معلم الإنجليزية.</p><div class="row"><span class="status">بدأ الدرس</span><span class="status">أكمل التدريب</span><span class="status">أتقن الدرس بعد الاختبار</span></div></section>
+<nav class="tabs"><button class="btn tab active" data-tab="path">المسار التجريبي</button><button class="btn tab" data-tab="review">مراجعة الأخطاء</button><button class="btn tab" data-tab="pilot">تجربة المدرسة</button></nav>
+<section id="path" class="panel">
+<div class="row" style="justify-content:space-between"><div><h2 style="margin:0">الدرس الأول: أعرّف بنفسي</h2><p class="muted small">الهدف: أعرّف بنفسي بخمس جمل قصيرة باستخدام الكلمات الست.</p></div><span id="lessonState" class="status">لم يبدأ الدرس</span></div>
+<div class="progress"><i id="trainingBar"></i></div><p id="trainingCount" class="small muted">0 من 6 كلمات تمت دراستها</p>
+<div class="notice small" style="margin:12px 0">انتبه للسياق: <b dir="ltr">book</b> تعني «كتاب» اسمًا، وفي <b dir="ltr">book a room</b> تعني «يحجز غرفة» فعلًا. لا تحفظ الكلمة بمعزل عن الجملة.</div><div id="wordGrid" class="grid"></div>
+<div class="row" style="margin-top:16px"><button class="btn primary" id="finishTraining">أنهيت التدريب وانتقل للاختبار</button><button class="btn" id="startTest" disabled>ابدأ اختبار الإتقان</button></div>
+<div id="testArea" class="hidden"></div><div id="resultArea" aria-live="polite"></div>
+</section>
+<section id="review" class="panel hidden"><h2>مراجعة الكلمات التي تحتاج تدريبًا</h2><p class="muted small">تظهر الكلمات التي أخطأت فيها، مع تذكير بعد ثلاثة أيام للتحقق من الاحتفاظ بالتعلم.</p><div id="reviewList"></div></section>
+<section id="pilot" class="panel hidden"><h2>سجل التجربة المدرسية</h2><p class="notice">خصوصية الطلاب: لا تسجّل أسماء أو أرقام جوالات أو بيانات تعريفية. استخدم رموزًا مجهولة فقط. بعد تسجيل دخول المعلم تُحفظ النتائج في حسابه السحابي وتظهر له من أجهزته المختلفة.</p>
+<div class="panel" style="margin:14px 0;background:var(--panel2)">
+  <h3 style="margin-top:0">☁️ حساب المعلم ومزامنة النتائج</h3>
+  <p id="pilotCloudStatus" class="small muted" role="status" aria-live="polite">جارٍ التحقق من جلسة المعلم...</p>
+  <form id="pilotCloudAuth" class="grid" style="align-items:end">
+    <label>البريد الإلكتروني<input id="pilotCloudEmail" class="field" type="email" maxlength="254" autocomplete="username" required dir="ltr"></label>
+    <label>كلمة المرور<input id="pilotCloudPassword" class="field" type="password" minlength="8" maxlength="128" autocomplete="current-password" required dir="ltr"></label>
+    <div><button class="btn primary" id="pilotCloudLogin" type="submit">تسجيل دخول المعلم</button></div>
+  </form>
+  <div class="row"><button class="btn" id="pilotCloudSignOut" type="button" hidden>تسجيل الخروج</button></div>
+  <p class="small muted">استخدم حساب المعلم الموجود في بطل الإنجليزي. لا تنشئ حسابًا للطالب ولا تدخل بياناته الشخصية هنا.</p>
+</div>
+<div class="grid" id="pilotStats"></div>
+<p class="notice">خطة التنفيذ المقترحة: أربعة أسابيع، ١٠ دقائق في الجلسة، أربعة أيام أسبوعيًا (١٦ جلسة). يحدد معلم الإنجليزية المهارة المستهدفة ويعتمد اختبارًا قبليًا وبعديًا متكافئًا.</p><h3>إضافة نتيجة طالب برمز مجهول</h3>
+<div class="grid">
+<label>رمز الطالب (مثال: P01)<input id="pCode" class="field" maxlength="12" placeholder="P01"></label>
+<label>الاختبار القبلي / ١٠٠<input id="pPre" class="field" type="number" min="0" max="100" step="1" inputmode="numeric"></label>
+<label>الاختبار البعدي / ١٠٠<input id="pPost" class="field" type="number" min="0" max="100" step="1" inputmode="numeric"></label>
+<label>اختبار الاحتفاظ بعد أسبوع / ١٠٠<input id="pDelay" class="field" type="number" min="0" max="100" step="1" inputmode="numeric"></label>
+<label>جلسات الحضور من ١٦<input id="pAttendance" class="field" type="number" min="0" max="16" step="1" inputmode="numeric" value="0"></label>
+</div>
+<p class="small muted">لا تُدخل أسماء الطلاب أو ملاحظات شخصية؛ يقتصر السجل على الرمز المجهول والنتائج والحضور.</p>
+<div class="row" style="margin-top:12px"><button class="btn primary" id="addParticipant">حفظ النتيجة محليًا</button><button class="btn" id="exportPilot">تصدير CSV</button><button class="btn" id="clearPilot">مسح سجل التجربة</button></div>
+<p id="pilotMessage" class="small muted" aria-live="polite"></p>
+<div style="overflow-x:auto;margin-top:16px"><table><thead><tr><th>الرمز</th><th>قبلي</th><th>بعدي</th><th>بعد أسبوع</th><th>الحضور</th><th>التغير</th></tr></thead><tbody id="pilotRows"></tbody></table></div>
+<p class="small muted">مؤشرات أولية وصفية وليست دليلًا علميًا قاطعًا على السببية. يراجع المعلم تكافؤ الاختبارين وصحة المحتوى قبل بدء التجربة.</p>
+</section>
+<footer class="small muted" style="text-align:center;padding:20px">نموذج أولي للمراجعة مع معلم الإنجليزية قبل تعميمه على الطلاب.</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script>
+'use strict';
+(()=>{
+const $=id=>document.getElementById(id),KEY='ehTeacherPilotMasteryV1',PILOT='ehTeacherPilotCohortV1',PILOT_OWNER='ehTeacherPilotOwnerV1';
+const pilotAccountKey=uid=>PILOT+'-account-'+uid;
+const words=[
+{en:'Name',ar:'اسم',ex:'My name is Sara.',meaning:'اسم',listen:'Listen and choose the word you hear.'},
+{en:'Student',ar:'طالب',ex:'I am a student.',meaning:'طالب',listen:'Listen and choose the word you hear.'},
+{en:'From',ar:'من',ex:'I am from Yemen.',meaning:'من',listen:'Listen and choose the word you hear.'},
+{en:'Live',ar:'يسكن / يعيش',ex:'I live in Riyadh.',meaning:'يسكن / يعيش',listen:'Listen and choose the word you hear.'},
+{en:'Like',ar:'يحب',ex:'I like football.',meaning:'يحب',listen:'Listen and choose the word you hear.'},
+{en:'Football',ar:'كرة القدم',ex:'I play football after school.',meaning:'كرة القدم',listen:'Listen and choose the word you hear.'}
+];
+let data={started:false,trained:[],attempts:0,mastered:false,lastAttempt:null,reviewDue:null,wrong:[]};
+let pilot=[];
+try{data={...data,...JSON.parse(localStorage.getItem(KEY)||'{}')};}catch{}
+try{pilot=JSON.parse(localStorage.getItem(PILOT)||'[]');if(!Array.isArray(pilot))pilot=[];}catch{pilot=[];}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}};
+const savePilot=(sync=true)=>{try{const raw=JSON.stringify(pilot);localStorage.setItem(PILOT,raw);if(cloudUser){localStorage.setItem(PILOT_OWNER,cloudUser.id);localStorage.setItem(pilotAccountKey(cloudUser.id),raw);}if(sync&&cloudUser)queuePilotSync();return true;}catch{$('pilotMessage').textContent='تعذر الحفظ المحلي. تحقق من مساحة التخزين.';return false;}};
+let cloudClient=null,cloudUser=null,cloudTimer=null,cloudBusy=false,cloudPending=false,cloudGeneration=0;
+const cloudStatus=message=>{const el=$('pilotCloudStatus');if(el)el.textContent=message;};
+const setCloudUI=()=>{const signed=!!cloudUser;$('pilotCloudAuth').classList.toggle('hidden',signed);$('pilotCloudSignOut').hidden=!signed;$('pilotCloudSignOut').disabled=!signed;};
+const queuePilotSync=()=>{clearTimeout(cloudTimer);cloudTimer=setTimeout(syncPilot,700);};
+const toCloudRow=(p,uid)=>({user_id:uid,code:p.code,pre_score:p.pre,post_score:p.post,retention_score:p.delay,sessions_attended:p.attendance,learning_note:null,updated_at:p.updated_at||new Date().toISOString()});
+async function syncPilot(){
+ if(!cloudClient||!cloudUser)return;
+ if(cloudBusy){cloudPending=true;return;}
+ cloudBusy=true;const uid=cloudUser.id,generation=cloudGeneration;
+ try{
+  const rows=pilot.map(p=>toCloudRow(p,uid));
+  if(!cloudUser||cloudUser.id!==uid||generation!==cloudGeneration)return;
+  if(rows.length){const {error}=await cloudClient.from('teacher_pilot_results').upsert(rows,{onConflict:'user_id,code'});if(error)throw error;}
+  if(!cloudUser||cloudUser.id!==uid||generation!==cloudGeneration)return;
+  cloudStatus('✅ تمت مزامنة سجل التجربة مع حساب المعلم. يمكنك فتحه من أي جهاز.');
+ }catch(error){if(generation===cloudGeneration)cloudStatus('تعذرت المزامنة الآن. بقيت النتائج محفوظة محليًا وستتم إعادة المحاولة عند عودة الاتصال.');console.error('Teacher pilot sync:',error?.message||error);}
+ finally{cloudBusy=false;if(cloudPending){cloudPending=false;if(cloudUser&&generation===cloudGeneration)queuePilotSync();}}
+}
+async function loadPilotCloud(){
+ if(!cloudClient||!cloudUser)return;
+ const uid=cloudUser.id,generation=cloudGeneration;cloudStatus('جارٍ تحميل نتائج حساب المعلم...');
+ try{
+  const owner=localStorage.getItem(PILOT_OWNER)||'';
+  if(owner&&owner!==uid){
+   localStorage.setItem(pilotAccountKey(owner),localStorage.getItem(PILOT)||'[]');
+   try{pilot=JSON.parse(localStorage.getItem(pilotAccountKey(uid))||'[]');if(!Array.isArray(pilot))pilot=[];}catch{pilot=[];}
+   localStorage.setItem(PILOT_OWNER,uid);savePilot(false);renderPilot();
+  }else if(!owner){
+   if(pilot.length&&window.confirm('وجدنا سجلًا محليًا سابقًا. هل تريد ربطه بحساب المعلم الذي سجلت الدخول به؟ اختر «إلغاء» لإبقائه نسخة محلية غير مرتبطة وبدء سجل هذا الحساب بشكل مستقل.')){
+    localStorage.setItem(PILOT_OWNER,uid);localStorage.setItem(pilotAccountKey(uid),JSON.stringify(pilot));
+   }else{
+    if(pilot.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(pilot));
+    pilot=[];localStorage.setItem(PILOT_OWNER,uid);savePilot(false);renderPilot();
+   }
+  }else{
+   const scoped=localStorage.getItem(pilotAccountKey(uid));
+   if(scoped){try{pilot=JSON.parse(scoped);if(!Array.isArray(pilot))pilot=[];}catch{pilot=[];}savePilot(false);renderPilot();}
+   else localStorage.setItem(pilotAccountKey(uid),JSON.stringify(pilot));
+  }
+  const {data,error}=await cloudClient.from('teacher_pilot_results').select('code,pre_score,post_score,retention_score,sessions_attended,learning_note,updated_at').eq('user_id',uid);
+  if(error)throw error;if(!cloudUser||cloudUser.id!==uid||generation!==cloudGeneration)return;
+  const merged=new Map((Array.isArray(data)?data:[]).map(r=>[r.code,{code:r.code,pre:r.pre_score,post:r.post_score,delay:r.retention_score,attendance:r.sessions_attended,updated_at:r.updated_at||''}]));
+  for(const local of pilot){const remote=merged.get(local.code);if(!remote||Date.parse(local.updated_at||0)>Date.parse(remote.updated_at||0))merged.set(local.code,local);}
+  pilot=[...merged.values()].sort((a,b)=>a.code.localeCompare(b.code));
+  savePilot(false);renderPilot();
+  if(generation===cloudGeneration)await syncPilot();
+ }catch(error){if(generation===cloudGeneration)cloudStatus('تعذر تحميل النتائج السحابية. لم نرفع بيانات محلية قبل اكتمال التحميل حمايةً من استبدال بيانات الحساب.');console.error('Teacher pilot load:',error?.message||error);}
+}
+async function initPilotCloud(){
+ try{
+  const cfg=window.ENGLISH_HERO_CLOUD_CONFIG;
+  if(!cfg||!window.supabase?.createClient)throw new Error('إعداد الاتصال السحابي غير متاح.');
+  cloudClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  const {data,error}=await cloudClient.auth.getSession();if(error)throw error;
+  cloudUser=data.session?.user||null;setCloudUI();
+  if(cloudUser)await loadPilotCloud();else{const owner=localStorage.getItem(PILOT_OWNER)||'';if(owner&&pilot.length)localStorage.setItem(pilotAccountKey(owner),JSON.stringify(pilot));else if(pilot.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(pilot));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('سجّل الدخول بحساب المعلم لعرض سجله ومزامنة النتائج.');}
+  cloudClient.auth.onAuthStateChange((event,session)=>{
+   const previousUser=cloudUser;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;
+   cloudUser=session?.user||null;setCloudUI();
+   if(event==='SIGNED_IN'&&cloudUser)setTimeout(loadPilotCloud,0);
+   if(event==='SIGNED_OUT'){if(previousUser)localStorage.setItem(pilotAccountKey(previousUser.id),JSON.stringify(pilot));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('تم تسجيل الخروج. أُخفي سجل الحساب السابق من هذه الصفحة.');}
+  });
+ }catch(error){cloudStatus('تعذر تهيئة المزامنة السحابية. يمكنك الاحتفاظ بالنتائج محليًا مؤقتًا.');console.error('Teacher pilot auth:',error?.message||error);}
+}
+$('pilotCloudAuth').addEventListener('submit',async e=>{
+ e.preventDefault();if(!cloudClient){cloudStatus('خدمة تسجيل الدخول غير متاحة حاليًا.');return;}
+ const button=$('pilotCloudLogin');button.disabled=true;cloudStatus('جارٍ تسجيل دخول المعلم...');
+ try{const {data,error}=await cloudClient.auth.signInWithPassword({email:$('pilotCloudEmail').value.trim(),password:$('pilotCloudPassword').value});if(error)throw error;cloudUser=data.user||data.session?.user||null;setCloudUI();cloudStatus('تم تسجيل الدخول. جارٍ تحميل بيانات هذا الحساب...');}
+ catch(error){cloudStatus('تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور، ثم حاول مجددًا.');console.error('Teacher pilot sign in:',error?.message||error);}
+ finally{button.disabled=false;}
+});
+$('pilotCloudSignOut').onclick=async()=>{if(!cloudClient)return;const {error}=await cloudClient.auth.signOut();if(error)cloudStatus('تعذر تسجيل الخروج. حاول مرة أخرى.');};
+window.addEventListener('online',()=>{if(cloudUser)loadPilotCloud();});
+
+const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const say=s=>{if(!('speechSynthesis'in window)){alert('النطق غير مدعوم في هذا المتصفح.');return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s);u.lang='en-US';u.rate=.88;speechSynthesis.speak(u);};
+const render=()=>{
+$('lessonState').textContent=data.mastered?'أتقن الدرس ✓':data.trained.length===6?'أكمل التدريب':data.started?'بدأ الدرس':'لم يبدأ الدرس';
+$('trainingBar').style.width=(data.trained.length/6*100)+'%';$('trainingCount').textContent=data.trained.length+' من 6 كلمات تمت دراستها';
+$('startTest').disabled=data.trained.length!==6;
+$('wordGrid').innerHTML=words.map((w,i)=>'<article class="word"><h3>'+w.en+'</h3><p>'+w.ar+'</p><p class="small muted" dir="ltr">'+w.ex+'</p><div class="row"><button class="btn" data-listen="'+i+'">🔊 استمع</button><button class="btn" data-reveal="'+i+'">إظهار المثال</button><button class="btn" data-trained="'+i+'">'+(data.trained.includes(i)?'✓ تدربت عليها':'أكملت التدريب')+'</button></div><p class="small muted" id="hint'+i+'">اضغط «إظهار المثال» لعرض جملة الاستخدام.</p></article>').join('');
+$('wordGrid').querySelectorAll('[data-listen]').forEach(b=>b.onclick=()=>{const w=words[Number(b.dataset.listen)];say(w.en);data.started=true;save();});
+$('wordGrid').querySelectorAll('[data-reveal]').forEach(b=>b.onclick=()=>{$('hint'+b.dataset.reveal).textContent=words[Number(b.dataset.reveal)].ex;data.started=true;save();renderStateOnly();});
+$('wordGrid').querySelectorAll('[data-trained]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.trained);data.started=true;if(!data.trained.includes(i))data.trained.push(i);save();render();});
+renderReview();
+};
+const renderStateOnly=()=>{$('lessonState').textContent=data.mastered?'أتقن الدرس ✓':data.trained.length===6?'أكمل التدريب':'بدأ الدرس';};
+let questions=[];
+const buildQuestions=()=>words.flatMap((w,i)=>[
+{type:'listen',word:w,prompt:'استمع إلى الكلمة ثم اخترها.',options:[w.en,...words.filter(x=>x!==w).slice((i+1)%5,(i+1)%5+3).map(x=>x.en)],answer:w.en},
+{type:'meaning',word:w,prompt:'ما معنى كلمة '+w.en+'؟',options:[w.ar,...words.filter(x=>x!==w).slice((i+2)%5,(i+2)%5+3).map(x=>x.ar)],answer:w.ar},
+{type:'write',word:w,prompt:'اكتب الكلمة الإنجليزية التي تعني: '+w.ar,answer:w.en}
+]);
+const shuffle=a=>{const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;};
+let qi=0,score=0,answers=[];
+const startTest=(reviewOnly=false)=>{if(data.trained.length!==6)return;const source=buildQuestions();const selected=reviewOnly?source.filter(q=>data.wrong.includes(q.word.en)):source;questions=shuffle(selected.length?selected:source).map(q=>{if(q.type==='write')return q;const distractors=words.filter(x=>x.en!==q.word.en).map(x=>q.type==='meaning'?x.ar:x.en).filter((value,index,array)=>array.indexOf(value)===index);return {...q,options:shuffle([q.answer,...distractors.slice(0,3)])};});qi=0;score=0;answers=[];$('resultArea').textContent='';renderQuestion();};
+const renderQuestion=()=>{
+const area=$('testArea');area.classList.remove('hidden');
+if(qi>=questions.length){finishTest();return;}
+const q=questions[qi];area.innerHTML='<div class="question"><div class="row" style="justify-content:space-between"><b>اختبار الإتقان</b><span class="small muted">'+(qi+1)+' / '+questions.length+'</span></div><div class="progress"><i style="width:'+qi/questions.length*100+'%"></i></div><h3>'+q.prompt+'</h3>'+(q.type==='listen'?'<button class="btn primary" id="playQuestion">🔊 تشغيل الصوت</button>':'')+(q.type==='write'?'<input id="typedAnswer" class="field" autocomplete="off" autocapitalize="none" placeholder="Type the English word">':'<div class="options">'+q.options.map(o=>'<button class="btn option" data-choice="'+escapeHTML(o)+'">'+escapeHTML(o)+'</button>').join('')+'</div>')+'<p class="small muted" id="questionFeedback"></p><button class="btn primary hidden" id="nextQuestion">التالي</button></div>';
+if(q.type==='listen')$('playQuestion').onclick=()=>say(q.word.en);
+if(q.type==='write'){$('typedAnswer').focus();$('typedAnswer').addEventListener('keydown',e=>{if(e.key==='Enter')submitAnswer($('typedAnswer').value);});}
+area.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>submitAnswer(b.dataset.choice));
+$('nextQuestion').onclick=()=>{qi++;renderQuestion();};
+};
+const submitAnswer=value=>{const q=questions[qi],ok=String(value).trim().toLocaleLowerCase()===q.answer.toLocaleLowerCase();if(ok)score++;else if(!data.wrong.includes(q.word.en))data.wrong.push(q.word.en);answers.push({word:q.word.en,type:q.type,correct:ok});$('questionFeedback').textContent=ok?'إجابة صحيحة ✓':'الإجابة الصحيحة: '+q.answer;$('questionFeedback').className='small '+(ok?'good':'bad');$('testArea').querySelectorAll('[data-choice], #typedAnswer, #playQuestion').forEach(b=>b.disabled=true);$('nextQuestion').classList.remove('hidden');};
+const finishTest=()=>{const pct=Math.round(score/questions.length*100),passed=pct>=80;data.attempts++;data.lastAttempt={date:new Date().toISOString(),score:pct,correct:score,total:questions.length};data.mastered=passed;data.reviewDue=new Date(Date.now()+3*86400000).toISOString().slice(0,10);data.wrong=[...new Set(answers.filter(a=>!a.correct).map(a=>a.word))];save();$('testArea').classList.add('hidden');$('resultArea').innerHTML='<div class="question"><h2>'+(passed?'أتقنت الدرس! 🎉':'لم تصل إلى حد الإتقان بعد')+'</h2><div class="stat"><b>'+pct+'٪</b>'+score+' من '+questions.length+' إجابة صحيحة • حد النجاح ٨٠٪</div><p>'+(passed?'تم تسجيل حالة «أتقن الدرس». ستظهر مراجعة الاحتفاظ بعد ثلاثة أيام.':'راجع الكلمات التي أخطأت فيها ثم أعد الاختبار. لا تُحتسب نقاط إتقان قبل بلوغ ٨٠٪.')+'</p><p class="small muted">موعد المراجعة اللاحقة: '+data.reviewDue+'</p><button class="btn primary" id="retryTest">إعادة الاختبار</button></div>';$('retryTest').onclick=startTest;renderStateOnly();renderReview();};
+const renderReview=()=>{const due=data.reviewDue&&data.reviewDue<=new Date().toISOString().slice(0,10);$('reviewList').innerHTML=data.wrong.length?'<p>'+data.wrong.map(w=>{const x=words.find(v=>v.en===w);return x?'<div class="word"><b dir="ltr">'+x.en+'</b> — '+x.ar+'<p dir="ltr">'+x.ex+'</p></div>':''}).join('')+'</p><p class="notice">'+(due?'حان موعد مراجعة الاحتفاظ بالتعلم. أعد الاختبار الآن.':'موعد المراجعة المجدولة: '+data.reviewDue)+'</p><button class="btn primary" id="reviewQuiz">اختبار مراجعة الكلمات</button>':'<p class="muted">لا توجد أخطاء مسجلة حتى الآن.</p>';if($('reviewQuiz'))$('reviewQuiz').onclick=()=>startTest(true);};
+const showTab=name=>{document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));['path','review','pilot'].forEach(id=>$(id).classList.toggle('hidden',id!==name));if(name==='pilot')renderPilot();if(name==='review')renderReview();};
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$('finishTraining').onclick=()=>{if(data.trained.length!==6){alert('أكمل تدريب الكلمات الست أولًا.');return;}data.started=true;save();$('startTest').disabled=false;renderStateOnly();$('resultArea').textContent='اكتمل التدريب. أصبح اختبار الإتقان متاحًا.';};
+$('startTest').onclick=startTest;
+const average=key=>{const values=pilot.map(p=>p[key]).filter(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v)));return values.length?Math.round(values.reduce((s,v)=>s+Number(v),0)/values.length):null;};
+const renderPilot=()=>{const n=pilot.length;$('pilotStats').innerHTML=[['عدد المشاركين',n],['متوسط الاختبار القبلي',n?average('pre')+'٪':'—'],['متوسط الاختبار البعدي',n?average('post')+'٪':'—'],['متوسط الاحتفاظ',average('delay')===null?'—':average('delay')+'٪'],['متوسط الحضور',n?average('attendance')+'/16':'—'],['متوسط التحسن',n?(average('post')-average('pre'))+' نقطة':'—']].map(([l,v])=>'<div class="stat"><span class="small muted">'+l+'</span><b>'+v+'</b></div>').join('');$('pilotRows').innerHTML=pilot.map(p=>'<tr><td>'+escapeHTML(p.code)+'</td><td>'+p.pre+'</td><td>'+p.post+'</td><td>'+(p.delay===null?'—':p.delay)+'</td><td>'+p.attendance+'/16</td><td class="'+(p.post>=p.pre?'good':'bad')+'">'+(p.post-p.pre>0?'+':'')+(p.post-p.pre)+'</td></tr>').join('');};
+$('addParticipant').onclick=()=>{const code=$('pCode').value.trim().toUpperCase(),preRaw=$('pPre').value.trim(),postRaw=$('pPost').value.trim(),delayRaw=$('pDelay').value.trim(),pre=Number(preRaw),post=Number(postRaw),delay=delayRaw===''?null:Number(delayRaw),attendance=Number($('pAttendance').value);if(!/^P[0-9]{2,3}$/.test(code)||!preRaw||!postRaw||![pre,post].every(v=>Number.isInteger(v)&&v>=0&&v<=100)||(delay!==null&&(!Number.isInteger(delay)||delay<0||delay>100))||!Number.isInteger(attendance)||attendance<0||attendance>16){$('pilotMessage').textContent='تحقق من الرمز (مثل P01) والدرجات من 0 إلى 100 والحضور من 0 إلى 16.';return;}if(pilot.length>=15&&!pilot.some(p=>p.code===code)){$('pilotMessage').textContent='الحد المقترح للتجربة 15 مشاركًا.';return;}const item={code,pre,post,delay,attendance,updated_at:new Date().toISOString()};const previous=pilot.slice(),idx=pilot.findIndex(p=>p.code===code);if(idx>=0)pilot[idx]=item;else pilot.push(item);if(!savePilot()){pilot=previous;renderPilot();return;}$('pilotMessage').textContent='تم حفظ نتيجة '+code+' محليًا.';$('pCode').value='';$('pPre').value='';$('pPost').value='';$('pDelay').value='';$('pAttendance').value='0';renderPilot();};
+$('exportPilot').onclick=()=>{const rows=[['code','pre_score','post_score','retention_score','sessions_attended','learning_note'],...pilot.map(p=>[p.code,p.pre,p.post,p.delay,p.attendance,p.note])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='english-hero-pilot-results.csv';a.click();URL.revokeObjectURL(url);};
+$('clearPilot').onclick=async()=>{if(!confirm('هل تريد مسح سجل التجربة من هذا الجهاز ومن حساب المعلم السحابي؟'))return;const uid=cloudUser?.id||null;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;pilot=[];savePilot(false);renderPilot();if(uid&&cloudClient){while(cloudBusy)await new Promise(resolve=>setTimeout(resolve,25));if(!cloudUser||cloudUser.id!==uid){$('pilotMessage').textContent='مُسح السجل المحلي. تغيّر الحساب قبل اكتمال المسح السحابي؛ تحقق من سجل الحساب السابق لاحقًا.';return;}const {error}=await cloudClient.from('teacher_pilot_results').delete().eq('user_id',uid);if(error){$('pilotMessage').textContent='مُسح السجل المحلي لكن تعذر مسحه سحابيًا. تحقق من الاتصال ثم أعد المحاولة.';return;}cloudStatus('تم مسح سجل التجربة من حساب المعلم.');}$('pilotMessage').textContent='تم مسح سجل التجربة.';};
+render();renderPilot();
+initPilotCloud();
+})();
+</script></body></html>
