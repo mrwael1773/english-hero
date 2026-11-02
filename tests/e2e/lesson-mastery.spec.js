@@ -234,7 +234,7 @@ test('due retention retest clears the scheduled record after a correct answer', 
   await page.locator('#answerArea button.answer').filter({hasText: 'مرحبًا'}).click();
   await page.locator('#quizNext').click();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
-  expect(saved.review?.['0-0']).toBeUndefined();
+  expect(saved.review?.['0-0']?.stage).toBe('retained');
   expect(saved.misses?.['0-0']).toBeUndefined();
 });
 
