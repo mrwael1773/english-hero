@@ -151,7 +151,7 @@
         ['📝','اختبارات مسجلة',history.length],
         ['🎯','متوسط نتائج الاختبارات',history.length ? average + '%' : '—'],
         ['✅','إجابات صحيحة مسجلة',correct + ' / ' + count],
-        ['📚','الدروس المكتملة',state.masteredLessons.length + (typeof lessons !== 'undefined' ? ' / ' + lessons.length : '')],
+        ['📚','الدروس المتقنة',state.masteredLessons.length + (typeof lessons !== 'undefined' ? ' / ' + lessons.length : '')],
         ['⚡','نقاط الخبرة',state.xp],
         ['🧠','أخطاء تحتاج مراجعة',Object.keys(state.misses || {}).length]
       ];
