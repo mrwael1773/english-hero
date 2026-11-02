@@ -23,35 +23,50 @@ jobs:
         with:
           node-version: 22
 
-      - name: Check inline JavaScript syntax
+      - name: Check inline and standalone JavaScript across the site
         shell: bash
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
 
-          html = Path("index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
-          inline_scripts = []
-          for attrs, script in scripts:
-              # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
-              if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
+          html_files = [
+              "index.html",
+              "teacher-pilot.html",
+              "english-basics.html",
+              "english-tenses-guide.html",
+              "privacy.html",
+              "contact.html",
+              "german.html",
+              "german-hero/index.html",
+          ]
+          count = 0
+          for html_path in html_files:
+              path = Path(html_path)
+              if not path.is_file():
                   continue
-              if script.strip():
-                  inline_scripts.append(script)
-          if not inline_scripts:
-              raise SystemExit("No inline JavaScript blocks found in index.html")
-          for i, script in enumerate(inline_scripts, 1):
-              Path(f"/tmp/english-hero-inline-{i}.js").write_text(script, encoding="utf-8")
-          print(f"Extracted {len(inline_scripts)} inline JavaScript block(s).")
+              html = path.read_text(encoding="utf-8")
+              scripts = re.findall(r"<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>", html, re.I)
+              for attrs, script in scripts:
+                  if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
+                      continue
+                  if not script.strip():
+                      continue
+                  count += 1
+                  output = Path(f"/tmp/english-hero-inline-{count}.js")
+                  output.write_text(script, encoding="utf-8")
+                  print(f"Extracted {html_path} inline script #{count}.")
+          if count == 0:
+              raise SystemExit("No inline JavaScript blocks were found.")
           PY
           for file in /tmp/english-hero-inline-*.js; do
             echo "Checking $file"
             node --check "$file"
           done
-          node --check config.js
-          node --check cloud-sync.js
-          node --check sw.js
+          for file in config.js cloud-sync.js sw.js english-hero-plus.js learning-expansion.js pro-dashboard.js writing-practice.js; do
+            echo "Checking $file"
+            node --check "$file"
+          done
 
       - name: Validate JSON data and vocabulary count
         run: |
