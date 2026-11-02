@@ -43,6 +43,11 @@ jobs:
               advisories: via
             }));
           }
+          const blocking = (summary.moderate || 0) + (summary.high || 0) + (summary.critical || 0);
+          if (blocking > 0) {
+            console.error(`Dependency audit failed: ${blocking} moderate/high/critical advisories remain.`);
+            process.exit(1);
+          }
           JS
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
