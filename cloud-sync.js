@@ -99,6 +99,44 @@
     clearTimeout(timer);
     timer=setTimeout(uploadProgress,900);
   };
+  function mergeReviewProgress(remoteReview,localReview,remoteMisses,localMisses){
+    const object=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+    const remote=object(remoteReview),local=object(localReview),rm=object(remoteMisses),lm=object(localMisses);
+    const keys=new Set([...Object.keys(remote),...Object.keys(local),...Object.keys(rm),...Object.keys(lm)]);
+    const stamp=item=>{
+      const explicit=Date.parse(item?.updatedAt||'');
+      if(Number.isFinite(explicit))return explicit;
+      const day=Date.parse((typeof item?.last==='string'?item.last:'')+'T00:00:00Z');
+      return Number.isFinite(day)?day:0;
+    };
+    const merged={};
+    for(const id of keys){
+      if(typeof wordMap!=='undefined'&&!wordMap[id])continue;
+      const a=remote[id],b=local[id];
+      let item=a&&b?(stamp(b)>=stamp(a)?b:a):(b||a);
+      if(!item&&(rm[id]||lm[id]))item={last:'',due:'',stage:'practice',times:1};
+      if(!item||typeof item!=='object'||Array.isArray(item))continue;
+      const normalized={...item};
+      if(!['practice','retention','retained'].includes(normalized.stage)){
+        if(rm[id]||lm[id])normalized.stage='practice';
+        else continue;
+      }
+      merged[id]=normalized;
+    }
+    return merged;
+  }
+  function reconcileReviewMisses(remoteMisses,localMisses,review){
+    const object=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+    const misses={};
+    for(const [id,value] of Object.entries({...object(remoteMisses),...object(localMisses)})){
+      if(value&&!(typeof wordMap!=='undefined'&&!wordMap[id]))misses[id]=true;
+    }
+    for(const [id,item] of Object.entries(object(review))){
+      if(item?.stage==='practice')misses[id]=true;
+      else if(item?.stage==='retention'||item?.stage==='retained')delete misses[id];
+    }
+    return misses;
+  }
   function mergeProgress(remote){
     const local=state||{};
     const r=remote&&typeof remote==='object'&&!Array.isArray(remote)?remote:{};
@@ -122,8 +160,8 @@
       lessonPositions:{...object(r.lessonPositions),...object(local.lessonPositions)},
       chatHistory,
       saved:union(r.saved,local.saved),
-      misses:{...object(r.misses),...object(local.misses)},
-      review:{...object(r.review),...object(local.review)},
+      review:mergeReviewProgress(r.review,local.review,r.misses,local.misses),
+      misses:reconcileReviewMisses(r.misses,local.misses,mergeReviewProgress(r.review,local.review,r.misses,local.misses)),
       daily,
       lastActive:[r.lastActive,local.lastActive].filter(v=>typeof v==='string').sort().pop()||'',
       theme:local.theme||r.theme||'dark',rate:local.rate||r.rate||0.9
@@ -142,6 +180,8 @@
     for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
     state.masteredLessons=typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(state.masteredLessons):[...new Set(state.masteredLessons.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];for(const key of ['lessonStarted','lessonTrained']) state[key]=[...new Set(state[key].filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     for(const key of ['misses','review','daily','lessonPositions']) if(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])) state[key]={};
+    state.review=mergeReviewProgress({},state.review,{},state.misses);
+    state.misses=reconcileReviewMisses({},state.misses,state.review);
     state.completed=[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     state.saved=[...new Set(state.saved)];
     state.foundationSaved=[...new Set(state.foundationSaved.filter(x=>typeof x==='string'))];
