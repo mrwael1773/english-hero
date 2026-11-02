@@ -138,10 +138,10 @@ async function loadPilotCloud(){
   }
   const {data,error}=await cloudClient.from('teacher_pilot_results').select('code,pre_score,post_score,retention_score,sessions_attended,session_log,learning_note,updated_at').eq('user_id',uid);
   if(error)throw error;if(!cloudUser||cloudUser.id!==uid||generation!==cloudGeneration)return;
-  cloudReady=true;setCloudUI();
   const merged=new Map(normalizePilotRecords((Array.isArray(data)?data:[]).map(r=>({code:r.code,pre:r.pre_score,post:r.post_score,delay:r.retention_score,attendance:r.sessions_attended,sessions:r.session_log,updated_at:r.updated_at||''}))).map(r=>[r.code,r]));
   for(const local of pilot){const remote=merged.get(local.code);if(!remote||Date.parse(local.updated_at||0)>Date.parse(remote.updated_at||0))merged.set(local.code,local);}
   pilot=[...merged.values()].sort((a,b)=>a.code.localeCompare(b.code));
+  cloudReady=true;setCloudUI();
   savePilot(false);renderPilot();
   if(generation===cloudGeneration)await syncPilot();
  }catch(error){if(generation===cloudGeneration)cloudStatus('تعذر تحميل النتائج السحابية. لم نرفع بيانات محلية قبل اكتمال التحميل حمايةً من استبدال بيانات الحساب.');console.error('Teacher pilot load:',error?.message||error);}
