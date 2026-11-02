@@ -55,7 +55,7 @@ test('attendance records 16 individual sessions, updates a participant, and expo
   await page.locator('#pPost').fill('85');
   await page.locator('#pDelay').fill('80');
   for (const session of [1, 3, 5, 9, 16]) {
-    await page.locator('.pilot-session').locator(`[value="${session}"]`).check();
+    await page.locator(`.pilot-session[value="${session}"]`).check();
   }
   await page.locator('#addParticipant').click();
   await expect(page.locator('#pilotRows tr')).toHaveCount(1);
@@ -73,7 +73,7 @@ test('attendance records 16 individual sessions, updates a participant, and expo
   await page.locator('#pPost').fill('88');
   await page.locator('#pDelay').fill('83');
   for (const session of [2, 8, 15]) {
-    await page.locator('.pilot-session').locator(`[value="${session}"]`).check();
+    await page.locator(`.pilot-session[value="${session}"]`).check();
   }
   await page.locator('#addParticipant').click();
   await expect(page.locator('#pilotRows tr')).toHaveCount(1);
