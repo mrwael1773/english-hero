@@ -124,6 +124,31 @@
     const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=el('a');a.href=url;a.download='english-hero-pilot-report.json';a.click();URL.revokeObjectURL(url);status('تم تجهيز تقرير مجهول دون اسم أو بريد.');
   };
   const reset=()=>{if(!window.confirm('هل تريد مسح تقدم المسار التجريبي فقط؟'))return;data=blank();persist();render();};
+  // Legacy course lessons only count as complete after their assessment reaches 80%.
+  if (typeof window.finishQuiz === 'function' && !window.finishQuiz.__ehMasteryGate) {
+    const originalFinish = window.finishQuiz;
+    const gatedFinish = function () {
+      const pending = Number.isInteger(window.__ehPendingLesson) ? window.__ehPendingLesson : null;
+      const total = typeof quiz !== 'undefined' && quiz && Array.isArray(quiz.items) ? quiz.items.length : 0;
+      const correct = typeof quiz !== 'undefined' && quiz ? Number(quiz.correct) || 0 : 0;
+      const passed = total > 0 && Math.round(correct / total * 100) >= 80;
+      originalFinish();
+      if (pending === null || !Array.isArray(state.completed)) return;
+      const retry = $('again');
+      if (passed) {
+        if (!state.completed.includes(pending)) { state.completed.push(pending); if (typeof gain === 'function') gain(40); if (typeof daily === 'function') daily('lesson'); }
+        if (typeof renderCourses === 'function') renderCourses();
+        if (typeof toast === 'function') toast('🎉 اجتزت اختبار الدرس بنسبة ٨٠٪ أو أكثر! +40 XP');
+        delete window.__ehPendingLesson;
+      } else {
+        if (retry) retry.onclick = () => { if (typeof restoreQuiz === 'function') restoreQuiz(); if (typeof startQuiz === 'function') startQuiz('lesson', lessons[pending].words); };
+        if (typeof toast === 'function') toast('أكملت التدريب، لكن يلزم ٨٠٪ لاجتياز الدرس. أعد المحاولة.');
+      }
+      if (typeof save === 'function') save();
+    };
+    gatedFinish.__ehMasteryGate = true;
+    window.finishQuiz = gatedFinish;
+  }
   window.addEventListener('DOMContentLoaded',render);
   if(document.readyState!=='loading')render();
 })();
