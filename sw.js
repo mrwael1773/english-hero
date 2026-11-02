@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE_NAME = 'english-hero-shell-v92';
-const APP_SHELL = ['./', './index.html', './english-basics.html', './english-tenses-guide.html', './privacy.html', './contact.html', './teacher-pilot.html', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js', './pro-dashboard.js?v=3', './learning-expansion.js?v=59', './english-hero-plus.js?v=68', './vocabulary-20000.json'];
+const CACHE_NAME = 'english-hero-shell-v93';
+const APP_SHELL = ['./', './index.html', './english-basics.html', './english-tenses-guide.html', './privacy.html', './contact.html', './teacher-pilot.html', './icon.svg', './config.js', './cloud-sync.js', './pro-dashboard.js?v=3', './learning-expansion.js?v=59', './english-hero-plus.js?v=68', './vocabulary-20000.json'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
