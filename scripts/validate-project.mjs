@@ -11,7 +11,7 @@ const read = path => {
 };
 
 const html = read('index.html');
-const manifestRaw = read('manifest.webmanifest');
+const packageRaw = read('package.json');
 const privacyPage = read('privacy.html');
 const contactPage = read('contact.html');
 const iconSvg = read('icon.svg');
@@ -40,19 +40,20 @@ check(html.includes('englishHeroStudentTasksV1') && html.includes('function rend
 const idCounts = new Map();
 for (const match of html.matchAll(/\bid=["']([^"']+)["']/g)) idCounts.set(match[1], (idCounts.get(match[1]) || 0) + 1);
 check([...idCounts.values()].every(count => count === 1), 'HTML element IDs are unique');
-for (const path of ['manifest.webmanifest', 'privacy.html', 'contact.html', 'icon.svg']) {
+for (const path of ['privacy.html', 'contact.html', 'icon.svg', 'package.json']) {
   check(existsSync(join(root, path)), `Required public file exists: ${path}`);
 }
 try {
-  const manifest = JSON.parse(manifestRaw);
-  check(Boolean(manifest.name && manifest.start_url && manifest.display), 'Web app manifest has required install fields');
-  check(Array.isArray(manifest.icons) && manifest.icons.length > 0, 'Web app manifest declares app icons');
+  const packageConfig = JSON.parse(packageRaw);
+  const nativePackages = ['@capacitor/android', '@capacitor/ios', '@capacitor/core', '@capacitor/cli'];
+  check(packageConfig.name === 'english-hero-web' && !packageConfig.scripts?.['build:android'] && !nativePackages.some(name => packageConfig.dependencies?.[name] || packageConfig.devDependencies?.[name]), 'Project package is website-only and has no native app build dependencies');
 } catch {
-  fail.push('Web app manifest is valid JSON');
+  fail.push('package.json is valid JSON and describes the website');
 }
+check(!html.includes('rel="manifest"') && !existsSync(join(root, 'manifest.webmanifest')) && !existsSync(join(root, 'capacitor.config.json')), 'No PWA manifest or native app installation configuration remains');
 check(privacyPage.includes('<html') && privacyPage.includes('</html>'), 'Privacy page has an HTML document');
 check(contactPage.includes('<html') && contactPage.includes('</html>'), 'Contact page has an HTML document');
-check(iconSvg.includes('<svg') && iconSvg.includes('</svg>'), 'App icon is a valid SVG document');
+check(iconSvg.includes('<svg') && iconSvg.includes('</svg>'), 'Site favicon is a valid SVG document');
 for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults']) {
   check(html.includes(`id="${id}"`), `Required UI element exists: ${id}`);
 }
