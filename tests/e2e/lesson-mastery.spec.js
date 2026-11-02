@@ -71,7 +71,24 @@ test('a score above 80% records mastery and unlocks the next lesson', async ({ p
   await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
   expect(saved.masteredLessons || []).toContain(0);
+  await page.reload();
   await page.evaluate(() => window.page('courses'));
   await expect(page.locator('#courseGrid button').nth(1)).toBeEnabled();
   await expect(page.locator('#done')).toHaveText(/^1\/\d+$/);
+});
+
+test('legacy completed records do not count as mastery or unlock later lessons', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      completed: [0, 1, 2],
+      masteredLessons: [],
+      lessonStarted: [],
+      lessonTrained: []
+    }));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('courses'));
+  await expect(page.locator('#done')).toHaveText(/^0\/\d+$/);
+  await expect(page.locator('#courseGrid button').nth(1)).toBeDisabled();
 });
