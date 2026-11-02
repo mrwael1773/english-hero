@@ -145,7 +145,8 @@ check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./en
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
 const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','german.html'].map(read).join('\\n');
-check(!/(adsbygoogle|googlesyndication|google-adsense-account|googletagmanager)/i.test(publicHtml), 'Public HTML files contain no ad or third-party analytics tags');
+check(!/(adsbygoogle|googlesyndication|google-adsense-account|googletagmanager|google-analytics)/i.test(publicHtml), 'Public HTML files contain no ad or third-party analytics tags');
+check(!html.includes('analytics_events') && !html.includes('englishHeroAnalyticsVisitorV1'), 'Main page does not send custom analytics events or create analytics visitor identifiers');
 check(html.includes('navigator.serviceWorker.register'), 'Main page registers the service worker');
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
 check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') && migration.includes('(SELECT auth.uid())'), 'Tracked migration contains the security and RLS policy changes');
@@ -155,10 +156,13 @@ let vocabulary;
 try {
   vocabulary = JSON.parse(vocabRaw);
   check(Array.isArray(vocabulary.words), 'Vocabulary JSON contains a words array');
-  check(vocabulary.words.length === 20000, 'Vocabulary list contains exactly 20000 entries');
-  check(new Set(vocabulary.words).size === vocabulary.words.length, 'Vocabulary list has no duplicate entries');
+  check(vocabulary.words.length >= 19000 && vocabulary.words.length <= 20000, 'Reviewed vocabulary list contains between 19000 and 20000 entries');
+  check(new Set(vocabulary.words.map(word => String(word).toLowerCase())).size === vocabulary.words.length, 'Vocabulary list has no case-insensitive duplicates');
   check(vocabulary.words.every(word => typeof word === 'string' && word.trim().length > 0), 'Vocabulary entries are non-empty strings');
   check(vocabulary.words.every(word => word.length > 1 || word === 'a' || word === 'i'), 'Vocabulary list excludes one-letter tokenization artifacts');
+  const unsuitableVocabulary = new Set(["xxx","milf","cum","hardcore","porno","tits","hentai","shemale","voyeur","sexo","blowjob","boobs","dildo","sexcam","milfhunter","beastiality","upskirt","milfs","breasts","blowjobs","bestiality","cumshot","busty","cocks","tranny","cumshots","bukkake","nipples","pissing","fisting","fucked","gangbang","dildos","upskirts","ejaculation","bbw","squirting","sluts","twinks","threesome","handjob","xnxx","thumbzilla","pichunter","bdsm","livesex","worldsex","zoophilia","vibrator","vibrators","escorts","sucks","adipex","sex","sexual","sexually","sexy","fuck","fucking","fucker","motherfucker","shit","bullshit","bitch","asshole","porn","pornography","pornographic","nude","penis","vagina","vaginal","masturbate","masturbation","masturbating","whore","slut","dick","dicks","playboy","transexual","transexuales"]);
+  check(vocabulary.words.every(word => !unsuitableVocabulary.has(String(word).toLowerCase())), 'Vocabulary excludes the reviewed explicit profanity and adult-content blocklist');
+  check(html.includes('d.words.length<19000') && html.includes('d.words.length>20000'), 'Vocabulary loader accepts the reviewed variable count and rejects invalid counts');
 } catch {
   fail.push('Vocabulary file is valid JSON');
 }
