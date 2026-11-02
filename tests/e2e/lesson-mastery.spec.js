@@ -86,9 +86,10 @@ test('a word missed in one part remains in review even if its other answers are 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
   expect(Object.keys(saved.misses || {})).toHaveLength(1);
   const missedId = Object.keys(saved.misses)[0];
-  expect(saved.review?.[missedId]?.due).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+  expect(saved.review?.[missedId]?.due).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 });
-\ntest('legacy completed records do not count as mastery or unlock later lessons', async ({ page }) => {
+
+test('legacy completed records do not count as mastery or unlock later lessons', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('english-hero-academy-3', JSON.stringify({
