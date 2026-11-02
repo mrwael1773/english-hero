@@ -141,6 +141,7 @@ test('legacy completions and broken mastery records cannot inflate progress or s
   await page.evaluate(() => window.page('profile'));
   await expect(page.locator('#profileDone')).toHaveText('1');
   await expect(page.locator('#badges .badgeitem').first()).not.toHaveClass(/locked/);
+  await page.evaluate(() => window.page('home'));
   await page.locator('#continueBtn').click();
   await expect(page.locator('#lessonTag')).toContainText('الدرس 2');
 });
