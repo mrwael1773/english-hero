@@ -99,44 +99,6 @@
     clearTimeout(timer);
     timer=setTimeout(uploadProgress,900);
   };
-  function mergeReviewProgress(remoteReview,localReview,remoteMisses,localMisses){
-    const object=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
-    const remote=object(remoteReview),local=object(localReview),rm=object(remoteMisses),lm=object(localMisses);
-    const keys=new Set([...Object.keys(remote),...Object.keys(local),...Object.keys(rm),...Object.keys(lm)]);
-    const stamp=item=>{
-      const explicit=Date.parse(item?.updatedAt||'');
-      if(Number.isFinite(explicit))return explicit;
-      const day=Date.parse((typeof item?.last==='string'?item.last:'')+'T00:00:00Z');
-      return Number.isFinite(day)?day:0;
-    };
-    const merged={};
-    for(const id of keys){
-      if(typeof wordMap!=='undefined'&&!wordMap[id])continue;
-      const a=remote[id],b=local[id];
-      let item=a&&b?(stamp(b)>=stamp(a)?b:a):(b||a);
-      if(!item&&(rm[id]||lm[id]))item={last:'',due:'',stage:'practice',times:1};
-      if(!item||typeof item!=='object'||Array.isArray(item))continue;
-      const normalized={...item};
-      if(!['practice','retention','retained'].includes(normalized.stage)){
-        if(rm[id]||lm[id])normalized.stage='practice';
-        else continue;
-      }
-      merged[id]=normalized;
-    }
-    return merged;
-  }
-  function reconcileReviewMisses(remoteMisses,localMisses,review){
-    const object=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
-    const misses={};
-    for(const [id,value] of Object.entries({...object(remoteMisses),...object(localMisses)})){
-      if(value&&!(typeof wordMap!=='undefined'&&!wordMap[id]))misses[id]=true;
-    }
-    for(const [id,item] of Object.entries(object(review))){
-      if(item?.stage==='practice')misses[id]=true;
-      else if(item?.stage==='retention'||item?.stage==='retained')delete misses[id];
-    }
-    return misses;
-  }
   function mergeProgress(remote){
     const local=state||{};
     const r=remote&&typeof remote==='object'&&!Array.isArray(remote)?remote:{};
