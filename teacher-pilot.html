@@ -92,13 +92,13 @@ const normalizePilotRecords=value=>{
 let data={started:false,trained:[],attempts:0,mastered:false,lastAttempt:null,reviewDue:null,wrong:[]};
 let pilot=[];
 try{data=normalizeMastery(JSON.parse(localStorage.getItem(KEY)||'{}'));}catch{data=normalizeMastery({});}
-try{pilot=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));}catch{pilot=[];}
+pilot=[]; // Never expose unclaimed student records before a teacher account is verified.
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}};
 save(); // Persist the validated state so corrupted local values cannot survive a reload.
-const savePilot=(sync=true)=>{try{pilot=normalizePilotRecords(pilot);const raw=JSON.stringify(pilot);localStorage.setItem(PILOT,raw);if(cloudUser){localStorage.setItem(PILOT_OWNER,cloudUser.id);localStorage.setItem(pilotAccountKey(cloudUser.id),raw);}if(sync&&cloudUser)queuePilotSync();return true;}catch{$('pilotMessage').textContent='تعذر الحفظ المحلي. تحقق من مساحة التخزين.';return false;}};
-let cloudClient=null,cloudUser=null,cloudTimer=null,cloudBusy=false,cloudPending=false,cloudGeneration=0;
+const savePilot=(sync=true)=>{if(!cloudUser||!cloudClient){$('pilotMessage').textContent='سجّل الدخول بحساب المعلم قبل حفظ بيانات الطلاب.';return false;}try{pilot=normalizePilotRecords(pilot);const raw=JSON.stringify(pilot);localStorage.setItem(PILOT,raw);if(cloudUser){localStorage.setItem(PILOT_OWNER,cloudUser.id);localStorage.setItem(pilotAccountKey(cloudUser.id),raw);}if(sync&&cloudUser)queuePilotSync();return true;}catch{$('pilotMessage').textContent='تعذر الحفظ المحلي. تحقق من مساحة التخزين.';return false;}};
+let cloudClient=null,cloudUser=null,cloudTimer=null,cloudBusy=false,cloudPending=false,cloudGeneration=0,cloudReady=false;
 const cloudStatus=message=>{const el=$('pilotCloudStatus');if(el)el.textContent=message;};
-const setCloudUI=()=>{const signed=!!cloudUser;$('pilotCloudAuth').classList.toggle('hidden',signed);$('pilotCloudSignOut').hidden=!signed;$('pilotCloudSignOut').disabled=!signed;};
+const setCloudUI=()=>{const signed=!!cloudUser;$('pilotCloudAuth').classList.toggle('hidden',signed);$('pilotCloudSignOut').hidden=!signed;$('pilotCloudSignOut').disabled=!signed;for(const id of ['addParticipant','exportPilot','clearPilot'])$(id).disabled=!(signed&&cloudReady);};
 const queuePilotSync=()=>{clearTimeout(cloudTimer);cloudTimer=setTimeout(syncPilot,700);};
 const toCloudRow=(p,uid)=>({user_id:uid,code:p.code,pre_score:p.pre,post_score:p.post,retention_score:p.delay,sessions_attended:p.attendance,session_log:normalizeSessions(p.sessions),learning_note:null,updated_at:p.updated_at||new Date().toISOString()});
 async function syncPilot(){
@@ -116,27 +116,29 @@ async function syncPilot(){
 }
 async function loadPilotCloud(){
  if(!cloudClient||!cloudUser)return;
+ cloudReady=false;setCloudUI();
  const uid=cloudUser.id,generation=cloudGeneration;cloudStatus('جارٍ تحميل نتائج حساب المعلم...');
  try{
   const owner=localStorage.getItem(PILOT_OWNER)||'';
   if(owner&&owner!==uid){
-   localStorage.setItem(pilotAccountKey(owner),localStorage.getItem(PILOT)||'[]');
+   const previousLocal=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));
+   // Do not overwrite a previous teacher's scoped backup with the empty cache left by sign-out.
+   if(previousLocal.length)localStorage.setItem(pilotAccountKey(owner),JSON.stringify(previousLocal));
    try{pilot=normalizePilotRecords(JSON.parse(localStorage.getItem(pilotAccountKey(uid))||'[]'));}catch{pilot=[];}
    localStorage.setItem(PILOT_OWNER,uid);savePilot(false);renderPilot();
   }else if(!owner){
-   if(pilot.length&&window.confirm('وجدنا سجلًا محليًا سابقًا. هل تريد ربطه بحساب المعلم الذي سجلت الدخول به؟ اختر «إلغاء» لإبقائه نسخة محلية غير مرتبطة وبدء سجل هذا الحساب بشكل مستقل.')){
-    localStorage.setItem(PILOT_OWNER,uid);localStorage.setItem(pilotAccountKey(uid),JSON.stringify(pilot));
-   }else{
-    if(pilot.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(pilot));
-    pilot=[];localStorage.setItem(PILOT_OWNER,uid);savePilot(false);renderPilot();
-   }
+   const legacy=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));
+   if(legacy.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(legacy));
+   try{pilot=normalizePilotRecords(JSON.parse(localStorage.getItem(pilotAccountKey(uid))||'[]'));}catch{pilot=[];}
+   localStorage.setItem(PILOT_OWNER,uid);savePilot(false);renderPilot();
   }else{
    const scoped=localStorage.getItem(pilotAccountKey(uid));
-   if(scoped){try{pilot=JSON.parse(scoped);if(!Array.isArray(pilot))pilot=[];}catch{pilot=[];}savePilot(false);renderPilot();}
-   else localStorage.setItem(pilotAccountKey(uid),JSON.stringify(pilot));
+   if(scoped){try{pilot=normalizePilotRecords(JSON.parse(scoped));}catch{pilot=[];}savePilot(false);renderPilot();}
+   else{pilot=[];localStorage.setItem(pilotAccountKey(uid),'[]');savePilot(false);renderPilot();}
   }
   const {data,error}=await cloudClient.from('teacher_pilot_results').select('code,pre_score,post_score,retention_score,sessions_attended,session_log,learning_note,updated_at').eq('user_id',uid);
   if(error)throw error;if(!cloudUser||cloudUser.id!==uid||generation!==cloudGeneration)return;
+  cloudReady=true;setCloudUI();
   const merged=new Map(normalizePilotRecords((Array.isArray(data)?data:[]).map(r=>({code:r.code,pre:r.pre_score,post:r.post_score,delay:r.retention_score,attendance:r.sessions_attended,sessions:r.session_log,updated_at:r.updated_at||''}))).map(r=>[r.code,r]));
   for(const local of pilot){const remote=merged.get(local.code);if(!remote||Date.parse(local.updated_at||0)>Date.parse(remote.updated_at||0))merged.set(local.code,local);}
   pilot=[...merged.values()].sort((a,b)=>a.code.localeCompare(b.code));
@@ -150,20 +152,20 @@ async function initPilotCloud(){
   if(!cfg||!window.supabase?.createClient)throw new Error('إعداد الاتصال السحابي غير متاح.');
   cloudClient=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   const {data,error}=await cloudClient.auth.getSession();if(error)throw error;
-  cloudUser=data.session?.user||null;setCloudUI();
-  if(cloudUser)await loadPilotCloud();else{const owner=localStorage.getItem(PILOT_OWNER)||'';if(owner&&pilot.length)localStorage.setItem(pilotAccountKey(owner),JSON.stringify(pilot));else if(pilot.length)localStorage.setItem(PILOT+'-unclaimed',JSON.stringify(pilot));if(!owner){try{pilot=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT+'-unclaimed')||'[]'));}catch{pilot=[];}}else{pilot=[];}localStorage.setItem(PILOT,JSON.stringify(pilot));renderPilot();cloudStatus('سجّل الدخول بحساب المعلم لمزامنة النتائج. السجل المحلي غير المرتبط سيبقى على هذا الجهاز حتى تختار ربطه بحسابك.');}
+  cloudUser=data.session?.user||null;cloudReady=false;setCloudUI();
+  if(cloudUser)await loadPilotCloud();else{pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('سجّل الدخول بحساب المعلم قبل عرض أو إدخال أو تصدير بيانات الطلاب. السجلات المحلية القديمة غير المرتبطة بحساب تبقى مخفية ولا تُنقل تلقائيًا.');}
   cloudClient.auth.onAuthStateChange((event,session)=>{
    const previousUser=cloudUser;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;
-   cloudUser=session?.user||null;setCloudUI();
+   cloudUser=session?.user||null;cloudReady=false;setCloudUI();
    if(event==='SIGNED_IN'&&cloudUser)setTimeout(loadPilotCloud,0);
-   if(event==='SIGNED_OUT'){if(previousUser)localStorage.setItem(pilotAccountKey(previousUser.id),JSON.stringify(pilot));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();cloudStatus('تم تسجيل الخروج. أُخفي سجل الحساب السابق من هذه الصفحة.');}
+   if(event==='SIGNED_OUT'){cloudReady=false;if(previousUser)localStorage.setItem(pilotAccountKey(previousUser.id),JSON.stringify(pilot));pilot=[];localStorage.setItem(PILOT,'[]');renderPilot();setCloudUI();cloudStatus('تم تسجيل الخروج. أُخفي سجل الحساب السابق من هذه الصفحة.');}
   });
- }catch(error){cloudStatus('تعذر تهيئة المزامنة السحابية. يمكنك الاحتفاظ بالنتائج محليًا مؤقتًا.');console.error('Teacher pilot auth:',error?.message||error);}
+ }catch(error){cloudReady=false;setCloudUI();pilot=[];renderPilot();cloudStatus('تعذر تهيئة تسجيل الدخول. أوقفنا إدخال وعرض بيانات الطلاب حتى لا تُحفظ محليًا دون حساب معلم.');console.error('Teacher pilot auth:',error?.message||error);}
 }
 $('pilotCloudAuth').addEventListener('submit',async e=>{
  e.preventDefault();if(!cloudClient){cloudStatus('خدمة تسجيل الدخول غير متاحة حاليًا.');return;}
  const button=$('pilotCloudLogin');button.disabled=true;cloudStatus('جارٍ تسجيل دخول المعلم...');
- try{const {data,error}=await cloudClient.auth.signInWithPassword({email:$('pilotCloudEmail').value.trim(),password:$('pilotCloudPassword').value});if(error)throw error;cloudUser=data.user||data.session?.user||null;setCloudUI();cloudStatus('تم تسجيل الدخول. جارٍ تحميل بيانات هذا الحساب...');}
+ try{const {data,error}=await cloudClient.auth.signInWithPassword({email:$('pilotCloudEmail').value.trim(),password:$('pilotCloudPassword').value});if(error)throw error;cloudUser=data.user||data.session?.user||null;cloudReady=false;setCloudUI();cloudStatus('تم تسجيل الدخول. جارٍ تحميل بيانات هذا الحساب...');}
  catch(error){cloudStatus('تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور، ثم حاول مجددًا.');console.error('Teacher pilot sign in:',error?.message||error);}
  finally{button.disabled=false;}
 });
@@ -210,9 +212,9 @@ $('finishTraining').onclick=()=>{if(data.trained.length!==6){alert('أكمل ت�
 $('startTest').onclick=startTest;
 const average=key=>{const values=pilot.map(p=>p[key]).filter(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v)));return values.length?Math.round(values.reduce((s,v)=>s+Number(v),0)/values.length):null;};
 const renderPilot=()=>{pilot=normalizePilotRecords(pilot);const n=pilot.length;$('pilotStats').innerHTML=[['عدد المشاركين',n],['متوسط الاختبار القبلي',n?average('pre')+'٪':'—'],['متوسط الاختبار البعدي',n?average('post')+'٪':'—'],['متوسط الاحتفاظ',average('delay')===null?'—':average('delay')+'٪'],['متوسط الحضور',n?average('attendance')+'/16':'—'],['متوسط التحسن',n?(average('post')-average('pre'))+' نقطة':'—']].map(([l,v])=>'<div class="stat"><span class="small muted">'+l+'</span><b>'+v+'</b></div>').join('');$('pilotRows').innerHTML=pilot.map(p=>{const ss=normalizeSessions(p.sessions);const weekly=[0,1,2,3].map(w=>ss.filter(n=>n>w*4&&n<=(w+1)*4).length);const attendanceText=!ss.length&&Number(p.attendance||0)>0?(p.attendance||0)+'/16 — سجل قديم':ss.length+'/16 (أ1 '+weekly[0]+'، أ2 '+weekly[1]+'، أ3 '+weekly[2]+'، أ4 '+weekly[3]+')';return '<tr><td>'+escapeHTML(p.code)+'</td><td>'+p.pre+'</td><td>'+p.post+'</td><td>'+(p.delay===null?'—':p.delay)+'</td><td>'+attendanceText+'</td><td class="'+(p.post>=p.pre?'good':'bad')+'">'+(p.post-p.pre>0?'+':'')+(p.post-p.pre)+'</td></tr>';}).join('');};
-$('addParticipant').onclick=()=>{const code=$('pCode').value.trim().toUpperCase(),preRaw=$('pPre').value.trim(),postRaw=$('pPost').value.trim(),delayRaw=$('pDelay').value.trim(),pre=Number(preRaw),post=Number(postRaw),delay=delayRaw===''?null:Number(delayRaw);if(!/^P[0-9]{2,3}$/.test(code)||!preRaw||!postRaw||![pre,post].every(v=>Number.isInteger(v)&&v>=0&&v<=100)||(delay!==null&&(!Number.isInteger(delay)||delay<0||delay>100))){$('pilotMessage').textContent='تحقق من الرمز (مثل P01) والدرجات من 0 إلى 100 وعلامات حضور الجلسات الصحيحة.';return;}if(pilot.length>=15&&!pilot.some(p=>p.code===code)){$('pilotMessage').textContent='الحد المقترح للتجربة 15 مشاركًا.';return;}const sessions=[...document.querySelectorAll('.pilot-session:checked')].map(el=>Number(el.value)).filter((v,i,a)=>Number.isInteger(v)&&v>=1&&v<=16&&a.indexOf(v)===i).sort((a,b)=>a-b);const attendance=sessions.length;const item={code,pre,post,delay,attendance,sessions,updated_at:new Date().toISOString()};const previous=pilot.slice(),idx=pilot.findIndex(p=>p.code===code);if(idx>=0)pilot[idx]=item;else pilot.push(item);if(!savePilot()){pilot=previous;renderPilot();return;}$('pilotMessage').textContent='تم حفظ نتيجة '+code+' محليًا.';$('pCode').value='';$('pPre').value='';$('pPost').value='';$('pDelay').value='';document.querySelectorAll('.pilot-session').forEach(el=>el.checked=false);renderPilot();};
-$('exportPilot').onclick=()=>{const rows=[['code','pre_score','post_score','retention_score','sessions_attended','session_log','week_1','week_2','week_3','week_4'],...pilot.map(p=>{const ss=Array.isArray(p.sessions)?p.sessions:[];return [p.code,p.pre,p.post,p.delay,p.attendance,ss.join('|'),...[0,1,2,3].map(w=>ss.filter(n=>n>w*4&&n<=(w+1)*4).length)];})];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='english-hero-pilot-results.csv';a.click();URL.revokeObjectURL(url);};
-$('clearPilot').onclick=async()=>{if(!confirm('هل تريد مسح سجل التجربة من هذا الجهاز ومن حساب المعلم السحابي؟'))return;const uid=cloudUser?.id||null;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;pilot=[];savePilot(false);if(!uid){try{if(!localStorage.getItem(PILOT_OWNER))localStorage.removeItem(PILOT+'-unclaimed');}catch{}}renderPilot();if(uid&&cloudClient){while(cloudBusy)await new Promise(resolve=>setTimeout(resolve,25));if(!cloudUser||cloudUser.id!==uid){$('pilotMessage').textContent='مُسح السجل المحلي. تغيّر الحساب قبل اكتمال المسح السحابي؛ تحقق من سجل الحساب السابق لاحقًا.';return;}const {error}=await cloudClient.from('teacher_pilot_results').delete().eq('user_id',uid);if(error){$('pilotMessage').textContent='مُسح السجل المحلي لكن تعذر مسحه سحابيًا. تحقق من الاتصال ثم أعد المحاولة.';return;}cloudStatus('تم مسح سجل التجربة من حساب المعلم.');}$('pilotMessage').textContent='تم مسح سجل التجربة.';};
+$('addParticipant').onclick=()=>{if(!cloudUser||!cloudReady){$('pilotMessage').textContent='يجب تسجيل الدخول وانتظار تحميل حساب المعلم قبل إدخال بيانات الطلاب.';return;}const code=$('pCode').value.trim().toUpperCase(),preRaw=$('pPre').value.trim(),postRaw=$('pPost').value.trim(),delayRaw=$('pDelay').value.trim(),pre=Number(preRaw),post=Number(postRaw),delay=delayRaw===''?null:Number(delayRaw);if(!/^P[0-9]{2,3}$/.test(code)||!preRaw||!postRaw||![pre,post].every(v=>Number.isInteger(v)&&v>=0&&v<=100)||(delay!==null&&(!Number.isInteger(delay)||delay<0||delay>100))){$('pilotMessage').textContent='تحقق من الرمز (مثل P01) والدرجات من 0 إلى 100 وعلامات حضور الجلسات الصحيحة.';return;}if(pilot.length>=15&&!pilot.some(p=>p.code===code)){$('pilotMessage').textContent='الحد المقترح للتجربة 15 مشاركًا.';return;}const sessions=[...document.querySelectorAll('.pilot-session:checked')].map(el=>Number(el.value)).filter((v,i,a)=>Number.isInteger(v)&&v>=1&&v<=16&&a.indexOf(v)===i).sort((a,b)=>a-b);const attendance=sessions.length;const item={code,pre,post,delay,attendance,sessions,updated_at:new Date().toISOString()};const previous=pilot.slice(),idx=pilot.findIndex(p=>p.code===code);if(idx>=0)pilot[idx]=item;else pilot.push(item);if(!savePilot()){pilot=previous;renderPilot();return;}$('pilotMessage').textContent='تم حفظ نتيجة '+code+' محليًا.';$('pCode').value='';$('pPre').value='';$('pPost').value='';$('pDelay').value='';document.querySelectorAll('.pilot-session').forEach(el=>el.checked=false);renderPilot();};
+$('exportPilot').onclick=()=>{if(!cloudUser||!cloudReady){$('pilotMessage').textContent='سجّل الدخول بحساب المعلم قبل تصدير بيانات الطلاب.';return;}const rows=[['code','pre_score','post_score','retention_score','sessions_attended','session_log','week_1','week_2','week_3','week_4'],...pilot.map(p=>{const ss=Array.isArray(p.sessions)?p.sessions:[];return [p.code,p.pre,p.post,p.delay,p.attendance,ss.join('|'),...[0,1,2,3].map(w=>ss.filter(n=>n>w*4&&n<=(w+1)*4).length)];})];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='english-hero-pilot-results.csv';a.click();URL.revokeObjectURL(url);};
+$('clearPilot').onclick=async()=>{if(!cloudUser||!cloudReady){$('pilotMessage').textContent='سجّل الدخول بحساب المعلم قبل إدارة سجلات الطلاب.';return;}if(!confirm('هل تريد مسح سجل التجربة من هذا الجهاز ومن حساب المعلم السحابي؟'))return;const uid=cloudUser?.id||null;cloudGeneration++;clearTimeout(cloudTimer);cloudPending=false;pilot=[];savePilot(false);if(!uid){try{if(!localStorage.getItem(PILOT_OWNER))localStorage.removeItem(PILOT+'-unclaimed');}catch{}}renderPilot();if(uid&&cloudClient){while(cloudBusy)await new Promise(resolve=>setTimeout(resolve,25));if(!cloudUser||cloudUser.id!==uid){$('pilotMessage').textContent='مُسح السجل المحلي. تغيّر الحساب قبل اكتمال المسح السحابي؛ تحقق من سجل الحساب السابق لاحقًا.';return;}const {error}=await cloudClient.from('teacher_pilot_results').delete().eq('user_id',uid);if(error){$('pilotMessage').textContent='مُسح السجل المحلي لكن تعذر مسحه سحابيًا. تحقق من الاتصال ثم أعد المحاولة.';return;}cloudStatus('تم مسح سجل التجربة من حساب المعلم.');}$('pilotMessage').textContent='تم مسح سجل التجربة.';};
 render();renderPilot();
 initPilotCloud();
 })();
