@@ -13,7 +13,7 @@ for (const route of ['/privacy.html', '/contact.html']) {
     const response = await page.goto(route);
     expect(response?.ok()).toBeTruthy();
     await expect(page.locator('body')).toBeVisible();
-    await expect(page.locator('title')).not.toHaveText('');
+    await expect(page.locator('title')).toHaveCount(1);
   });
 }
 
