@@ -20,6 +20,7 @@ const cloud = read('cloud-sync.js');
 const progressDashboard = read('pro-dashboard.js');
 const learningExpansion = read('learning-expansion.js');
 const englishHeroPlus = read('english-hero-plus.js');
+const measuredPilot = read('measurable-learning-pilot.js');
 const config = read('config.js');
 const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-20000.json');
@@ -142,6 +143,9 @@ check(html.includes("age>=0&&age<7") && html.includes("x.mode==='mistakes'"), 'W
 try { new Function(progressDashboard); check(true, 'Professional dashboard JavaScript syntax is valid'); } catch (error) { fail.push(`pro-dashboard.js has a syntax error: ${error.message}`); }
 try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript syntax is valid'); } catch (error) { fail.push(`english-hero-plus.js has a syntax error: ${error.message}`); }
 check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./english-hero-plus.js?v="), 'English Hero Plus is linked and cached offline');
+try { new Function(measuredPilot); check(true, 'Measurable learning pilot JavaScript syntax is valid'); } catch (error) { fail.push('measurable-learning-pilot.js has a syntax error: ' + error.message); }
+check(html.includes('src="measurable-learning-pilot.js?v=1"') && sw.includes("'./measurable-learning-pilot.js?v=1'"), 'Measurable learning pilot is linked and cached offline');
+check(measuredPilot.includes('data.trainingDone=true') && measuredPilot.includes('pct>=80') && measuredPilot.includes('nextReview') && measuredPilot.includes('exportReport'), 'Pilot tracks training, mastery threshold, spaced review, and anonymous reporting');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
 const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','german.html'].map(read).join('\\n');
