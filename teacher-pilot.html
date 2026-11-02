@@ -73,7 +73,7 @@ const normalizeMastery=value=>{
  const attempt=raw.lastAttempt&&typeof raw.lastAttempt==='object'?raw.lastAttempt:null;
  const total=Number(attempt?.total),correct=Number(attempt?.correct),score=Number(attempt?.score),date=Date.parse(attempt?.date||'');
  const validAttempt=Number.isInteger(total)&&total===18&&Number.isInteger(correct)&&correct>=0&&correct<=total&&Number.isInteger(score)&&score===Math.round(correct/total*100)&&Number.isFinite(date);
- const due=typeof raw.reviewDue==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(raw.reviewDue)&&Number.isFinite(Date.parse(raw.reviewDue+'T00:00:00Z'))?raw.reviewDue:null;
+ const due=typeof raw.reviewDue==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.reviewDue)&&Number.isFinite(Date.parse(raw.reviewDue+'T00:00:00Z'))?raw.reviewDue:null;
  return {started:!!raw.started||trained.length>0,trained,attempts:Number.isInteger(Number(raw.attempts))?Math.max(0,Math.min(10000,Number(raw.attempts))):0,mastered:!!(validAttempt&&score>=80),lastAttempt:validAttempt?{date:new Date(date).toISOString(),score,correct,total}:null,reviewDue:due,wrong};
 };
 const normalizePilotRecords=value=>{
@@ -94,6 +94,7 @@ let pilot=[];
 try{data=normalizeMastery(JSON.parse(localStorage.getItem(KEY)||'{}'));}catch{data=normalizeMastery({});}
 try{pilot=normalizePilotRecords(JSON.parse(localStorage.getItem(PILOT)||'[]'));}catch{pilot=[];}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}};
+save(); // Persist the validated state so corrupted local values cannot survive a reload.
 const savePilot=(sync=true)=>{try{pilot=normalizePilotRecords(pilot);const raw=JSON.stringify(pilot);localStorage.setItem(PILOT,raw);if(cloudUser){localStorage.setItem(PILOT_OWNER,cloudUser.id);localStorage.setItem(pilotAccountKey(cloudUser.id),raw);}if(sync&&cloudUser)queuePilotSync();return true;}catch{$('pilotMessage').textContent='تعذر الحفظ المحلي. تحقق من مساحة التخزين.';return false;}};
 let cloudClient=null,cloudUser=null,cloudTimer=null,cloudBusy=false,cloudPending=false,cloudGeneration=0;
 const cloudStatus=message=>{const el=$('pilotCloudStatus');if(el)el.textContent=message;};
