@@ -307,3 +307,30 @@ test('a full lesson retest moves a previously missed word into delayed retention
   expect(saved.misses?.['0-0']).toBeUndefined();
   expect(saved.review?.['0-0']?.stage).toBe('retention');
 });
+
+
+test('review sync keeps the newest per-word state and does not resurrect resolved misses', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() => {
+    const remoteReview = {'0-0': {stage: 'practice', last: '2026-11-02', due: '2026-11-05', updatedAt: '2026-11-02T08:00:00.000Z'}};
+    const localReview = {'0-0': {stage: 'retained', last: '2026-11-02', due: '', updatedAt: '2026-11-02T09:00:00.000Z'}};
+    const remoteMisses = {'0-0': true};
+    const localMisses = {};
+    const mergedReview = window.mergeReviewProgress(remoteReview, localReview, remoteMisses, localMisses);
+    const mergedMisses = window.reconcileReviewMisses(remoteMisses, localMisses, mergedReview);
+    const newerPractice = window.mergeReviewProgress(
+      {'0-0': {stage: 'retained', updatedAt: '2026-11-02T08:00:00.000Z'}},
+      {'0-0': {stage: 'practice', updatedAt: '2026-11-02T09:00:00.000Z'}},
+      {},
+      {'0-0': true}
+    );
+    const newerPracticeMisses = window.reconcileReviewMisses({}, {'0-0': true}, newerPractice);
+    const legacy = window.mergeReviewProgress({}, {}, {'0-0': true}, {});
+    return {mergedReview, mergedMisses, newerPractice, newerPracticeMisses, legacy};
+  });
+  expect(result.mergedReview['0-0'].stage).toBe('retained');
+  expect(result.mergedMisses['0-0']).toBeUndefined();
+  expect(result.newerPractice['0-0'].stage).toBe('practice');
+  expect(result.newerPracticeMisses['0-0']).toBe(true);
+  expect(result.legacy['0-0'].stage).toBe('practice');
+});
