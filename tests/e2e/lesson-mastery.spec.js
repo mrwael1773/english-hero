@@ -23,14 +23,15 @@ async function openFirstLesson(page) {
   return translations;
 }
 
-async function answerAll(page, translations, shouldPass) {
+async function answerAll(page, translations, shouldPass, wrongIndex = -1) {
   for (let i = 0; i < 18; i++) {
     const question = (await page.locator('#question').innerText()).trim();
+    const passThis = shouldPass && i !== wrongIndex;
     const input = page.locator('#answerArea input');
     if (await input.count()) {
       const correct = translations.get(question);
       expect(correct, 'Arabic prompt should map to its English word').toBeTruthy();
-      await input.fill(shouldPass ? correct : 'definitely-wrong');
+      await input.fill(passThis ? correct : 'definitely-wrong');
       await page.locator('#answerArea button').click();
     } else {
       let correct;
@@ -45,7 +46,7 @@ async function answerAll(page, translations, shouldPass) {
       const optionCount = await options.count();
       expect(optionCount).toBeGreaterThan(1);
       let target = options.filter({ hasText: correct }).first();
-      if (!shouldPass) {
+      if (!passThis) {
         target = options.filter({ hasNotText: correct }).first();
       }
       await target.click();
@@ -77,7 +78,17 @@ test('a score above 80% records mastery and unlocks the next lesson', async ({ p
   await expect(page.locator('#done')).toHaveText(/^1\/\d+$/);
 });
 
-test('legacy completed records do not count as mastery or unlock later lessons', async ({ page }) => {
+
+test('a word missed in one part remains in review even if its other answers are correct', async ({ page }) => {
+  const translations = await openFirstLesson(page);
+  await answerAll(page, translations, true, 0);
+  await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(Object.keys(saved.misses || {})).toHaveLength(1);
+  const missedId = Object.keys(saved.misses)[0];
+  expect(saved.review?.[missedId]?.due).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+});
+\ntest('legacy completed records do not count as mastery or unlock later lessons', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('english-hero-academy-3', JSON.stringify({
