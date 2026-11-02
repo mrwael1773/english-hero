@@ -1580,30 +1580,39 @@ function speak(s){
   utterance.lang='en-US';
   utterance.rate=Number(state.rate)||0.9;
   utterance.pitch=1;
-  // Read voices synchronously, but never wait for voiceschanged: iOS Safari can
-  // lose the user's audio activation when speech is deferred to a Promise/timer.
-  const voices=synth.getVoices();
-  const englishVoices=voices.filter(voice=>/^en(-|$)/i.test(voice.lang||''));
-  const preferred=englishVoices.find(voice=>/^en-US$/i.test(voice.lang)&&/Google US English|Samantha|Ava|Jenny|Aria|Guy|Andrew/i.test(voice.name))
-    || englishVoices.find(voice=>/^en-US$/i.test(voice.lang))
-    || englishVoices.find(voice=>/^en-GB$/i.test(voice.lang))
-    || englishVoices[0];
+
+  // Prefer a high-quality US English voice already installed on the device.
+  // Browser speech remains local and free; available voices vary by device.
+  const voices=synth.getVoices().filter(v=>/^en(-|$)/i.test(v.lang||''));
+  const score=voice=>{
+    const name=String(voice.name||'');
+    let points=0;
+    if(/^en-US$/i.test(voice.lang||''))points+=100;
+    else if(/^en-GB$/i.test(voice.lang||''))points+=55;
+    else points+=20;
+    if(/Samantha|Ava|Jenny|Aria|Andrew|Guy|Google US English/i.test(name))points+=35;
+    if(/enhanced|premium|neural/i.test(name))points+=30;
+    if(voice.localService)points+=5;
+    return points;
+  };
+  const preferred=voices.slice().sort((a,b)=>score(b)-score(a))[0];
   if(preferred)utterance.voice=preferred;
   utterance.onerror=event=>{
-    if(event.error!=='canceled'&&event.error!=='interrupted')toast('تعذر تشغيل النطق. تحقق من صوت الإنجليزية في إعدادات الجهاز.');
+    if(event.error!=='canceled'&&event.error!=='interrupted')toast('تعذر تشغيل النطق. تحقق من تفعيل صوت الإنجليزية في إعدادات الجهاز.');
   };
-  // Warm up the platform voice list early; never cancel an idle synthesizer.
-  // On iOS Safari, cancel() immediately before the first speak() can drop that utterance.
-  try{synth.getVoices()}catch{}
+
+  // Start synchronously from the tap for better iPhone/Safari reliability.
   try{synth.resume()}catch{}
   if(requestId!==speechRequestId)return;
   if(synth.speaking||synth.pending){
     try{synth.cancel()}catch{}
-    // If replacing active speech, allow iOS Safari to finish cancellation first.
-    setTimeout(()=>{if(requestId===speechRequestId){try{synth.resume()}catch{};synth.speak(utterance)}},80);
+    setTimeout(()=>{
+      if(requestId!==speechRequestId)return;
+      try{synth.resume()}catch{}
+      try{synth.speak(utterance)}catch{toast('تعذر تشغيل النطق. حاول مرة أخرى.')}
+    },100);
   }else{
-    // First/idle utterance is started synchronously inside the user's tap.
-    synth.speak(utterance);
+    try{synth.speak(utterance)}catch{toast('تعذر تشغيل النطق. حاول مرة أخرى.')}
   }
 }$('sayWord').onclick=()=>speak(lessons[li].words[wi].en);
 const modes=[['🗓️','اختبار الأسبوع','20 سؤالًا متنوعًا من القواعد والمفردات — جرّبه كل جمعة','weekly'],['⚔️','معركة الكلمات','خمسة أسئلة سريعة واربح نقاطًا إضافية','battle'],['🎲','اختبار شامل','أسئلة اختيار من متعدد','all'],['✍️','تحدي الكتابة','اكتب الكلمة الإنجليزية بنفسك','type'],['🔊','اختبار الاستماع','استمع واختر الإجابة','listen'],['📅','تحدي اليوم','أسئلة قصيرة تتجدد يوميًا','daily'],['📘','قواعد وجمل','اختبر فهم القواعد الأساسية','grammar'],['🧠','اختبار أخطائي','راجع الكلمات التي أخطأت فيها','mistakes']];const m=$('trainingModes');m.replaceChildren(...modes.map(([emoji,title,desc,key])=>{const b=document.createElement('button');b.className='tile';b.innerHTML='<div class="emoji">'+emoji+'</div><h3>'+title+'</h3><p>'+desc+'</p>';b.onclick=()=>startQuiz(key);return b}));
