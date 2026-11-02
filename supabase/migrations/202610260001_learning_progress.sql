@@ -7,6 +7,7 @@ create table if not exists public.learning_progress (
 );
 
 alter table public.learning_progress enable row level security;
+alter table public.learning_progress force row level security;
 
 drop policy if exists "Learners can read their own progress" on public.learning_progress;
 drop policy if exists "Users can read own learning progress" on public.learning_progress;
@@ -30,4 +31,5 @@ create policy "Learners can update their own progress"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-grant select, insert, update on public.learning_progress to authenticated;
+revoke all privileges on table public.learning_progress from public, anon, authenticated;
+grant select, insert, update on table public.learning_progress to authenticated;
