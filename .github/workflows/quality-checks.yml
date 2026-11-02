@@ -46,7 +46,7 @@ jobs:
               if not path.is_file():
                   continue
               html = path.read_text(encoding="utf-8")
-              scripts = re.findall(r"<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>", html, re.I)
+              scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
               for attrs, script in scripts:
                   if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
                       continue
