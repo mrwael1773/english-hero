@@ -188,3 +188,73 @@ test('continue button shows completion instead of reopening lesson one when all 
   await expect(page.locator('#toast')).toContainText('أتقنت جميع الدروس');
   await expect(page.locator('#lessonTag')).toBeHidden();
 });
+
+
+test('correctly practising a missed word schedules a three-day retention retest', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      misses: {'0-0': true},
+      review: {'0-0': {last: '2026-10-30', due: '2026-11-02', stage: 'practice', times: 1}},
+      saved: []
+    }));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('review'));
+  await expect(page.locator('#reviewStart')).toBeEnabled();
+  await page.locator('#reviewStart').click();
+  await expect(page.locator('#question')).toHaveText('Hello');
+  await page.locator('#answerArea button.answer').filter({hasText: 'مرحبًا'}).click();
+  await page.locator('#quizNext').click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.misses?.['0-0']).toBeUndefined();
+  expect(saved.review?.['0-0']?.stage).toBe('retention');
+  expect(saved.review?.['0-0']?.due).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+  await page.evaluate(() => window.page('review'));
+  await expect(page.locator('#reviewStart')).toBeDisabled();
+  await expect(page.locator('#reviewStart')).toHaveText('لا توجد مراجعات مستحقة الآن');
+});
+
+test('due retention retest clears the scheduled record after a correct answer', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      misses: {},
+      review: {'0-0': {last: '2000-01-01', due: '2000-01-01', stage: 'retention', times: 1}},
+      saved: []
+    }));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('review'));
+  await expect(page.locator('#reviewStart')).toBeEnabled();
+  await expect(page.locator('#reviewStart')).toHaveText('اختبر الاحتفاظ بالكلمات');
+  await page.locator('#reviewStart').click();
+  await expect(page.locator('#quizHeading')).toContainText('اختبار الاحتفاظ');
+  await expect(page.locator('#question')).toHaveText('Hello');
+  await page.locator('#answerArea button.answer').filter({hasText: 'مرحبًا'}).click();
+  await page.locator('#quizNext').click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.review?.['0-0']).toBeUndefined();
+  expect(saved.misses?.['0-0']).toBeUndefined();
+});
+
+test('a missed retention retest returns the word to immediate practice', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      misses: {},
+      review: {'0-0': {last: '2000-01-01', due: '2000-01-01', stage: 'retention', times: 1}},
+      saved: []
+    }));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('review'));
+  await page.locator('#reviewStart').click();
+  await expect(page.locator('#quizHeading')).toContainText('اختبار الاحتفاظ');
+  await page.locator('#answerArea button.answer').filter({hasNotText: 'مرحبًا'}).first().click();
+  await page.locator('#quizNext').click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.misses?.['0-0']).toBe(true);
+  expect(saved.review?.['0-0']?.stage).toBe('practice');
+  expect(saved.review?.['0-0']?.due).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+});
