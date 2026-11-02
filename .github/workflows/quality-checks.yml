@@ -73,9 +73,12 @@ jobs:
           node --input-type=module <<'JS'
           import fs from 'node:fs';
 
-          const manifest = JSON.parse(fs.readFileSync('manifest.webmanifest', 'utf8'));
-          if (!manifest.name || !manifest.start_url || !manifest.scope || !Array.isArray(manifest.icons)) {
-            throw new Error('manifest.webmanifest is missing required app fields');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const nativePackages = ['@capacitor/android', '@capacitor/ios', '@capacitor/core', '@capacitor/cli'];
+          if (pkg.name !== 'english-hero-web' || pkg.scripts?.['build:android'] ||
+              nativePackages.some(name => pkg.dependencies?.[name] || pkg.devDependencies?.[name]) ||
+              fs.existsSync('manifest.webmanifest') || fs.existsSync('capacitor.config.json')) {
+            throw new Error('Native app / PWA installation artifacts must not be present in this website-only project');
           }
 
           const vocab = JSON.parse(fs.readFileSync('vocabulary-6000.json', 'utf8'));
@@ -87,7 +90,7 @@ jobs:
           if (normalized.some(word => !word)) throw new Error('Vocabulary contains an empty word');
           if (new Set(normalized).size !== normalized.length) throw new Error('Vocabulary contains duplicate words');
           console.log(`Validated ${normalized.length} unique vocabulary entries.`);
-          console.log(`Validated manifest for ${manifest.name}.`);
+          console.log('Validated website-only package configuration.');
           JS
 
       - name: Check essential app files
@@ -96,7 +99,7 @@ jobs:
           test -s sw.js
           test -s config.js
           test -s cloud-sync.js
-          test -s manifest.webmanifest
+          test -s package.json
           test -s vocabulary-6000.json
           test -s icon.svg
           grep -q 'لا تكتفِ بحفظ الكلمات' index.html
