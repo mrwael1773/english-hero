@@ -22,7 +22,7 @@ const learningExpansion = read('learning-expansion.js');
 const englishHeroPlus = read('english-hero-plus.js');
 const config = read('config.js');
 const privacy = read('privacy.html');
-const vocabRaw = read('vocabulary-6000.json');
+const vocabRaw = read('vocabulary-20000.json');
 const migrationPath = 'supabase/migrations/20261026151420_secure_rls_auto_enable_and_optimize_progress_policies.sql';
 const migration = read(migrationPath);
 
@@ -56,7 +56,7 @@ for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','clo
 check(/sw\.js\?v=(\d+)/.test(html), 'Service worker registration has a version');
 const registeredVersion = html.match(/sw\.js\?v=(\d+)/)?.[1];
 const cacheVersion = sw.match(/english-hero-shell-v(\d+)/)?.[1];
-check(Boolean(registeredVersion && cacheVersion), 'Service worker registration and cache use explicit versions');
+check(Boolean(registeredVersion && cacheVersion && registeredVersion === cacheVersion), 'Service worker registration and cache versions match');
 check(sw.includes("fetch(request)") && sw.includes("request.mode === 'navigate'"), 'Service worker refreshes navigation from network first');
 check(cloud.includes("from('learning_progress')") && cloud.includes('signInWithPassword') && cloud.includes('signUp'), 'Cloud progress and email auth flows are present');
 check(cloud.includes('async function cloudRequest(query, timeoutMs=15000)') && cloud.includes('query.abortSignal(controller.signal)'), 'Cloud progress requests abort after a bounded timeout');
@@ -144,6 +144,9 @@ try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript s
 check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./english-hero-plus.js?v="), 'English Hero Plus is linked and cached offline');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
+const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','german.html'].map(read).join('\\n');
+check(!/(adsbygoogle|googlesyndication|google-adsense-account|googletagmanager)/i.test(publicHtml), 'Public HTML files contain no ad or third-party analytics tags');
+check(html.includes('navigator.serviceWorker.register'), 'Main page registers the service worker');
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
 check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') && migration.includes('(SELECT auth.uid())'), 'Tracked migration contains the security and RLS policy changes');
 check(existsSync(join(root, migrationPath)), 'Applied Supabase migration is tracked in the repository');
@@ -152,7 +155,7 @@ let vocabulary;
 try {
   vocabulary = JSON.parse(vocabRaw);
   check(Array.isArray(vocabulary.words), 'Vocabulary JSON contains a words array');
-  check(vocabulary.words.length === 6000, 'Vocabulary list contains exactly 6000 entries');
+  check(vocabulary.words.length === 20000, 'Vocabulary list contains exactly 20000 entries');
   check(new Set(vocabulary.words).size === vocabulary.words.length, 'Vocabulary list has no duplicate entries');
   check(vocabulary.words.every(word => typeof word === 'string' && word.trim().length > 0), 'Vocabulary entries are non-empty strings');
   check(vocabulary.words.every(word => word.length > 1 || word === 'a' || word === 'i'), 'Vocabulary list excludes one-letter tokenization artifacts');
