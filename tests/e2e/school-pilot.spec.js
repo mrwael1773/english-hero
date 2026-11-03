@@ -90,12 +90,10 @@ test('reports normalized percentage-point gains and session outage counts', asyn
   await page.goto('/school-pilot.html');
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
-  for (let i = 1; i < 12; i++) {
-    await page.locator('.outage[data-outage="' + i + '"]').fill('0');
-    await page.locator('.outage[data-outage="' + i + '"]').dispatchEvent('change');
+  for (let i = 0; i < 12; i++) {
+    await page.locator('.outage[data-outage="' + i + '"]').fill(i === 0 ? '6' : '0');
   }
-  await page.locator('.outage[data-outage="0"]').fill('6');
-  await page.locator('.outage[data-outage="0"]').dispatchEvent('change');
+  await page.locator('#saveOutages').click();
   const add = async (code, group, preL, postL, preV, postV, delayedV) => {
     await page.locator('#code').fill(code);
     await page.locator('#group').selectOption(group);
