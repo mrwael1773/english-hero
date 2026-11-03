@@ -77,3 +77,30 @@ test('limits participants to 24 and prevents duplicate codes', async ({ page }) 
   await expect(page.locator('#formStatus')).toContainText('مسجل مسبقًا');
   await expect(page.locator('#rows tr')).toHaveCount(24);
 });
+
+test('reports normalized percentage-point gains and session outage counts', async ({ page }) => {
+  await page.goto('/school-pilot.html');
+  await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
+  await page.locator('#vaultOpen').click();
+  await page.locator('.outage[data-outage="0"]').fill('6');
+  await page.locator('.outage[data-outage="0"]').dispatchEvent('change');
+  const add = async (code, group, preL, postL, preV, postV, delayedV) => {
+    await page.locator('#code').fill(code);
+    await page.locator('#group').selectOption(group);
+    await page.locator('#pair').selectOption('1');
+    await page.locator('#preListen').fill(String(preL));
+    await page.locator('#preUnderstand').fill(String(preV / 2));
+    await page.locator('#preRecall').fill(String(preV / 2));
+    await page.locator('#postListen').fill(String(postL));
+    await page.locator('#postUnderstand').fill(String(postV / 2));
+    await page.locator('#postRecall').fill(String(postV / 2));
+    await page.locator('#delayUnderstand').fill(String(delayedV / 2));
+    await page.locator('#delayRecall').fill(String(delayedV / 2));
+    await page.locator('#participantForm button[type="submit"]').click();
+  };
+  await add('P01', 'app', 5, 7, 10, 14, 13);
+  await add('P02', 'control', 5, 6, 10, 12, 11);
+  await expect(page.locator('#summary')).toContainText('20.0');
+  await expect(page.locator('#summary')).toContainText('10.0');
+  await expect(page.locator('#summary')).toContainText('11/12');
+});
