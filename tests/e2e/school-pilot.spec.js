@@ -1,10 +1,19 @@
 import { test, expect } from '@playwright/test';
 
 async function openVault(page) {
-  await page.goto('/school-pilot.html');
   const pageErrors = [], consoleErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  await page.addInitScript(() => {
+    const proto = Object.getPrototypeOf(crypto.subtle);
+    const original = proto.deriveKey;
+    Object.defineProperty(window, '__schoolPilotDeriveKeyCalls', { value: 0, writable: true });
+    proto.deriveKey = function (...args) {
+      window.__schoolPilotDeriveKeyCalls += 1;
+      return original.apply(this, args);
+    };
+  });
+  await page.goto('/school-pilot.html');
   const setup = await page.locator('#vaultOpen').evaluate(el => ({
     handler: typeof el.onclick,
     disabled: el.disabled,
@@ -14,13 +23,13 @@ async function openVault(page) {
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
   try {
-    // PBKDF2 uses 310,000 iterations; allow slower mobile Chromium devices to finish.
     await expect(page.locator('#workspace')).toBeVisible({ timeout: 30000 });
   } catch (error) {
     const status = await page.locator('#vaultStatus').textContent();
     const state = await page.locator('#vaultOpen').evaluate(el => ({ disabled: el.disabled, status: document.getElementById('vaultStatus').textContent }));
-    throw new Error('Vault did not open. Status: ' + status + '. Button state: ' + JSON.stringify(state) + '. Page errors: ' + pageErrors.join(' | ') + '. Console errors: ' + consoleErrors.join(' | '));
+    throw new Error('Vault did not open. Status: ' + status + '. Button state: ' + JSON.stringify(state) + '. Derive calls: ' + await page.evaluate(() => window.__schoolPilotDeriveKeyCalls) + '. Page errors: ' + pageErrors.join(' | ') + '. Console errors: ' + consoleErrors.join(' | '));
   }
+  expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(1);
 }
 
 async function markItems(page, time, value) {
@@ -95,9 +104,11 @@ test('encrypted vault stores four assessment domains and item-level retention wi
   expect(csv).toContain('vocab_delay_20');
 
   await page.locator('#vaultLock').click();
+  expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(1);
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
   await expect(page.locator('#rows')).toContainText('P01');
+  expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(2);
 });
 
 test('rejects wrong password, invalid scores, and missing item-level baseline entries', async ({ page }) => {
@@ -143,6 +154,7 @@ test('limits participants to 24, randomizes within each pair, and prevents dupli
     await page.locator('#participantForm button[type="submit"]').click();
     await expect(page.locator('#rows tr')).toHaveCount(i);
   }
+  expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(1);
   page.once('dialog', dialog => dialog.accept());
   await page.locator('#randomizePairs').click();
   await expect(page.locator('#formStatus')).toContainText('اكتملت القرعة');
