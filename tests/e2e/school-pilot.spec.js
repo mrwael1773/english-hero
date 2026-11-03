@@ -246,3 +246,25 @@ test('reports domain gains, item-level retention, delayed vocabulary performance
   await expect(page.locator('#summary')).toContainText('70.0');
   await expect(page.locator('#summary')).toContainText('11/12');
 });
+
+
+test('aggregates retention using pooled item counts rather than averaging participant percentages', async ({ page }) => {
+  await openVault(page);
+  const add = async (code, postCorrect, delayedCorrect, pair) => {
+    await page.locator('#code').fill(code);
+    await page.locator('#group').selectOption('app');
+    await page.locator('#pair').selectOption(String(pair));
+    await page.locator('#preForm').selectOption('A');
+    await page.locator('#postForm').selectOption('B');
+    for (const id of ['preListen','preUnderstand','preRecall','preUse','postListen','postUnderstand','postRecall','postUse','delayListen','delayUnderstand','delayRecall','delayUse']) {
+      await page.locator('#' + id).fill('5');
+    }
+    await page.locator('.item-score[data-time="pre"]').evaluateAll(els => els.forEach(el => el.value = '0'));
+    await page.locator('.item-score[data-time="post"]').evaluateAll((els, count) => els.forEach((el, i) => el.value = i < count ? '1' : '0'), postCorrect);
+    await page.locator('.item-score[data-time="delay"]').evaluateAll((els, count) => els.forEach((el, i) => el.value = i < count ? '1' : '0'), delayedCorrect);
+    await page.locator('#participantForm button[type="submit"]').click();
+  };
+  await add('P01', 1, 1, 1);   // 1/1 retained
+  await add('P02', 20, 0, 2);  // 0/20 retained
+  await expect(page.locator('#summary')).toContainText('4.8% (1/21)');
+});
