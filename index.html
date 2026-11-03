@@ -1953,11 +1953,23 @@ theme();renderStats();renderCourses();renderHome();
     for (let i=copy.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [copy[i],copy[j]]=[copy[j],copy[i]]; }
     return copy.slice(0,5);
   };
-  const optionsFor = (word, words, field) => {
+  const optionsFor = (word, words, field, lessonWords=words) => {
+    const correct = String(word[field] || '').trim();
+    const distractors = [...new Set([...words,...lessonWords].filter(w=>w.id!==word.id).map(w=>String(w[field] || '').trim()).filter(value=>value && value.toLocaleLowerCase()!==correct.toLocaleLowerCase()))];
+    const picks = distractors.sort(()=>Math.random()-.5).slice(0,3);
+    return [correct,...picks].sort(()=>Math.random()-.5);
+  };
+  const contextSentence = word => {
+    const source = String(word.ex || '');
+    const escaped = String(word.en || '').replace(/[.*+?^${}()|[\]\\]/g, '\\  const optionsFor = (word, words, field) => {
     const correct = word[field];
     const distractors = [...new Set(words.filter(w=>w.id!==word.id).map(w=>w[field]).filter(Boolean))];
     const picks = distractors.sort(()=>Math.random()-.5).slice(0,3);
     return [correct,...picks].sort(()=>Math.random()-.5);
+  };');
+    const matcher = escaped ? new RegExp(escaped, 'i') : null;
+    const sentence = matcher && matcher.test(source) ? source : 'I often use the word ' + word.en + ' when I speak English.';
+    return sentence.replace(matcher || /$^/, '_____');
   };
   function begin(index, stage) {
     const lesson = lessons[index], record = getRecord(index);
@@ -1983,8 +1995,8 @@ theme();renderStats();renderCourses();renderHome();
     $('quizProgress').style.width=(position/5*100)+'%';
     $('question').style.direction='ltr';
     $('question').style.textAlign='center';
-    const sentence=(word.ex||('I use the word '+word.en+' in a sentence.'));
-    $('question').textContent=stage==='listen'?'🔊 Listen and choose':stage==='meaning'?word.en:stage==='recall'?word.ar:stage==='context'?sentence.replace(new RegExp(word.en,'i'),'_____'):word.en;
+    const sentence=contextSentence(word);
+    $('question').textContent=stage==='listen'?'🔊 Listen and choose':stage==='meaning'?word.en:stage==='recall'?word.ar:stage==='context'?sentence:word.en;
     $('questionHint').textContent=cfg.prompt;
     $('quizFeedback').classList.add('hidden');$('quizNext').classList.add('hidden');
     const area=$('answerArea');area.replaceChildren();area.className=stage==='recall'?'':'answers';
@@ -2001,10 +2013,10 @@ theme();renderStats();renderCourses();renderHome();
     };
     if(stage==='listen') {
       const play=makeButton('🔊 استمع',()=>speak(word.en),'btn ghost full');area.append(play);
-      optionsFor(word,selected,'en').forEach(value=>area.append(makeButton(value,()=>submit(value,word.en),'answer')));
+      optionsFor(word,selected,'en',lessons[run.index].words).forEach(value=>area.append(makeButton(value,()=>submit(value,word.en),'answer')));
       speak(word.en);
     } else if(stage==='meaning') {
-      optionsFor(word,selected,'ar').forEach(value=>area.append(makeButton(value,()=>submit(value,word.ar),'answer')));
+      optionsFor(word,selected,'ar',lessons[run.index].words).forEach(value=>area.append(makeButton(value,()=>submit(value,word.ar),'answer')));
     } else if(stage==='recall') {
       const input=document.createElement('input');input.className='field';input.dir='ltr';input.placeholder='Type the English word';input.autocomplete='off';
       const button=makeButton('تحقق',()=>submit(input.value,word.en),'btn primary full');area.append(input,button);
