@@ -107,23 +107,25 @@ test('reports normalized percentage-point gains and session outage counts', asyn
     await page.locator('.outage[data-outage="' + i + '"]').fill(i === 0 ? '6' : '0');
   }
   await page.locator('#saveOutages').click();
-  const add = async (code, group, preL, postL, preV, postV, delayedV) => {
+  const add = async (code, group, preL, postL, preV, postV, delayedV, pair = 1) => {
     await page.locator('#code').fill(code);
     await page.locator('#group').selectOption(group);
-    await page.locator('#pair').selectOption('1');
+    await page.locator('#pair').selectOption(String(pair));
     await page.locator('#preListen').fill(String(preL));
     await page.locator('#preUnderstand').fill(String(preV / 2));
     await page.locator('#preRecall').fill(String(preV / 2));
     await page.locator('#postListen').fill(String(postL));
     await page.locator('#postUnderstand').fill(String(postV / 2));
     await page.locator('#postRecall').fill(String(postV / 2));
-    await page.locator('#delayUnderstand').fill(String(delayedV / 2));
-    await page.locator('#delayRecall').fill(String(delayedV / 2));
+    if (delayedV !== null) {
+      await page.locator('#delayUnderstand').fill(String(delayedV / 2));
+      await page.locator('#delayRecall').fill(String(delayedV / 2));
+    }
     await page.locator('#participantForm button[type="submit"]').click();
   };
   await add('P01', 'app', 5, 7, 10, 14, 12);
   await add('P02', 'control', 5, 6, 10, 12, 12);
-  await add('P03', 'app', 5, 8, 10, 16, 10);
+  await add('P03', 'app', 5, 8, 10, 16, null, 2);
   await expect(page.locator('#summary')).toContainText('25.0');
   await expect(page.locator('#summary')).toContainText('10.0');
   await expect(page.locator('#summary')).toContainText('11/12');
