@@ -267,4 +267,6 @@ test('aggregates retention using pooled item counts rather than averaging partic
   await add('P01', 1, 1, 1);   // 1/1 retained
   await add('P02', 20, 0, 2);  // 0/20 retained
   await expect(page.locator('#summary')).toContainText('4.8% (1/21)');
+  await expect(page.locator('#summary')).toContainText('نسبة الاحتفاظ بالبنود المتقنة');
+  await expect(page.locator('#summary')).toContainText('نسبة الاحتفاظ بالمفردات المكتسبة');
 });
