@@ -1,38 +1,60 @@
-/* Mentor-guided lesson progression. Pure functions; dates use local calendar days. */
+/* Canonical mentor progression rules. Uses exact elapsed-time delays. */
 (function (root) {
   'use strict';
-  const ORDER = ['listen', 'recall', 'recall_retest', 'context', 'retention', 'mastered'];
+  const ORDER = ['listen', 'meaning', 'recall', 'context', 'retention', 'mastered'];
   const REQUIRED = 4;
   const TOTAL = 5;
-  function localDate(value) {
-    const d = value instanceof Date ? new Date(value.getTime()) : new Date(value || Date.now());
-    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+  const DELAYS = Object.freeze({ recall: 48 * 60 * 60 * 1000, retention: 7 * 24 * 60 * 60 * 1000 });
+  function asTime(value) {
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    const parsed = Date.parse(value || '');
+    return Number.isFinite(parsed) ? parsed : Date.now();
   }
-  function addDays(date, count) {
-    const d = new Date(String(date || localDate()).slice(0, 10) + 'T12:00:00');
-    d.setDate(d.getDate() + count);
-    return localDate(d);
+  function initial() {
+    return { stage: 'listen', due: '', attempts: {}, history: [], lastScore: null, updatedAt: '' };
   }
-  function initial() { return { stage: 'listen', due: '', attempts: {}, lastScore: null, updatedAt: '' }; }
   function normalize(value) {
     const v = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     const stage = ORDER.includes(v.stage) ? v.stage : 'listen';
     const attempts = v.attempts && typeof v.attempts === 'object' && !Array.isArray(v.attempts) ? v.attempts : {};
-    return { stage, due: typeof v.due === 'string' ? v.due : '', attempts, lastScore: Number.isFinite(v.lastScore) ? v.lastScore : null, updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : '' };
+    const history = Array.isArray(v.history) ? v.history.filter(x => x && typeof x === 'object').slice(-40) : [];
+    return {
+      ...v,
+      stage,
+      due: typeof v.due === 'string' ? v.due : '',
+      attempts: { ...attempts },
+      history,
+      lastScore: Number.isInteger(v.lastScore) ? Math.max(0, Math.min(TOTAL, v.lastScore)) : null,
+      updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : ''
+    };
   }
-  function isDue(progress, today) { const p = normalize(progress); return !p.due || p.due <= String(today || localDate()); }
-  function evaluate(progress, score, today) {
+  function isDue(progress, now = Date.now()) {
     const p = normalize(progress);
-    const day = String(today || localDate());
-    const numeric = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
-    p.lastScore = numeric;
-    p.attempts[p.stage] = (Number(p.attempts[p.stage]) || 0) + 1;
-    p.updatedAt = new Date().toISOString();
-    if (numeric < REQUIRED / TOTAL * 100) return { progress: p, passed: false, required: REQUIRED, total: TOTAL, nextDue: p.due };
-    const next = { listen: 'recall', recall: 'recall_retest', recall_retest: 'context', context: 'retention', retention: 'mastered' }[p.stage];
-    p.stage = next || p.stage;
-    p.due = next === 'recall_retest' ? addDays(day, 2) : next === 'retention' ? addDays(day, 7) : '';
-    return { progress: p, passed: true, required: REQUIRED, total: TOTAL, nextDue: p.due };
+    return !p.due || asTime(now) >= asTime(p.due);
   }
-  root.EnglishHeroMentorProgression = Object.freeze({ ORDER, REQUIRED, TOTAL, localDate, addDays, initial, normalize, isDue, evaluate });
-})(window);
+  function evaluate(progress, correct, now = Date.now()) {
+    const p = normalize(progress);
+    const time = asTime(now);
+    if (!isDue(p, time)) {
+      return { progress: p, passed: false, blocked: true, required: REQUIRED, total: TOTAL, nextDue: p.due };
+    }
+    const score = Math.max(0, Math.min(TOTAL, Math.trunc(Number(correct) || 0)));
+    const stage = p.stage;
+    p.lastScore = score;
+    p.attempts[stage] = (Number(p.attempts[stage]) || 0) + 1;
+    p.updatedAt = new Date(time).toISOString();
+    const passed = score >= REQUIRED;
+    p.history.push({ stage, score, total: TOTAL, passed, at: p.updatedAt });
+    p.history = p.history.slice(-40);
+    if (!passed) return { progress: p, passed: false, blocked: false, required: REQUIRED, total: TOTAL, nextDue: p.due };
+    const next = { listen: 'meaning', meaning: 'recall', recall: 'context', context: 'retention', retention: 'mastered' }[stage] || stage;
+    p.stage = next;
+    p.due = next === 'recall' ? new Date(time + DELAYS.recall).toISOString()
+      : next === 'retention' ? new Date(time + DELAYS.retention).toISOString()
+      : '';
+    return { progress: p, passed: true, blocked: false, required: REQUIRED, total: TOTAL, nextDue: p.due };
+  }
+  root.EnglishHeroMentorProgression = Object.freeze({ ORDER, REQUIRED, TOTAL, DELAYS, initial, normalize, isDue, evaluate });
+  if (typeof module !== 'undefined' && module.exports) module.exports = root.EnglishHeroMentorProgression;
+})(typeof window !== 'undefined' ? window : globalThis);
