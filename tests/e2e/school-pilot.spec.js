@@ -28,6 +28,7 @@ test('encrypted vault persists participant data and hides plaintext from localSt
   await page.locator('#clarity').selectOption('yes');
   await page.locator('#participantForm button[type="submit"]').click();
   await expect(page.locator('#rows')).toContainText('P01');
+  await expect(page.locator('#rows')).toContainText('مستوفٍ');
   const raw = await page.evaluate(() => localStorage.getItem('ehSchoolPilotEncryptedV1'));
   expect(raw).toBeTruthy();
   expect(raw).not.toContain('P01');
