@@ -104,6 +104,8 @@ test('rejects wrong password, invalid scores, and missing item-level baseline en
   await expect(page.locator('#formStatus')).toContainText('من 0 إلى 10');
 
   await page.locator('#preListen').fill('5');
+  await page.locator('#preForm').selectOption('A');
+  await page.locator('#postForm').selectOption('B');
   await page.locator('#participantForm button[type="submit"]').click();
   await expect(page.locator('#formStatus')).toContainText('البنود العشرين');
 });
@@ -116,6 +118,8 @@ test('limits participants to 24, randomizes within each pair, and prevents dupli
     await page.locator('#code').fill(code);
     await page.locator('#group').selectOption('app');
     await page.locator('#pair').selectOption(String(Math.ceil(i / 2)));
+    await page.locator('#preForm').selectOption(i % 2 === 0 ? 'A' : 'B');
+    await page.locator('#postForm').selectOption(i % 2 === 0 ? 'B' : 'A');
     await page.locator('#preListen').fill('5');
     await page.locator('#preUnderstand').fill('5');
     await page.locator('#preRecall').fill('5');
