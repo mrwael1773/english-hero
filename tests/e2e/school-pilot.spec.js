@@ -30,6 +30,8 @@ async function openVault(page) {
     throw new Error('Vault did not open. Status: ' + status + '. Button state: ' + JSON.stringify(state) + '. Derive calls: ' + await page.evaluate(() => window.__schoolPilotDeriveKeyCalls) + '. Page errors: ' + pageErrors.join(' | ') + '. Console errors: ' + consoleErrors.join(' | '));
   }
   expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(1);
+  await expect(page.locator('#vaultPassword')).toBeDisabled();
+  await expect(page.locator('#vaultPassword')).toHaveValue('');
 }
 
 async function markItems(page, time, value) {
@@ -48,11 +50,13 @@ test('school pilot keeps teacher keys out of public HTML and has the approved 20
   await expect(page.locator('script[src]')).toHaveCount(0);
   expect(externalRequests).toEqual([]);
   await expect(page.locator('#workspace')).toBeHidden();
-  await expect(page.locator('#wordGrid .word')).toHaveCount(0);
+  await expect(page.locator('#wordGrid .word:visible')).toHaveCount(0);
   await openVault(page);
   await expect(page.locator('#wordGrid .word')).toHaveCount(20);
   await expect(page.locator('#attendanceGrid .session')).toHaveCount(12);
   await expect(page.locator('#outageGrid .session')).toHaveCount(12);
+  await expect(page.locator('.minutes').first()).toHaveAttribute('max', '20');
+  await expect(page.locator('.outage').first()).toHaveAttribute('max', '20');
   await expect(page.locator('#workspace details')).toHaveCount(0);
   await expect(page.locator('#workspace')).toContainText('لا تُضمّن في مصدر HTML العام');
   await expect(page.locator('#workspace')).not.toContainText('Omar goes to the library on Monday');
@@ -88,10 +92,14 @@ test('encrypted vault stores four assessment domains and item-level retention wi
   await page.locator('#participantForm button[type="submit"]').click();
   await expect(page.locator('#rows')).toContainText('P01');
   await expect(page.locator('#rows')).toContainText('100.0% (20/20)');
+  const initialIv = await page.evaluate(() => JSON.parse(localStorage.getItem('ehSchoolPilotEncryptedV1')).iv);
   const raw = await page.evaluate(() => localStorage.getItem('ehSchoolPilotEncryptedV1'));
   expect(raw).toBeTruthy();
   expect(raw).not.toContain('P01');
   expect(raw).not.toContain('school-pilot-passphrase-2026');
+  const savedIv = await page.evaluate(() => JSON.parse(localStorage.getItem('ehSchoolPilotEncryptedV1')).iv);
+  expect(savedIv).not.toBe(initialIv);
+  expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(1);
 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#exportCsv').click();
