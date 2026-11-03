@@ -65,13 +65,20 @@ test('limits participants to 24 and prevents duplicate codes', async ({ page }) 
   for (let i = 1; i <= 24; i++) {
     const code = 'P' + String(i).padStart(2, '0');
     await page.locator('#code').fill(code);
-    await page.locator('#group').selectOption(i % 2 ? 'app' : 'control');
+    await page.locator('#group').selectOption('app');
+    await page.locator('#pair').selectOption(String(Math.ceil(i / 2)));
     await page.locator('#preListen').fill('5');
     await page.locator('#preUnderstand').fill('5');
     await page.locator('#preRecall').fill('5');
     await page.locator('#participantForm button[type="submit"]').click();
     await expect(page.locator('#rows tr')).toHaveCount(i);
   }
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('#randomizePairs').click();
+  const assigned = await page.locator('#rows tr').evaluateAll(rows => rows.map(row => row.children[1].textContent));
+  expect(assigned.filter(group => group === 'التطبيق')).toHaveLength(12);
+  expect(assigned.filter(group => group === 'المقارنة')).toHaveLength(12);
+  await expect(page.locator('#summary')).toContainText('12/12');
   await page.locator('#code').fill('P01');
   await page.locator('#preListen').fill('6');
   await page.locator('#participantForm button[type="submit"]').click();
