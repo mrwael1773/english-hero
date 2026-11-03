@@ -2,8 +2,15 @@ import { test, expect } from '@playwright/test';
 
 async function openVault(page) {
   await page.goto('/school-pilot.html');
-  const pageErrors = [];
+  const pageErrors = [], consoleErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  const setup = await page.locator('#vaultOpen').evaluate(el => ({
+    handler: typeof el.onclick,
+    disabled: el.disabled,
+    passwordInput: !!document.getElementById('vaultPassword')
+  }));
+  expect(setup).toEqual({ handler: 'function', disabled: false, passwordInput: true });
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
   try {
@@ -11,7 +18,8 @@ async function openVault(page) {
     await expect(page.locator('#workspace')).toBeVisible({ timeout: 30000 });
   } catch (error) {
     const status = await page.locator('#vaultStatus').textContent();
-    throw new Error('Vault did not open within 30s. Status: ' + status + '. Page errors: ' + pageErrors.join(' | '));
+    const state = await page.locator('#vaultOpen').evaluate(el => ({ disabled: el.disabled, status: document.getElementById('vaultStatus').textContent }));
+    throw new Error('Vault did not open. Status: ' + status + '. Button state: ' + JSON.stringify(state) + '. Page errors: ' + pageErrors.join(' | ') + '. Console errors: ' + consoleErrors.join(' | '));
   }
 }
 
