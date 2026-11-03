@@ -32,6 +32,7 @@ test('encrypted vault persists participant data and hides plaintext from localSt
   await page.locator('#delayRecall').fill('7');
   await page.locator('.minutes[data-session="1"]').fill('20');
   await page.locator('#clarity').selectOption('yes');
+  await page.locator('#help').selectOption('no');
   await page.locator('#participantForm button[type="submit"]').click();
   await expect(page.locator('#rows')).toContainText('P01');
   await expect(page.locator('#rows')).toContainText('مستوفٍ');
