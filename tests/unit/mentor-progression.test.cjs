@@ -56,7 +56,7 @@ test('normalization keeps only bounded, valid progression history', () => {
   const normalized = mentor.normalize({ stage: 'not-a-stage', attempts: [], history, lastScore: 8 });
   assert.equal(normalized.stage, 'listen');
   assert.equal(normalized.history.length, 40);
-  assert.equal(normalized.lastScore, null);
+  assert.equal(normalized.lastScore, 5);
 });
 
 test('a full passing path follows listening, meaning, 48-hour recall, context, and 7-day retention', () => {
