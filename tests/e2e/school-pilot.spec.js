@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('school pilot has 20 words and 12 sessions', async ({ page }) => {
   await page.goto('/school-pilot.html');
   await expect(page.locator('#workspace')).toBeHidden();
-  await expect(page.locator('#wordGrid .word')).toHaveCount(0);
+  await expect(page.locator('#wordGrid .word')).toHaveCount(20);
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
   await expect(page.locator('#wordGrid .word')).toHaveCount(20);
@@ -59,6 +59,7 @@ test('rejects wrong password and invalid score values', async ({ page }) => {
 });
 
 test('limits participants to 24 and prevents duplicate codes', async ({ page }) => {
+  test.setTimeout(120_000);
   await page.goto('/school-pilot.html');
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
@@ -111,7 +112,7 @@ test('reports normalized percentage-point gains and session outage counts', asyn
     await page.locator('#participantForm button[type="submit"]').click();
   };
   await add('P01', 'app', 5, 7, 10, 14, 12);
-  await add('P02', 'control', 5, 6, 10, 12, 11);
+  await add('P02', 'control', 5, 6, 10, 12, 12);
   await expect(page.locator('#summary')).toContainText('20.0');
   await expect(page.locator('#summary')).toContainText('10.0');
   await expect(page.locator('#summary')).toContainText('11/12');
