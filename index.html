@@ -1921,6 +1921,183 @@ theme();renderStats();renderCourses();renderHome();
 
 
 <script>
+/* Mentor mastery protocol: staged evidence, 48-hour recall, contextual use, 7-day retention. */
+(() => {
+  const KEY = 'english-hero-academy-3';
+  const HOURS = 60 * 60 * 1000;
+  const quizMarkup = $('quizArea').innerHTML;
+  const store = () => {
+    if (!state.mentorMastery || typeof state.mentorMastery !== 'object') state.mentorMastery = {};
+    return state.mentorMastery;
+  };
+  const stamp = value => Number.isFinite(Date.parse(value || '')) ? Date.parse(value) : 0;
+  const dueText = value => new Date(value).toLocaleString('ar-SA', {dateStyle:'medium',timeStyle:'short'});
+  const stages = {
+    listen: {title:'الاستماع', prompt:'استمع إلى الكلمة واخترها', kind:'listen'},
+    meaning: {title:'فهم المعنى', prompt:'اختر معنى الكلمة الصحيح', kind:'meaning'},
+    recall: {title:'الاستدعاء بعد 48 ساعة', prompt:'اكتب الكلمة الإنجليزية من معناها', kind:'recall'},
+    context: {title:'الاستخدام في السياق', prompt:'اختر الكلمة التي تكمل الجملة', kind:'context'},
+    retention: {title:'الاحتفاظ بعد 7 أيام', prompt:'اختبار مؤجل للتحقق من بقاء التعلم', kind:'retention'}
+  };
+  let run = null;
+  const getRecord = id => {
+    const all = store();
+    if (!all[id] || typeof all[id] !== 'object') all[id] = {stage:'listen', attempts:{}, history:[]};
+    const r = all[id];
+    if (!r.attempts || typeof r.attempts !== 'object') r.attempts = {};
+    if (!Array.isArray(r.history)) r.history = [];
+    return r;
+  };
+  const sample = words => {
+    const copy = [...words];
+    for (let i=copy.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [copy[i],copy[j]]=[copy[j],copy[i]]; }
+    return copy.slice(0,5);
+  };
+  const optionsFor = (word, words, field, lessonWords=words) => {
+    const correct = String(word[field] || '').trim();
+    const distractors = [...new Set([...words,...lessonWords].filter(w=>w.id!==word.id).map(w=>String(w[field] || '').trim()).filter(value=>value && value.toLocaleLowerCase()!==correct.toLocaleLowerCase()))];
+    const picks = distractors.sort(()=>Math.random()-.5).slice(0,3);
+    return [correct,...picks].sort(()=>Math.random()-.5);
+  };
+  const contextSentence = word => {
+    const source = String(word.ex || '');
+    const target = String(word.en || '');
+    const index = target ? source.toLocaleLowerCase().indexOf(target.toLocaleLowerCase()) : -1;
+    if (index < 0) return 'I often use the word _____ when I speak English.';
+    return source.slice(0,index) + '_____' + source.slice(index + target.length);
+  };
+  function begin(index, stage) {
+    const lesson = lessons[index], record = getRecord(index);
+    const now = Date.now();
+    const selected = sample(lesson.words);
+    run = {index, stage, record, selected, questions:selected.map(word=>({word})) ,position:0,correct:0,answered:false};
+    const due = stage==='recall' ? stamp(record.recallDue) : stage==='retention' ? stamp(record.retentionDue) : 0;
+    if (due && now < due) {
+      toast('موعد هذه المرحلة: '+dueText(due));
+      return;
+    }
+    $('quizArea').innerHTML=quizMarkup;
+    $('quizArea').classList.remove('hidden');
+    $('trainingModes').classList.add('hidden');
+    $('quizHeading').textContent='🎯 '+stages[stage].title;
+    page('training');
+    draw();
+  }
+  function draw() {
+    if (!run) return;
+    const {stage,selected,position,correct}=run, word=selected[position], cfg=stages[stage];
+    $('quizCounter').textContent='السؤال '+(position+1)+' من 5';
+    $('quizProgress').style.width=(position/5*100)+'%';
+    $('question').style.direction='ltr';
+    $('question').style.textAlign='center';
+    const sentence=contextSentence(word);
+    $('question').textContent=stage==='listen'?'🔊 Listen and choose':stage==='meaning'?word.en:stage==='recall'?word.ar:stage==='context'?sentence:word.en;
+    $('questionHint').textContent=cfg.prompt;
+    $('quizFeedback').classList.add('hidden');$('quizNext').classList.add('hidden');
+    const area=$('answerArea');area.replaceChildren();area.className=stage==='recall'?'':'answers';
+    const submit=(value,expected)=>{
+      if(run.answered||!value)return;
+      run.answered=true;
+      const ok=String(value).trim().toLocaleLowerCase()===String(expected).trim().toLocaleLowerCase();
+      if(ok)run.correct++;
+      $('quizFeedback').classList.remove('hidden');
+      $('quizFeedback').textContent=ok?'✅ إجابة صحيحة':'💡 الإجابة الصحيحة: '+expected;
+      area.querySelectorAll('button,input').forEach(el=>el.disabled=true);
+      $('quizNext').classList.remove('hidden');
+      $('quizNext').textContent=position===4?'عرض نتيجة المرحلة':'السؤال التالي';
+    };
+    if(stage==='listen') {
+      const play=makeButton('🔊 استمع',()=>speak(word.en),'btn ghost full');area.append(play);
+      optionsFor(word,selected,'en',lessons[run.index].words).forEach(value=>area.append(makeButton(value,()=>submit(value,word.en),'answer')));
+      speak(word.en);
+    } else if(stage==='meaning') {
+      optionsFor(word,selected,'ar',lessons[run.index].words).forEach(value=>area.append(makeButton(value,()=>submit(value,word.ar),'answer')));
+    } else if(stage==='recall') {
+      const input=document.createElement('input');input.className='field';input.dir='ltr';input.placeholder='Type the English word';input.autocomplete='off';
+      const button=makeButton('تحقق',()=>submit(input.value,word.en),'btn primary full');area.append(input,button);
+      input.addEventListener('keydown',e=>{if(e.key==='Enter')button.click()});input.focus();
+    } else {
+      const distractors=optionsFor(word,selected,'en',lessons[run.index].words);
+      distractors.forEach(value=>area.append(makeButton(value,()=>submit(value,word.en),'answer')));
+    }
+    $('quizNext').onclick=()=>{if(!run)return;if(run.position<4){run.position++;run.answered=false;draw()}else finish()};
+  }
+  function finish() {
+    const r=run.record, stage=run.stage, score=run.correct, now=new Date().toISOString();
+    r.updatedAt=now;
+    const passed=score>=4;
+    r.attempts[stage]=(r.attempts[stage]||0)+1;
+    r.history.push({stage,score,total:5,passed,at:now});
+    r.history=r.history.slice(-40);
+    if(passed) {
+      if(stage==='listen') {r.listenPassed=true;r.stage='meaning';}
+      else if(stage==='meaning') {
+        r.meaningPassed=true;
+        if(r.listenPassed) {r.stage='recall';r.recallDue=new Date(Date.now()+48*HOURS).toISOString();}
+      } else if(stage==='recall') {r.recallPassed=true;r.stage='context';}
+      else if(stage==='context') {r.contextPassed=true;r.stage='retention';r.retentionDue=new Date(Date.now()+7*24*HOURS).toISOString();}
+      else if(stage==='retention') {
+        r.retentionPassed=true;r.stage='mastered';
+        if(!state.masteredLessons.includes(run.index))state.masteredLessons.push(run.index);
+        if(!state.completed.includes(run.index))state.completed.push(run.index);
+        state.masteredLessons=normalizeMasteredLessons(state.masteredLessons);
+        gain(40);daily('lesson');
+      }
+    }
+    save();renderCourses();
+    const summary=passed?'نجحت في المرحلة: '+stages[stage].title:'لم تحقق شرط 4 من 5. أعد هذه المرحلة.';
+    const next=r.stage==='mastered'?'أتقنت الدرس بعد استكمال جميع المراحل.':r.stage==='recall'?'موعد الاستدعاء بعد 48 ساعة: '+dueText(r.recallDue):r.stage==='retention'?'موعد اختبار الاحتفاظ بعد 7 أيام: '+dueText(r.retentionDue):'المرحلة التالية: '+(stages[r.stage]?.title||'');
+    $('quizProgress').style.width='100%';
+    $('quizArea').innerHTML='<div class="center" style="padding:18px"><h2>'+summary+'</h2><h1 style="font-size:48px;color:var(--mint)">'+score+'/5</h1><p>'+next+'</p><button id="mentorContinue" class="btn primary">متابعة</button></div>';
+    $('mentorContinue').onclick=()=>{run=null;page('courses');renderCourses()};
+  }
+  const originalOpenLesson=openLesson;
+  openLesson=function(index) {
+    if(index>0&&!state.masteredLessons.includes(index-1)){toast('🔒 أكمل مراحل المرشد للدرس السابق أولًا');return;}
+    const record=getRecord(index), stage=record.stage||'listen';
+    if(stage==='mastered'){originalOpenLesson(index);return;}
+    const due=stage==='recall'?stamp(record.recallDue):stage==='retention'?stamp(record.retentionDue):0;
+    if(due&&Date.now()<due){toast('المرحلة التالية متاحة في '+dueText(due));return;}
+    li=index;wi=0;
+    if(!state.lessonStarted.includes(index))state.lessonStarted.push(index);
+    save();drawWord();page('lesson');
+    $('lessonTag').textContent='الدرس '+(index+1)+' • '+(stages[stage]?.title||'قيد التعلّم');
+    $('nextWord').onclick=()=>{
+      if(wi<lessons[li].words.length-1){wi++;state.lessonPositions[li]=wi;save();drawWord();return;}
+      if(!state.lessonTrained.includes(li))state.lessonTrained.push(li);
+      state.lessonPositions[li]=wi;save();
+      const current=getRecord(li), currentStage=current.stage||'listen';
+      begin(li,currentStage);
+    };
+  };
+  const oldLessonTile=lessonTile;
+  lessonTile=function(lesson) {
+    const tile=oldLessonTile(lesson), record=state.mentorMastery?.[lesson.id], stage=record?.stage||'listen';
+    if(!state.masteredLessons.includes(lesson.id)) {
+      const status=stage==='recall'?'استدعاء بعد 48 ساعة':stage==='retention'?'احتفاظ بعد 7 أيام':stages[stage]?.title||'الاستماع';
+      const tag=tile.querySelector('.tag');if(tag&&!tile.disabled)tag.textContent='مرحلة المرشد: '+status;
+    }
+    return tile;
+  };
+  // Prevent legacy 80% quiz flow from granting mastery to a lesson.
+  const oldStartQuiz=startQuiz;
+  startQuiz=function(mode,pool) {
+    if(mode==='lesson') {toast('إثبات الإتقان يتم عبر مراحل المرشد المتتابعة.');return;}
+    return oldStartQuiz(mode,pool);
+  };
+  // Migrate old 80%-based mastery conservatively: prior completion is not evidence for the new protocol.
+  if(!state.mentorMastery||typeof state.mentorMastery!=='object')state.mentorMastery={};
+  const legacy=state.masteredLessons.filter(id=>!state.mentorMastery[id]?.retentionPassed);
+  if(legacy.length) {
+    state.masteredLessons=state.masteredLessons.filter(id=>state.mentorMastery[id]?.retentionPassed);
+    state.completed=state.completed.filter(id=>state.masteredLessons.includes(id));
+    save();
+  }
+  window.addEventListener('pageshow',()=>renderCourses());
+})();
+</script>
+
+<script>
 /* English Hero Adventure Map v2: no AI, no paid APIs */
 (() => {
   const mount = document.getElementById('ehAdventureMap');
