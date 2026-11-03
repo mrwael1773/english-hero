@@ -104,6 +104,24 @@
     const r=remote&&typeof remote==='object'&&!Array.isArray(remote)?remote:{};
     const union=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
     const object=(v)=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+    const mergeMentorMastery=(remoteRows,localRows)=>{
+      const remoteMap=object(remoteRows),localMap=object(localRows),merged={};
+      for(const key of new Set([...Object.keys(remoteMap),...Object.keys(localMap)])){
+        const a=object(remoteMap[key]),b=object(localMap[key]);
+        if(!Object.keys(a).length){merged[key]=b;continue;}
+        if(!Object.keys(b).length){merged[key]=a;continue;}
+        const history=[...(Array.isArray(a.history)?a.history:[]),...(Array.isArray(b.history)?b.history:[])];
+        const unique=[...new Map(history.filter(x=>x&&typeof x==='object'&&typeof x.at==='string').map(x=>[x.stage+'|'+x.at,x])).values()]
+          .sort((x,y)=>Date.parse(x.at)-Date.parse(y.at)).slice(-40);
+        const aTime=Date.parse(a.updatedAt||unique.at(-1)?.at||'')||0;
+        const bTime=Date.parse(b.updatedAt||'')||0;
+        const latest=bTime>=aTime?b:a;
+        merged[key]={...latest,attempts:{...object(a.attempts),...object(b.attempts)},history:unique};
+        for(const stage of Object.keys(object(a.attempts))) merged[key].attempts[stage]=Math.max(Number(a.attempts[stage])||0,Number(b.attempts?.[stage])||0);
+        if(a.retentionPassed||b.retentionPassed){merged[key].retentionPassed=true;merged[key].stage='mastered';}
+      }
+      return merged;
+    };
     const chatRows=[...(Array.isArray(r.chatHistory)?r.chatHistory:[]),...(Array.isArray(local.chatHistory)?local.chatHistory:[])].filter(m=>m&&typeof m.text==='string'&&['me','bot'].includes(m.who));
     const chatHistory=[...new Map(chatRows.map(m=>[JSON.stringify(m),m])).values()].slice(-60);
     const daily={...object(r.daily),...object(local.daily)};
@@ -118,6 +136,7 @@
       masteredLessons:typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(union(r.masteredLessons,local.masteredLessons)):union(r.masteredLessons,local.masteredLessons),
       lessonStarted:union(r.lessonStarted,local.lessonStarted).filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length),
       lessonTrained:union(r.lessonTrained,local.lessonTrained).filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length),
+      mentorMastery:mergeMentorMastery(r.mentorMastery,local.mentorMastery),
       foundationSaved:union(r.foundationSaved,local.foundationSaved),
       lessonPositions:{...object(r.lessonPositions),...object(local.lessonPositions)},
       chatHistory,
