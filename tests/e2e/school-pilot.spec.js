@@ -270,3 +270,21 @@ test('aggregates retention using pooled item counts rather than averaging partic
   await expect(page.locator('#summary')).toContainText('نسبة الاحتفاظ بالبنود المتقنة');
   await expect(page.locator('#summary')).toContainText('نسبة الاحتفاظ بالمفردات المكتسبة');
 });
+
+
+test('shows retention as uncomputable when the pooled denominator is zero', async ({ page }) => {
+  await openVault(page);
+  await page.locator('#code').fill('P01');
+  await page.locator('#group').selectOption('app');
+  await page.locator('#pair').selectOption('1');
+  await page.locator('#preForm').selectOption('A');
+  await page.locator('#postForm').selectOption('B');
+  for (const id of ['preListen','preUnderstand','preRecall','preUse','postListen','postUnderstand','postRecall','postUse','delayListen','delayUnderstand','delayRecall','delayUse']) {
+    await page.locator('#' + id).fill('5');
+  }
+  for (const time of ['pre','post','delay']) {
+    await page.locator('.item-score[data-time="' + time + '"]').evaluateAll(els => els.forEach(el => el.value = '0'));
+  }
+  await page.locator('#participantForm button[type="submit"]').click();
+  await expect(page.locator('#summary')).toContainText('غير قابل للحساب (0/0)');
+});
