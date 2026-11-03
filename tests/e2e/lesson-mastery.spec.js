@@ -56,3 +56,21 @@ test('legacy percentage-based mastery is not accepted as mentor-verified mastery
   await page.evaluate(() => window.page('courses'));
   await expect(page.locator('#courseGrid button').nth(1)).toBeDisabled();
 });
+
+test('context stage always hides the target word and offers four lesson-based choices', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      completed: [], masteredLessons: [], lessonStarted: [], lessonTrained: [], saved: [],
+      mentorMastery: { 0: { stage: 'context', attempts: {}, history: [] } }
+    }));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('courses'));
+  await page.locator('#courseGrid button').first().click();
+  for (let i = 0; i < 6; i++) await page.locator('#nextWord').click();
+  await expect(page.locator('#quizHeading')).toContainText('الاستخدام في السياق');
+  await expect(page.locator('#question')).toContainText('_____');
+  await expect(page.locator('#answerArea button.answer')).toHaveCount(4);
+});
