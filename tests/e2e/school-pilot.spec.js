@@ -97,6 +97,11 @@ test('encrypted vault stores four assessment domains and item-level retention wi
   expect(raw).toBeTruthy();
   expect(raw).not.toContain('P01');
   expect(raw).not.toContain('school-pilot-passphrase-2026');
+  // A second read is not a second encryption. Trigger an explicit save,
+  // then verify that each actual save rotates the AES-GCM IV.
+  await page.locator('.outage').first().fill('0');
+  await page.locator('#saveOutages').click();
+  await expect(page.locator('#outageStatus')).toContainText('حُفظ سجل أعطال الجلسات');
   const savedIv = await page.evaluate(() => JSON.parse(localStorage.getItem('ehSchoolPilotEncryptedV1')).iv);
   expect(savedIv).not.toBe(initialIv);
   expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(1);
