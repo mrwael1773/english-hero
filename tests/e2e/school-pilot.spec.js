@@ -130,6 +130,7 @@ test('reports normalized percentage-point gains and session outage counts', asyn
   await add('P02', 'control', 5, 6, 10, 12, 12);
   await add('P03', 'app', 5, 8, 10, 16, null, 2);
   await expect(page.locator('#summary')).toContainText('25.0');
-  await expect(page.locator('#summary')).toContainText('10.0');
+  await expect(page.locator('#summary')).toContainText('15.0');
+  await expect(page.locator('#summary')).toContainText('50.0%');
   await expect(page.locator('#summary')).toContainText('11/12');
 });
