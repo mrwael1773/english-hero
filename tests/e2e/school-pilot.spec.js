@@ -13,6 +13,8 @@ test('school pilot has 20 words and 12 sessions without external scripts or requ
   await expect(page.locator('#wordGrid .word')).toHaveCount(20);
   await expect(page.locator('#attendanceGrid .session')).toHaveCount(12);
   await expect(page.locator('#outageGrid .session')).toHaveCount(12);
+  await expect(page.locator('#workspace details')).toContainText('Omar goes to the library on Monday');
+  await expect(page.locator('#workspace details')).toContainText('The bus leaves the station at seven');
 });
 
 test('encrypted vault persists participant data and hides plaintext from localStorage', async ({ page }) => {
