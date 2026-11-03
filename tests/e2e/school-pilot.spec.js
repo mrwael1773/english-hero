@@ -98,7 +98,7 @@ test('reports normalized percentage-point gains and session outage counts', asyn
     await page.locator('#delayRecall').fill(String(delayedV / 2));
     await page.locator('#participantForm button[type="submit"]').click();
   };
-  await add('P01', 'app', 5, 7, 10, 14, 13);
+  await add('P01', 'app', 5, 7, 10, 14, 12);
   await add('P02', 'control', 5, 6, 10, 12, 11);
   await expect(page.locator('#summary')).toContainText('20.0');
   await expect(page.locator('#summary')).toContainText('10.0');
