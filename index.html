@@ -1920,11 +1920,12 @@ theme();renderStats();renderCourses();renderHome();
 
 
 
+<script src="mentor-progression.js"></script>
 <script>
 /* Mentor mastery protocol: staged evidence, 48-hour recall, contextual use, 7-day retention. */
 (() => {
-  const KEY = 'english-hero-academy-3';
-  const HOURS = 60 * 60 * 1000;
+  const progression = window.EnglishHeroMentorProgression;
+  if (!progression) throw new Error('Mentor progression rules failed to load');
   const quizMarkup = $('quizArea').innerHTML;
   const store = () => {
     if (!state.mentorMastery || typeof state.mentorMastery !== 'object') state.mentorMastery = {};
@@ -1971,8 +1972,8 @@ theme();renderStats();renderCourses();renderHome();
     const now = Date.now();
     const selected = sample(lesson.words);
     run = {index, stage, record, selected, questions:selected.map(word=>({word})) ,position:0,correct:0,answered:false};
-    const due = stage==='recall' ? stamp(record.recallDue) : stage==='retention' ? stamp(record.retentionDue) : 0;
-    if (due && now < due) {
+    const due = stage==='recall' ? record.recallDue : stage==='retention' ? record.retentionDue : '';
+    if (!progression.isDue({due}, now)) {
       toast('موعد هذه المرحلة: '+dueText(due));
       return;
     }
@@ -2025,17 +2026,17 @@ theme();renderStats();renderCourses();renderHome();
   function finish() {
     const r=run.record, stage=run.stage, score=run.correct, now=new Date().toISOString();
     r.updatedAt=now;
-    const passed=score>=4;
+    const evaluated=progression.evaluate({stage}, score, Date.now());
+    const passed=evaluated.passed;
     r.attempts[stage]=(r.attempts[stage]||0)+1;
     r.history.push({stage,score,total:5,passed,at:now});
     r.history=r.history.slice(-40);
     if(passed) {
-      if(stage==='listen') {r.listenPassed=true;r.stage='meaning';}
-      else if(stage==='meaning') {
-        r.meaningPassed=true;
-        if(r.listenPassed) {r.stage='recall';r.recallDue=new Date(Date.now()+48*HOURS).toISOString();}
-      } else if(stage==='recall') {r.recallPassed=true;r.stage='context';}
-      else if(stage==='context') {r.contextPassed=true;r.stage='retention';r.retentionDue=new Date(Date.now()+7*24*HOURS).toISOString();}
+      r.stage=evaluated.progress.stage;
+      if(stage==='listen') r.listenPassed=true;
+      else if(stage==='meaning') {r.meaningPassed=true;if(r.listenPassed)r.recallDue=evaluated.progress.due;}
+      else if(stage==='recall') r.recallPassed=true;
+      else if(stage==='context') {r.contextPassed=true;r.retentionDue=evaluated.progress.due;}
       else if(stage==='retention') {
         r.retentionPassed=true;r.stage='mastered';
         if(!state.masteredLessons.includes(run.index))state.masteredLessons.push(run.index);
@@ -2056,8 +2057,8 @@ theme();renderStats();renderCourses();renderHome();
     if(index>0&&!state.masteredLessons.includes(index-1)){toast('🔒 أكمل مراحل المرشد للدرس السابق أولًا');return;}
     const record=getRecord(index), stage=record.stage||'listen';
     if(stage==='mastered'){originalOpenLesson(index);return;}
-    const due=stage==='recall'?stamp(record.recallDue):stage==='retention'?stamp(record.retentionDue):0;
-    if(due&&Date.now()<due){toast('المرحلة التالية متاحة في '+dueText(due));return;}
+    const due=stage==='recall'?record.recallDue:stage==='retention'?record.retentionDue:'';
+    if(!progression.isDue({due},Date.now())){toast('المرحلة التالية متاحة في '+dueText(due));return;}
     li=index;wi=0;
     if(!state.lessonStarted.includes(index))state.lessonStarted.push(index);
     save();drawWord();page('lesson');
