@@ -84,11 +84,10 @@ async function signInTeacher(page, email = 'teacher-a@example.test') {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/@supabase/supabase-js@2*', route => route.fulfill({
-    status: 200,
-    contentType: 'application/javascript',
-    body: mockSupabaseScript,
-  }));
+  // Install the deterministic Supabase mock before page scripts execute. The CDN
+  // is blocked so CI never depends on an external network response.
+  await page.addInitScript(mockSupabaseScript);
+  await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2*', route => route.abort());
   await page.goto('/teacher-pilot.html');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
