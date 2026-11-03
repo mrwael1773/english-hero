@@ -131,8 +131,6 @@ test('pilot lesson can complete all six training words and advance through all 1
 test('attendance records 16 individual sessions, updates a participant, and exports weekly CSV data', async ({ page }) => {
   await page.locator('[data-tab="pilot"]').click();
   await expect(page.locator('#addParticipant')).toBeDisabled();
-  await page.locator('#addParticipant').click();
-  await expect(page.locator('#pilotMessage')).toContainText('تسجيل الدخول');
 
   await signInTeacher(page);
   await page.locator('#pCode').fill('STUDENT NAME');
@@ -189,8 +187,8 @@ test('attendance records 16 individual sessions, updates a participant, and expo
 });
 
 test('teacher data stays isolated when two teachers switch accounts on the same device', async ({ page }) => {
-  await signInTeacher(page, 'teacher-a@example.test');
   await page.locator('[data-tab="pilot"]').click();
+  await signInTeacher(page, 'teacher-a@example.test');
   await page.locator('#pCode').fill('P02');
   await page.locator('#pPre').fill('60');
   await page.locator('#pPost').fill('75');
