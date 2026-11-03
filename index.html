@@ -1970,13 +1970,14 @@ theme();renderStats();renderCourses();renderHome();
   function begin(index, stage) {
     const lesson = lessons[index], record = getRecord(index);
     const now = Date.now();
-    const selected = sample(lesson.words);
-    run = {index, stage, record, selected, questions:selected.map(word=>({word})) ,position:0,correct:0,answered:false};
     const due = stage==='recall' ? record.recallDue : stage==='retention' ? record.retentionDue : '';
     if (!progression.isDue({due}, now)) {
+      run = null;
       toast('موعد هذه المرحلة: '+dueText(due));
       return;
     }
+    const selected = sample(lesson.words);
+    run = {index, stage, record, selected, questions:selected.map(word=>({word})) ,position:0,correct:0,answered:false};
     $('quizArea').innerHTML=quizMarkup;
     $('quizArea').classList.remove('hidden');
     $('trainingModes').classList.add('hidden');
