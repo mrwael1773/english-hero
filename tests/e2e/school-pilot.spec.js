@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test('school pilot has 20 words and 12 sessions', async ({ page }) => {
+test('school pilot has 20 words and 12 sessions without external scripts or requests', async ({ page }) => {
+  const externalRequests = [];
+  page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4173/')) externalRequests.push(request.url()); });
   await page.goto('/school-pilot.html');
+  await expect(page.locator('script[src]')).toHaveCount(0);
+  expect(externalRequests).toEqual([]);
   await expect(page.locator('#workspace')).toBeHidden();
   await expect(page.locator('#wordGrid .word')).toHaveCount(20);
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
