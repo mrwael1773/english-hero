@@ -1925,6 +1925,7 @@ theme();renderStats();renderCourses();renderHome();
 (() => {
   const KEY = 'english-hero-academy-3';
   const HOURS = 60 * 60 * 1000;
+  const quizMarkup = $('quizArea').innerHTML;
   const store = () => {
     if (!state.mentorMastery || typeof state.mentorMastery !== 'object') state.mentorMastery = {};
     return state.mentorMastery;
@@ -1968,6 +1969,7 @@ theme();renderStats();renderCourses();renderHome();
       toast('موعد هذه المرحلة: '+dueText(due));
       return;
     }
+    $('quizArea').innerHTML=quizMarkup;
     $('quizArea').classList.remove('hidden');
     $('trainingModes').classList.add('hidden');
     $('quizHeading').textContent='🎯 '+stages[stage].title;
@@ -1981,8 +1983,8 @@ theme();renderStats();renderCourses();renderHome();
     $('quizProgress').style.width=(position/5*100)+'%';
     $('question').style.direction='ltr';
     $('question').style.textAlign='center';
-    $('question').textContent=stage==='listen'?'🔊 Listen and choose':stage==='meaning'?word.en:stage==='recall'?word.ar:stage==='context'?(word.ex||('I use the word '+word.en+' in a sentence.')).replace(new RegExp(word.en.replace(/[.*+?^${}()|[\]\\]/g,'\\<script>
-/* English Hero Adventure Map v2: no AI, no paid APIs */'),'i'),'_____'):word.en;
+    const sentence=(word.ex||('I use the word '+word.en+' in a sentence.'));
+    $('question').textContent=stage==='listen'?'🔊 Listen and choose':stage==='meaning'?word.en:stage==='recall'?word.ar:stage==='context'?sentence.replace(new RegExp(word.en,'i'),'_____'):word.en;
     $('questionHint').textContent=cfg.prompt;
     $('quizFeedback').classList.add('hidden');$('quizNext').classList.add('hidden');
     const area=$('answerArea');area.replaceChildren();area.className=stage==='recall'?'':'answers';
