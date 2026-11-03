@@ -6,10 +6,14 @@
   const TOTAL = 5;
   const DELAYS = Object.freeze({ recall: 48 * 60 * 60 * 1000, retention: 7 * 24 * 60 * 60 * 1000 });
   function asTime(value) {
-    if (value instanceof Date) return value.getTime();
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-    const parsed = Date.parse(value || '');
-    return Number.isFinite(parsed) ? parsed : Date.now();
+    if (value instanceof Date) {
+      const time = value.getTime();
+      return Number.isFinite(time) ? time : null;
+    }
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value !== 'string' || !value.trim()) return null;
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : null;
   }
   function initial() {
     return { stage: 'listen', due: '', attempts: {}, history: [], lastScore: null, updatedAt: '' };
@@ -31,15 +35,20 @@
   }
   function isDue(progress, now = Date.now()) {
     const p = normalize(progress);
-    return !p.due || asTime(now) >= asTime(p.due);
+    if (!p.due) return true;
+    const dueTime = asTime(p.due);
+    const currentTime = asTime(now);
+    // Fail closed: a malformed due timestamp must never unlock a delayed stage.
+    return dueTime !== null && currentTime !== null && currentTime >= dueTime;
   }
   function evaluate(progress, correct, now = Date.now()) {
     const p = normalize(progress);
     const time = asTime(now);
-    if (!isDue(p, time)) {
+    if (time === null || !isDue(p, time)) {
       return { progress: p, passed: false, blocked: true, required: REQUIRED, total: TOTAL, nextDue: p.due };
     }
-    const score = Math.max(0, Math.min(TOTAL, Math.trunc(Number(correct) || 0)));
+    const rawScore = Number(correct);
+    const score = Number.isFinite(rawScore) ? Math.max(0, Math.min(TOTAL, Math.trunc(rawScore))) : 0;
     const stage = p.stage;
     p.lastScore = score;
     p.attempts[stage] = (Number(p.attempts[stage]) || 0) + 1;
