@@ -58,3 +58,19 @@ test('normalization keeps only bounded, valid progression history', () => {
   assert.equal(normalized.history.length, 40);
   assert.equal(normalized.lastScore, null);
 });
+
+test('a full passing path follows listening, meaning, 48-hour recall, context, and 7-day retention', () => {
+  let p = mentor.initial();
+  p = mentor.evaluate(p, 4, at(0)).progress;
+  assert.equal(p.stage, 'meaning');
+  p = mentor.evaluate(p, 5, at(1)).progress;
+  assert.equal(p.stage, 'recall');
+  const recallAt = Date.parse(p.due);
+  p = mentor.evaluate(p, 4, recallAt).progress;
+  assert.equal(p.stage, 'context');
+  p = mentor.evaluate(p, 4, recallAt + 1).progress;
+  assert.equal(p.stage, 'retention');
+  const retentionAt = Date.parse(p.due);
+  p = mentor.evaluate(p, 4, retentionAt).progress;
+  assert.equal(p.stage, 'mastered');
+});
