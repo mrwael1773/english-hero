@@ -45,6 +45,14 @@ test('seven-day retention is blocked until the exact due timestamp', () => {
   assert.equal(mentor.isDue(afterContext, at(sevenDays)), true);
 });
 
+test('malformed due timestamps and invalid clocks fail closed', () => {
+  assert.equal(mentor.isDue({ stage: 'recall', due: 'not-a-date' }, at(10_000_000)), false);
+  assert.equal(mentor.isDue({ stage: 'recall', due: '2026-01-01T12:00:00.000Z' }, 'invalid-clock'), false);
+  const blocked = mentor.evaluate({ stage: 'recall', due: 'not-a-date' }, 5, at(10_000_000));
+  assert.equal(blocked.blocked, true);
+  assert.equal(blocked.progress.stage, 'recall');
+});
+
 test('successful retention is the only stage that marks mastery', () => {
   const result = mentor.evaluate({ stage: 'retention' }, 4, at(0));
   assert.equal(result.progress.stage, 'mastered');
