@@ -2017,7 +2017,7 @@ theme();renderStats();renderCourses();renderHome();
       const button=makeButton('تحقق',()=>submit(input.value,word.en),'btn primary full');area.append(input,button);
       input.addEventListener('keydown',e=>{if(e.key==='Enter')button.click()});input.focus();
     } else {
-      const distractors=optionsFor(word,selected,'en');
+      const distractors=optionsFor(word,selected,'en',lessons[run.index].words);
       distractors.forEach(value=>area.append(makeButton(value,()=>submit(value,word.en),'answer')));
     }
     $('quizNext').onclick=()=>{if(!run)return;if(run.position<4){run.position++;run.answered=false;draw()}else finish()};
