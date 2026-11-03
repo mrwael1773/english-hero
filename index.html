@@ -1961,15 +1961,10 @@ theme();renderStats();renderCourses();renderHome();
   };
   const contextSentence = word => {
     const source = String(word.ex || '');
-    const escaped = String(word.en || '').replace(/[.*+?^${}()|[\]\\]/g, '\\  const optionsFor = (word, words, field) => {
-    const correct = word[field];
-    const distractors = [...new Set(words.filter(w=>w.id!==word.id).map(w=>w[field]).filter(Boolean))];
-    const picks = distractors.sort(()=>Math.random()-.5).slice(0,3);
-    return [correct,...picks].sort(()=>Math.random()-.5);
-  };');
-    const matcher = escaped ? new RegExp(escaped, 'i') : null;
-    const sentence = matcher && matcher.test(source) ? source : 'I often use the word ' + word.en + ' when I speak English.';
-    return sentence.replace(matcher || /$^/, '_____');
+    const target = String(word.en || '');
+    const index = target ? source.toLocaleLowerCase().indexOf(target.toLocaleLowerCase()) : -1;
+    if (index < 0) return 'I often use the word _____ when I speak English.';
+    return source.slice(0,index) + '_____' + source.slice(index + target.length);
   };
   function begin(index, stage) {
     const lesson = lessons[index], record = getRecord(index);
