@@ -85,6 +85,9 @@ test('limits participants to 24 and prevents duplicate codes', async ({ page }) 
   const assigned = await page.locator('#rows tr').evaluateAll(rows => rows.map(row => row.children[1].textContent));
   expect(assigned.filter(group => group === 'التطبيق')).toHaveLength(12);
   expect(assigned.filter(group => group === 'المقارنة')).toHaveLength(12);
+  await expect(page.locator('#randomizePairs')).toBeDisabled();
+  await expect(page.locator('#group')).toBeDisabled();
+  await expect(page.locator('#pair')).toBeDisabled();
   await expect(page.locator('#summary')).toContainText('12/12');
   await page.locator('#code').fill('P01');
   await page.locator('#preListen').fill('6');
