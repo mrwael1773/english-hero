@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   static-checks:
-    name: Validate app files
+    name: English Hero quality checks
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository

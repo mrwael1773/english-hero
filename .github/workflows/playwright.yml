@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   browser-tests:
+    name: Playwright browser tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
