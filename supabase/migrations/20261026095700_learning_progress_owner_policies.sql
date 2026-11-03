@@ -1,0 +1,27 @@
+-- Learners may access only their own durable progress row.
+-- Version aligned with the connected Supabase migration history: 20261026095700.
+alter table public.learning_progress enable row level security;
+
+drop policy if exists "Learners can read their own progress" on public.learning_progress;
+drop policy if exists "Users can read own learning progress" on public.learning_progress;
+create policy "Learners can read their own progress"
+  on public.learning_progress for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Learners can insert their own progress" on public.learning_progress;
+drop policy if exists "Users can insert own learning progress" on public.learning_progress;
+create policy "Learners can insert their own progress"
+  on public.learning_progress for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Learners can update their own progress" on public.learning_progress;
+drop policy if exists "Users can update own learning progress" on public.learning_progress;
+create policy "Learners can update their own progress"
+  on public.learning_progress for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+grant select, insert, update on public.learning_progress to authenticated;
