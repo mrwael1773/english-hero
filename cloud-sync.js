@@ -117,7 +117,7 @@
         const bTime=Date.parse(b.updatedAt||'')||0;
         const latest=bTime>=aTime?b:a;
         merged[key]={...latest,attempts:{...object(a.attempts),...object(b.attempts)},history:unique};
-        for(const stage of Object.keys(object(a.attempts))) merged[key].attempts[stage]=Math.max(Number(a.attempts[stage])||0,Number(b.attempts?.[stage])||0);
+        for(const stage of new Set([...Object.keys(object(a.attempts)),...Object.keys(object(b.attempts))])) merged[key].attempts[stage]=Math.max(Number(a.attempts?.[stage])||0,Number(b.attempts?.[stage])||0);
         if(a.retentionPassed||b.retentionPassed){merged[key].retentionPassed=true;merged[key].stage='mastered';}
       }
       return merged;
