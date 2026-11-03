@@ -98,7 +98,7 @@ test('rejects wrong password, invalid scores, and missing item-level baseline en
   await page.locator('#vaultPassword').fill('wrong-password-2026');
   await page.locator('#vaultOpen').click();
   await expect(page.locator('#workspace')).toBeHidden();
-  await expect(page.locator('#vaultStatus')).toContainText('تحقق من عبارة المرور');
+  await expect(page.locator('#vaultStatus')).toContainText('تعذر الفتح:');
 
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
