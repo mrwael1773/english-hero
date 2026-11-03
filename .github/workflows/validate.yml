@@ -22,3 +22,5 @@ jobs:
           node-version: 22
       - name: Validate site, scripts, vocabulary, and security migration
         run: node scripts/validate-project.mjs
+      - name: Test mentor progression rules and due-time boundaries
+        run: node --test tests/unit/mentor-progression.test.cjs
