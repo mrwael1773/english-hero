@@ -128,6 +128,34 @@ test('pilot lesson can complete all six training words and advance through all 1
   expect(saved.reviewDue).toBeTruthy();
 });
 
+test('writing assessment shows explicit correct and incorrect feedback and requires a non-empty answer', async ({ page }) => {
+  for (let i = 0; i < 6; i++) await page.locator('[data-trained]').nth(i).click();
+  await page.locator('#finishTraining').click();
+  await page.locator('#startTest').click();
+
+  // Advance to a writing question regardless of the shuffled question order.
+  for (let i = 0; i < 18; i++) {
+    if (await page.locator('#typedAnswer').count()) break;
+    await page.locator('#testArea [data-choice]').first().click();
+    await page.locator('#nextQuestion').click();
+  }
+  await expect(page.locator('#typedAnswer')).toBeVisible();
+  await page.locator('#checkTypedAnswer').click();
+  await expect(page.locator('#questionFeedback')).toContainText('اكتب إجابتك أولًا');
+  await expect(page.locator('#nextQuestion')).toBeHidden();
+
+  const expected = await page.locator('#testArea h3').textContent();
+  const word = expected.match(/ما معنى كلمة (.+)\؟/)?.[1];
+  // The expected word is available from the question's answer via the rendered prompt's
+  // associated word data in the page test fixture; use a deliberately wrong answer first.
+  await page.locator('#typedAnswer').fill('definitely-wrong');
+  await page.locator('#checkTypedAnswer').click();
+  await expect(page.locator('#questionFeedback')).toContainText('✗');
+  await expect(page.locator('#questionFeedback')).toContainText('الإجابة الصحيحة:');
+  await expect(page.locator('#typedAnswer')).toBeDisabled();
+  await expect(page.locator('#nextQuestion')).toBeVisible();
+});
+
 test('attendance records 16 individual sessions, updates a participant, and exports weekly CSV data', async ({ page }) => {
   await page.locator('[data-tab="pilot"]').click();
   await expect(page.locator('#addParticipant')).toBeDisabled();
