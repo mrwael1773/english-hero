@@ -3,8 +3,15 @@ import { test, expect } from '@playwright/test';
 async function openVault(page) {
   await page.goto('/school-pilot.html');
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
   await page.locator('#vaultOpen').click();
-  await expect(page.locator('#workspace')).toBeVisible();
+  try {
+    await expect(page.locator('#workspace')).toBeVisible({ timeout: 5000 });
+  } catch (error) {
+    const status = await page.locator('#vaultStatus').textContent();
+    throw new Error('Vault did not open. Status: ' + status + '. Page errors: ' + pageErrors.join(' | '));
+  }
 }
 
 async function markItems(page, time, value) {
@@ -23,7 +30,7 @@ test('school pilot keeps teacher keys out of public HTML and has the approved 20
   await expect(page.locator('script[src]')).toHaveCount(0);
   expect(externalRequests).toEqual([]);
   await expect(page.locator('#workspace')).toBeHidden();
-  await expect(page.locator('#wordGrid .word')).toHaveCount(20);
+  await expect(page.locator('#wordGrid .word')).toHaveCount(0);
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
   await expect(page.locator('#wordGrid .word')).toHaveCount(20);
