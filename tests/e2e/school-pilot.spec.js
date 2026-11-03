@@ -83,6 +83,7 @@ test('limits participants to 24 and prevents duplicate codes', async ({ page }) 
   }
   page.once('dialog', dialog => dialog.accept());
   await page.locator('#randomizePairs').click();
+  await expect(page.locator('#formStatus')).toContainText('اكتملت القرعة');
   const assigned = await page.locator('#rows tr').evaluateAll(rows => rows.map(row => row.children[1].textContent));
   expect(assigned.filter(group => group === 'التطبيق')).toHaveLength(12);
   expect(assigned.filter(group => group === 'المقارنة')).toHaveLength(12);
@@ -121,7 +122,9 @@ test('reports normalized percentage-point gains and session outage counts', asyn
       await page.locator('#delayUnderstand').fill(String(delayedV / 2));
       await page.locator('#delayRecall').fill(String(delayedV / 2));
     }
+    const before = await page.locator('#rows tr').count();
     await page.locator('#participantForm button[type="submit"]').click();
+    await expect(page.locator('#rows tr')).toHaveCount(before + 1);
   };
   await add('P01', 'app', 5, 7, 10, 14, 12);
   await add('P02', 'control', 5, 6, 10, 12, 12);
