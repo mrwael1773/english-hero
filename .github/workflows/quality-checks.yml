@@ -32,7 +32,7 @@ jobs:
 
           for page in ("index.html", "teacher-pilot.html"):
               html = Path(page).read_text(encoding="utf-8")
-              scripts = re.findall(r"<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>", html, re.I)
+              scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
               inline_scripts = []
               for attrs, script in scripts:
                   # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
