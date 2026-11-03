@@ -2024,6 +2024,7 @@ theme();renderStats();renderCourses();renderHome();
   }
   function finish() {
     const r=run.record, stage=run.stage, score=run.correct, now=new Date().toISOString();
+    r.updatedAt=now;
     const passed=score>=4;
     r.attempts[stage]=(r.attempts[stage]||0)+1;
     r.history.push({stage,score,total:5,passed,at:now});
