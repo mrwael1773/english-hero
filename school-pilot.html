@@ -15,7 +15,40 @@
 <div class="row" style="justify-content:flex-start;margin-top:12px"><button id="vaultOpen" class="btn primary">إنشاء السجل / فتحه</button><button id="vaultLock" class="btn hidden">قفل السجل</button></div><p id="vaultStatus" class="small muted" role="status" aria-live="polite">السجل مقفل. لا توجد بيانات معروضة.</p></section>
 <div id="workspace" class="hidden">
 <section class="panel"><div class="row"><div><h2>الكلمات العشرون</h2><p class="small muted">أربع حزم أسبوعية؛ المعاني من ملحق المرشد وتحتاج اعتماد المعلمين.</p></div><span id="approvalState" class="tag">المراجعة غير مكتملة</span></div>
-<div class="grid" id="wordGrid"></div><p class="notice small">النطق يستخدم صوت الجهاز SpeechSynthesis فقط. لا يضمن عمله أو جودته؛ يلزم اختباره على جهازي المدرسة.</p>
+<div class="grid" id="wordGrid"></div>
+<details><summary>مرجع المعلم: نصوص الاستماع ومفاتيح الإجابة (لا تُعرض للطلاب)</summary>
+<p class="small muted">تقرأ الصيغة المعتمدة مرتين بسرعة ثابتة. لا يظهر النص الإنجليزي للطالب أثناء القياس. يراجع المعلمان تكافؤ الصيغ قبل اعتمادها.</p>
+<h3>1. المكتبة</h3>
+<p dir="ltr">A: Omar goes to the library on Monday. He borrows a book and returns it on Thursday.</p>
+<p dir="ltr">B: Sara goes to the library on Tuesday. She borrows a book and returns it on Friday.</p>
+<p dir="ltr">C: Khalid goes to the library on Wednesday. He borrows a book and returns it on Saturday.</p>
+<p>المفتاح: A الاثنين، الخميس. B الثلاثاء، الجمعة. C الأربعاء، السبت.</p>
+<h3>2. المحطة</h3>
+<p dir="ltr">A: The bus leaves the station at seven. Ali arrives early. He buys one ticket.</p>
+<p dir="ltr">B: The bus leaves the station at eight. Sami arrives early. He buys two tickets.</p>
+<p dir="ltr">C: The bus leaves the station at nine. Fahad arrives early. He buys three tickets.</p>
+<p>المفتاح: A السابعة، تذكرة واحدة. B الثامنة، تذكرتان. C التاسعة، ثلاث تذاكر.</p>
+<h3>3. الوجبات</h3>
+<p dir="ltr">A: Mona has breakfast at home. She eats bread and drinks water. She has lunch at school.</p>
+<p dir="ltr">B: Nora has breakfast at home. She eats bread and drinks milk. She has lunch at the park.</p>
+<p dir="ltr">C: Huda has breakfast at school. She eats bread and drinks juice. She has lunch at home.</p>
+<p>المفتاح: A الماء، المدرسة. B الحليب، الحديقة. C العصير، المنزل.</p>
+<h3>4. تعليمات الصف</h3>
+<p dir="ltr">A: The teacher says: Open your book at page ten. Read quietly. Then close your book.</p>
+<p dir="ltr">B: The teacher says: Open your book at page twelve. Read quietly. Then close your book.</p>
+<p dir="ltr">C: The teacher says: Open your book at page eleven. Read quietly. Then close your book.</p>
+<p>المفتاح: A الصفحة 10، يغلق الكتاب. B الصفحة 12، يغلق الكتاب. C الصفحة 11، يغلق الكتاب.</p>
+<h3>5. لقاء الصديق</h3>
+<p dir="ltr">A: Hassan meets his friend in the evening. They go to the park at five. They leave at six.</p>
+<p dir="ltr">B: Yousef meets his friend in the morning. They go to the park at nine. They leave at ten.</p>
+<p dir="ltr">C: Ahmed meets his friend in the evening. They go to the park at six. They leave at seven.</p>
+<p>المفتاح: A المساء، السادسة. B الصباح، العاشرة. C المساء، السابعة.</p>
+<h3>مفتاح المفردات</h3>
+<p>الاستدعاء: morning صباح، evening مساء، breakfast فطور، lunch غداء، water ماء، bread خبز، friend صديق، teacher معلم، open يفتح، close يغلق.</p>
+<p>فهم المعنى: library مكتبة، borrow يستعير، return يعيد أو يرجع، quiet هادئ، arrive يصل، leave يغادر، early مبكر، late متأخر، ticket تذكرة، station محطة.</p>
+<p class="notice warn small">ملاحظة: ترتيب الصيغة (ج) في جدول المفردات ورد بصورة ملتبسة «1 (أو 11)» مع أن عدد البنود 10. لا تعتمد ترتيب (ج) حتى يصححه المعلمان ويثبتا مفتاحه. هذا المرجع لا ينشئ أوراق اختبار الطالب تلقائيًا.</p>
+</details>
+<p class="notice small">النطق يستخدم صوت الجهاز SpeechSynthesis فقط. لا يضمن عمله أو جودته؛ يلزم اختباره على جهازي المدرسة.</p>
 <div class="row"><button class="btn" id="checkVoice">اختبار صوت الجهاز</button><button class="btn" id="approveWords">اعتماد مراجعة الكلمات</button></div><p id="voiceStatus" class="small muted" aria-live="polite"></p></section>
 <section class="panel"><h2>المشاركون والقياسات</h2><p class="small muted">حد أقصى 24 رمزًا. لا تدخل أسماء أو هواتف أو بريدًا أو ملاحظات شخصية. المجموعة: تطبيق أو مقارنة، والثنائية من 1 إلى 12.</p>
 <form id="participantForm" novalidate><div class="grid">
