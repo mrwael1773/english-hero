@@ -81,6 +81,8 @@ test('limits participants to 24 and prevents duplicate codes', async ({ page }) 
   await expect(page.locator('#summary')).toContainText('12/12');
   await page.locator('#code').fill('P01');
   await page.locator('#preListen').fill('6');
+  await page.locator('#preUnderstand').fill('5');
+  await page.locator('#preRecall').fill('5');
   await page.locator('#participantForm button[type="submit"]').click();
   await expect(page.locator('#formStatus')).toContainText('مسجل مسبقًا');
   await expect(page.locator('#rows tr')).toHaveCount(24);
