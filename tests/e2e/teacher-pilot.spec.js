@@ -144,14 +144,30 @@ test('writing assessment shows explicit correct and incorrect feedback and requi
   await expect(page.locator('#questionFeedback')).toContainText('اكتب إجابتك أولًا');
   await expect(page.locator('#nextQuestion')).toBeHidden();
 
-  const expected = await page.locator('#testArea h3').textContent();
-  const word = expected.match(/ما معنى كلمة (.+)\؟/)?.[1];
-  // The expected word is available from the question's answer via the rendered prompt's
-  // associated word data in the page test fixture; use a deliberately wrong answer first.
   await page.locator('#typedAnswer').fill('definitely-wrong');
   await page.locator('#checkTypedAnswer').click();
   await expect(page.locator('#questionFeedback')).toContainText('✗');
   await expect(page.locator('#questionFeedback')).toContainText('الإجابة الصحيحة:');
+  await expect(page.locator('#typedAnswer')).toBeDisabled();
+  await expect(page.locator('#nextQuestion')).toBeVisible();
+
+  await page.locator('#nextQuestion').click();
+  for (let i = 0; i < 18 && !(await page.locator('#typedAnswer').count()); i++) {
+    await page.locator('#testArea [data-choice]').first().click();
+    await page.locator('#nextQuestion').click();
+  }
+  await expect(page.locator('#typedAnswer')).toBeVisible();
+  const prompt = await page.locator('#testArea h3').textContent();
+  const expectedByMeaning = {
+    'اسم': 'Name', 'طالب': 'Student', 'من': 'From',
+    'يسكن / يعيش': 'Live', 'يحب': 'Like', 'كرة القدم': 'Football',
+  };
+  const expectedAnswer = Object.entries(expectedByMeaning)
+    .find(([meaning]) => prompt.includes(meaning))?.[1];
+  expect(expectedAnswer).toBeTruthy();
+  await page.locator('#typedAnswer').fill(expectedAnswer);
+  await page.locator('#checkTypedAnswer').click();
+  await expect(page.locator('#questionFeedback')).toContainText('✓ إجابة صحيحة');
   await expect(page.locator('#typedAnswer')).toBeDisabled();
   await expect(page.locator('#nextQuestion')).toBeVisible();
 });
