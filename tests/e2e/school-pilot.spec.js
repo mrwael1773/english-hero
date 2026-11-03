@@ -287,4 +287,5 @@ test('shows retention as uncomputable when the pooled denominator is zero', asyn
   }
   await page.locator('#participantForm button[type="submit"]').click();
   await expect(page.locator('#summary')).toContainText('غير قابل للحساب (0/0)');
+  await expect(page.locator('#rows')).toContainText('غير قابل للحساب (0/0)');
 });
