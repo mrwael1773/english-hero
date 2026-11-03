@@ -133,7 +133,19 @@ test('limits participants to 24, randomizes within each pair, and prevents dupli
   await expect(page.locator('#randomizePairs')).toBeDisabled();
   await expect(page.locator('#group')).toBeDisabled();
   await expect(page.locator('#pair')).toBeDisabled();
+  await expect(page.locator('#preForm')).toBeDisabled();
+  await expect(page.locator('#postForm')).toBeDisabled();
   await expect(page.locator('#summary')).toContainText('12/12');
+  const members = await page.locator('#rows tr').evaluateAll(rows => rows.map(row => ({ code: row.children[0].textContent, group: row.children[1].textContent === 'التطبيق' ? 'app' : 'control' })));
+  const formOrders = { app: [], control: [] };
+  for (const member of members) {
+    await page.locator('[data-edit="' + member.code + '"]').click();
+    formOrders[member.group].push(await page.locator('#preForm').inputValue() + await page.locator('#postForm').inputValue());
+  }
+  for (const group of ['app', 'control']) {
+    expect(formOrders[group].filter(order => order === 'AB')).toHaveLength(6);
+    expect(formOrders[group].filter(order => order === 'BA')).toHaveLength(6);
+  }
 
   await page.locator('#code').fill('P01');
   await page.locator('#preListen').fill('6');
