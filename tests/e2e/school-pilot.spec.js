@@ -8,6 +8,7 @@ test('school pilot has 20 words and 12 sessions', async ({ page }) => {
   await page.locator('#vaultOpen').click();
   await expect(page.locator('#wordGrid .word')).toHaveCount(20);
   await expect(page.locator('#attendanceGrid .session')).toHaveCount(12);
+  await expect(page.locator('#outageGrid .session')).toHaveCount(12);
 });
 
 test('encrypted vault persists participant data and hides plaintext from localStorage', async ({ page }) => {
