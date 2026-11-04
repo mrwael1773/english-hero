@@ -24,9 +24,33 @@ test('grammar cards open a dedicated lesson with an interactive challenge', asyn
   await expect(page.locator('#examples .example')).toHaveCount(3);
   await expect(page.locator('#challenge .option')).toHaveCount(3);
 
-  await page.locator('#challenge .option').first().click();
+  const firstReveal = page.locator('#examples .example').first().getByRole('button', { name: 'أظهر الترجمة' });
+  await expect(firstReveal).toHaveAttribute('aria-expanded', 'false');
+  await firstReveal.click();
+  await expect(page.locator('#examples .example').first().locator('.example-ar')).toBeVisible();
+  await expect(firstReveal).toHaveAttribute('aria-expanded', 'true');
+  await firstReveal.click();
+  await expect(page.locator('#examples .example').first().locator('.example-ar')).toBeHidden();
+
+  const options = page.locator('#challenge .option');
+  const next = page.locator('#challenge .quiz-footer button');
+  await options.nth(0).click();
   await expect(page.locator('#challenge .feedback')).toContainText('صحيح');
-  await expect(page.locator('#challenge .quiz-footer button')).toBeEnabled();
+  await expect(next).toBeEnabled();
+  await next.click();
+  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 2 من 3');
+  await options.nth(0).click();
+  await expect(page.locator('#challenge .feedback')).toContainText('ليست الإجابة الصحيحة');
+  await expect(page.locator('#challenge .feedback')).toContainText('نستخدم She');
+  await next.click();
+  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 3 من 3');
+  await options.nth(1).click();
+  await expect(page.locator('#challenge .feedback')).toContainText('صحيح');
+  await next.click();
+  await expect(page.locator('#challenge .quiz-result .score')).toHaveText('2 / 3');
+  await page.getByRole('button', { name: 'إعادة التحدي' }).click();
+  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 1 من 3');
+  await expect(page.locator('#challenge .option')).toHaveCount(3);
 });
 
 test('tense cards open dedicated tense pages', async ({ page }) => {
