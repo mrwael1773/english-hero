@@ -23,6 +23,8 @@ const englishHeroPlus = read('english-hero-plus.js');
 const config = read('config.js');
 const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-20000.json');
+const grammarLessonPage = read('grammar-lesson.html');
+const grammarLessonsRaw = read('grammar-lessons.js');
 const migrationPath = 'supabase/migrations/20261026151420_secure_rls_auto_enable_and_optimize_progress_policies.sql';
 const migration = read(migrationPath);
 
@@ -37,7 +39,7 @@ check(html.includes('englishHeroStudentTasksV1') && html.includes('function rend
 const idCounts = new Map();
 for (const match of html.matchAll(/\bid=["']([^"']+)["']/g)) idCounts.set(match[1], (idCounts.get(match[1]) || 0) + 1);
 check([...idCounts.values()].every(count => count === 1), 'HTML element IDs are unique');
-for (const path of ['manifest.webmanifest', 'privacy.html', 'contact.html', 'icon.svg']) {
+for (const path of ['manifest.webmanifest', 'privacy.html', 'contact.html', 'icon.svg', 'grammar-lesson.html', 'grammar-lessons.js']) {
   check(existsSync(join(root, path)), `Required public file exists: ${path}`);
 }
 try {
@@ -58,6 +60,45 @@ const registeredVersion = html.match(/sw\.js\?v=(\d+)/)?.[1];
 const cacheVersion = sw.match(/english-hero-shell-v(\d+)/)?.[1];
 check(Boolean(registeredVersion && cacheVersion && registeredVersion === cacheVersion), 'Service worker registration and cache versions match');
 check(sw.includes("fetch(request)") && sw.includes("request.mode === 'navigate'"), 'Service worker refreshes navigation from network first');
+check(/src="\.\/grammar-lessons\.js\?v=1"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
+check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
+check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.includes('id="challenge"') && grammarLessonPage.includes('aria-live="polite"'), 'Dedicated lesson page provides a challenge area with accessible feedback');
+check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
+check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=1'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
+try {
+  new Function(grammarLessonsRaw);
+  check(true, 'Grammar lesson catalogue JavaScript syntax is valid');
+} catch (error) {
+  fail.push(`grammar-lessons.js has a syntax error: ${error.message}`);
+}
+try {
+  const lessonData = new Function('window', grammarLessonsRaw + '; return window.EnglishHeroLessons;')({});
+  const allLessons = [...lessonData.grammar, ...lessonData.tenses];
+  const slugs = allLessons.map(item => item.slug);
+  const validQuestions = item => Array.isArray(item.questions) && item.questions.length >= 3 &&
+    item.questions.every(q => q && typeof q.text === 'string' && q.text.trim() &&
+      Array.isArray(q.options) && q.options.length === 3 &&
+      q.options.every(option => typeof option === 'string' && option.trim()) &&
+      Number.isInteger(q.answer) && q.answer >= 0 && q.answer < q.options.length &&
+      typeof q.explain === 'string' && q.explain.trim());
+  const validLessons = allLessons.every(item =>
+    typeof item.title === 'string' && item.title.trim() &&
+    typeof item.summary === 'string' && item.summary.trim() &&
+    typeof item.everyday === 'string' && item.everyday.trim() &&
+    typeof item.formula === 'string' && item.formula.trim() &&
+    Array.isArray(item.steps) && item.steps.length >= 2 &&
+    Array.isArray(item.examples) && item.examples.length >= 2 &&
+    item.examples.every(example => example.en && example.ar) &&
+    item.mistake && item.mistake.wrong && item.mistake.right && item.mistake.why &&
+    typeof item.tip === 'string' && item.tip.trim() && validQuestions(item));
+  check(lessonData.grammar.length === 37 && lessonData.tenses.length === 10,
+    'Interactive catalogue includes all 37 grammar rules and 10 tense lessons');
+  check(new Set(slugs).size === allLessons.length && validLessons,
+    'Every lesson has a unique slug, step-by-step explanation, examples, correction, tip, and valid practice questions');
+} catch (error) {
+  fail.push('Interactive grammar catalogue can be parsed and checked: ' + error.message);
+}
+
 check(cloud.includes("from('learning_progress')") && cloud.includes('signInWithPassword') && cloud.includes('signUp'), 'Cloud progress and email auth flows are present');
 check(cloud.includes('async function cloudRequest(query, timeoutMs=15000)') && cloud.includes('query.abortSignal(controller.signal)'), 'Cloud progress requests abort after a bounded timeout');
 check(cloud.includes("English Hero sign out:") && cloud.includes('finally {\n      setSignedInUI();\n    }'), 'Sign-out failures restore the account UI safely');
@@ -144,7 +185,7 @@ try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript s
 check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./english-hero-plus.js?v="), 'English Hero Plus is linked and cached offline');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
-const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html'].map(read).join('\\n');
+const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','grammar-lesson.html'].map(read).join('\\n');
 check(!/(adsbygoogle|googlesyndication|google-adsense-account|googletagmanager|google-analytics)/i.test(publicHtml), 'Public HTML files contain no ad or third-party analytics tags');
 check(!html.includes('analytics_events') && !html.includes('englishHeroAnalyticsVisitorV1'), 'Main page does not send custom analytics events or create analytics visitor identifiers');
 check(html.includes('navigator.serviceWorker.register'), 'Main page registers the service worker');
