@@ -118,9 +118,19 @@ test('encrypted vault stores four assessment domains and item-level retention wi
 
   await page.locator('#vaultLock').click();
   expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(1);
+  await expect(page.locator('#rows')).toBeEmpty();
+  await expect(page.locator('#summary')).toBeEmpty();
+  await expect(page.locator('#wordGrid')).toBeEmpty();
+  await expect(page.locator('#itemScoreRows')).toBeEmpty();
+  await expect(page.locator('#code')).toHaveValue('');
+  await expect(page.locator('#preListen')).toHaveValue('');
+  await expect(page.locator('#approvalState')).toContainText('المراجعة غير مكتملة');
+  await expect(page.locator('#readiness')).toContainText('السجل مقفل');
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
   await expect(page.locator('#rows')).toContainText('P01');
+  await expect(page.locator('#group')).toHaveValue('app');
+  await expect(page.locator('#pair')).toHaveValue('1');
   expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(2);
 });
 
