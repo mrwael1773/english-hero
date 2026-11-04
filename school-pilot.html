@@ -80,8 +80,9 @@ function clearWorkspaceData(){
   ['rows','summary','wordGrid','itemScoreRows'].forEach(id=>$(id).replaceChildren());
   $('participantForm').reset();
   document.querySelectorAll('#workspace input, #workspace select, #workspace textarea').forEach(el=>{
+    if(el.disabled)return;
     if(el.type==='checkbox')el.checked=false;
-    else if(el.id!=='delayedForm')el.value='';
+    else el.value='';
   });
   ['formStatus','outageStatus','voiceStatus'].forEach(id=>$(id).textContent='');
   $('approvalState').textContent='المراجعة غير مكتملة';
