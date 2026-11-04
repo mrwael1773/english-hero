@@ -33,7 +33,7 @@ jobs:
           inline_count = 0
           for page_path in ["index.html", "grammar-lesson.html"]:
               html = Path(page_path).read_text(encoding="utf-8")
-              scripts = re.findall(r"<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>", html, re.I)
+              scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
               for attrs, script in scripts:
                   # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
                   if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
