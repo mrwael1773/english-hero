@@ -210,27 +210,45 @@
   const renderGrammarAcademy = () => {
     const host = $('grammarLibrary');
     if (!host || $('grammarAcademy')) return;
-    const section = document.createElement('section'); section.id = 'grammarAcademy'; section.className = 'section';
-    const title = document.createElement('h2'); title.textContent = '🎓 أكاديمية القواعد — تعلّم بالتدرّج';
-    const intro = document.createElement('p'); intro.className = 'muted'; intro.textContent = 'افتح درسًا، اقرأ الشرح والأمثلة، ثم اختبر فهمك. ابدأ بالأساسيات قبل الانتقال إلى القواعد الأصعب.';
-    const grid = document.createElement('div'); grid.className = 'grid'; grid.id = 'grammarAcademyGrid';
-    section.append(title,intro,grid); host.parentElement.append(section);
+    const section = document.createElement('section');
+    section.id = 'grammarAcademy';
+    section.className = 'section';
+    const title = document.createElement('h2');
+    title.textContent = '🎓 المسار التأسيسي — ابدأ من الأساسيات';
+    const intro = document.createElement('p');
+    intro.className = 'muted';
+    intro.textContent = 'هذه عشر محطات مقترحة للمبتدئ. افتح كل محطة في صفحة شرح مستقلة، ثم أكمل أمثلتها وتحدّيها القصير.';
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    grid.id = 'grammarAcademyGrid';
+    const routeSlugs = [
+      'g-subject-pronouns','g-be-verb','g-present-simple','g-present-continuous',
+      'g-past-simple','g-future-will','g-question-words','g-place-prepositions',
+      'g-comparatives','g-can-cant'
+    ];
     grid.replaceChildren(...grammarLessons.map((lesson,index) => {
-      const card = document.createElement('article'); card.className = 'tile';
-      const heading = document.createElement('h3'); heading.textContent = (index+1) + '. ' + lesson[0];
-      const desc = document.createElement('p'); desc.textContent = lesson[2];
-      const button = document.createElement('button'); button.type='button'; button.className='btn outline full'; button.textContent='افتح الدرس';
-      const detail = document.createElement('div'); detail.className='eh-grammar-detail'; detail.hidden=true;
-      const formula = document.createElement('p'); formula.innerHTML='<b>القاعدة:</b> ';
-      const formulaText = document.createElement('span'); formulaText.textContent=lesson[1]; formula.append(formulaText);
-      const ex1 = document.createElement('div'); ex1.className='eh-example'; ex1.textContent=lesson[3];
-      const ex2 = document.createElement('div'); ex2.className='eh-example'; ex2.textContent=lesson[4];
-      const tip = document.createElement('p'); tip.textContent='💡 '+lesson[5];
-      const quizButton = document.createElement('button'); quizButton.type='button'; quizButton.className='btn primary'; quizButton.textContent='اختبر فهمك';
-      quizButton.addEventListener('click',()=>{if(typeof page==='function')page('training');if(typeof startQuiz==='function')startQuiz('grammar',reviewedAcademyQuestions[index]);});
-      detail.append(formula,ex1,ex2,tip,quizButton); button.addEventListener('click',()=>{detail.hidden=!detail.hidden;button.textContent=detail.hidden?'افتح الدرس':'إخفاء الدرس';});
-      card.append(heading,desc,button,detail); return card;
+      const detail = window.EnglishHeroLessons?.grammar?.find(item => item.slug === routeSlugs[index]);
+      const card = document.createElement('a');
+      card.className = 'tile eh-grammar-path-link';
+      card.href = 'grammar-lesson.html#' + routeSlugs[index];
+      card.setAttribute('aria-label','افتح درس ' + (detail?.title || lesson[0]));
+      card.style.cssText = 'display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;min-height:160px';
+      const meta = document.createElement('span');
+      meta.className = 'tag';
+      meta.textContent = 'المحطة ' + (index+1);
+      const heading = document.createElement('h3');
+      heading.textContent = detail?.title || lesson[0];
+      const desc = document.createElement('p');
+      desc.textContent = detail?.summary || lesson[2];
+      const open = document.createElement('span');
+      open.className = 'small';
+      open.style.cssText = 'margin-top:auto;color:var(--mint);font-weight:850';
+      open.textContent = 'افتح صفحة الدرس ←';
+      card.append(meta,heading,desc,open);
+      return card;
     }));
+    section.append(title,intro,grid);
+    host.parentElement.insertBefore(section,host);
   };
   const addExam = () => {
     const root = $('trainingModes');
