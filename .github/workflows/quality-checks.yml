@@ -52,6 +52,10 @@ jobs:
           node --check config.js
           node --check cloud-sync.js
           node --check sw.js
+          node --check pro-dashboard.js
+          node --check learning-expansion.js
+          node --check english-hero-plus.js
+          node --check writing-practice.js
 
       - name: Validate JSON data and vocabulary count
         run: |
