@@ -6,7 +6,7 @@
   });
 
   const grammar = [
-    lesson('g-subject-pronouns','ضمائر الفاعل','تعرّف على الكلمة التي تخبرنا: من الذي يفعل؟','بدل أن تكرر اسم وائل في كل جملة، تستطيع أن تقول He. الضمير يختصر الاسم ويجعل كلامك أسهل.','Subject + verb',
+    lesson('g-subject-pronouns','ضمائر الفاعل','تعرّف على الكلمة التي تخبرنا: من الذي يفعل؟','بدل أن تكرر اسم أحمد في كل جملة، تستطيع أن تقول He. الضمير يختصر الاسم ويجعل كلامك أسهل.','Subject + verb',
       ['اسأل نفسك: من يقوم بالفعل؟ هذا هو الفاعل.','استخدم I للمتكلم، وyou للمخاطب، وhe أو she للشخص، وit لغير العاقل غالبًا.','استخدم we لمجموعة فيها المتكلم، وthey لمجموعة أخرى.'],
       [{en:'I play football.',ar:'أنا ألعب كرة القدم.',focus:'I'},{en:'Mona is kind. She helps her friends.',ar:'منى لطيفة. هي تساعد صديقاتها.',focus:'She'},{en:'The books are new. They are interesting.',ar:'الكتب جديدة. إنها ممتعة.',focus:'They'}],
       {wrong:'Ahmed is a student. Ahmed studies English.',right:'Ahmed is a student. He studies English.',why:'نستخدم He بدل تكرار اسم أحمد لأنه شخص مذكر واحد.'},
