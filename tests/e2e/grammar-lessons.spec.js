@@ -67,3 +67,20 @@ test('unknown lesson slugs show a safe fallback instead of a broken page', async
   await expect(page.locator('#lessonRoot')).toContainText('لم نعثر على هذا الدرس');
   await expect(page.locator('#lessonRoot a')).toHaveAttribute('href', './index.html');
 });
+
+test('all 47 grammar and tense lesson slugs resolve to their own page content', async ({ page }) => {
+  await page.goto('/grammar-lesson.html#g-subject-pronouns');
+  const lessons = await page.evaluate(() => window.EnglishHeroLessons.all.map(item => ({
+    slug: item.slug,
+    title: item.title
+  })));
+  expect(lessons).toHaveLength(47);
+  expect(new Set(lessons.map(item => item.slug)).size).toBe(47);
+
+  for (const lesson of lessons) {
+    await page.evaluate(slug => { window.location.hash = slug; }, lesson.slug);
+    await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
+    await expect(page.locator('#examples .example')).toHaveCount(3);
+    await expect(page.locator('#challenge .option')).toHaveCount(3);
+  }
+});
