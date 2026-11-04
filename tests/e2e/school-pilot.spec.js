@@ -129,6 +129,8 @@ test('encrypted vault stores four assessment domains and item-level retention wi
   await page.locator('#vaultPassword').fill('school-pilot-passphrase-2026');
   await page.locator('#vaultOpen').click();
   await expect(page.locator('#rows')).toContainText('P01');
+  await expect(page.locator('#group')).toHaveValue('app');
+  await expect(page.locator('#pair')).toHaveValue('1');
   expect(await page.evaluate(() => window.__schoolPilotDeriveKeyCalls)).toBe(2);
 });
 
