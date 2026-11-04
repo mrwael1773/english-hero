@@ -334,3 +334,16 @@ test('review sync keeps the newest per-word state and does not resurrect resolve
   expect(result.newerPracticeMisses['0-0']).toBe(true);
   expect(result.legacy['0-0'].stage).toBe('practice');
 });
+
+
+test('lesson bookmark action is clearly labelled as adding to review, not saving or mastering', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.page('courses'));
+  await page.locator('#courseGrid button').first().click();
+  await expect(page.locator('#bookmarkWord')).toContainText('أضف للمراجعة');
+  await page.locator('#bookmarkWord').click();
+  await expect(page.locator('#bookmarkWord')).toContainText('في المراجعة');
+  await expect(page.locator('#quizArea')).toBeHidden();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(saved.masteredLessons || []).not.toContain(0);
+});
