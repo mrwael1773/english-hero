@@ -1,8 +1,7 @@
--- Applied to the English Hero Supabase project on 2026-10-26.
--- Restrict the event-trigger helper to database administration.
+-- Keep the database event-trigger helper private to database administration.
 REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;
 
--- Keep the learner's row isolated while avoiding repeated auth.uid() evaluation.
+-- Cache auth.uid() per statement rather than reevaluating it for every row.
 DROP POLICY IF EXISTS "Learners can insert their own progress" ON public.learning_progress;
 CREATE POLICY "Learners can insert their own progress"
   ON public.learning_progress FOR INSERT TO authenticated
