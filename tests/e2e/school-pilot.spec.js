@@ -289,3 +289,36 @@ test('shows retention as uncomputable when the pooled denominator is zero', asyn
   await expect(page.locator('#summary')).toContainText('غير قابل للحساب (0/0)');
   await expect(page.locator('#rows')).toContainText('غير قابل للحساب (0/0)');
 });
+
+
+test('shows the candidate vocabulary in the teachers document order and avoids unapproved automatic expansion gates', async ({ page }) => {
+  await openVault(page);
+  const words = await page.locator('#wordGrid .word').evaluateAll(cards => cards.map(card => ({
+    word: card.querySelector('strong')?.textContent?.trim(),
+    week: card.querySelector('.tag')?.textContent?.trim()
+  })));
+  expect(words).toEqual([
+    { word: 'library', week: 'الأسبوع 1' },
+    { word: 'borrow', week: 'الأسبوع 1' },
+    { word: 'return', week: 'الأسبوع 1' },
+    { word: 'friend', week: 'الأسبوع 1' },
+    { word: 'teacher', week: 'الأسبوع 1' },
+    { word: 'quiet', week: 'الأسبوع 2' },
+    { word: 'early', week: 'الأسبوع 2' },
+    { word: 'late', week: 'الأسبوع 2' },
+    { word: 'arrive', week: 'الأسبوع 2' },
+    { word: 'leave', week: 'الأسبوع 2' },
+    { word: 'morning', week: 'الأسبوع 3' },
+    { word: 'evening', week: 'الأسبوع 3' },
+    { word: 'breakfast', week: 'الأسبوع 3' },
+    { word: 'lunch', week: 'الأسبوع 3' },
+    { word: 'water', week: 'الأسبوع 3' },
+    { word: 'bread', week: 'الأسبوع 4' },
+    { word: 'ticket', week: 'الأسبوع 4' },
+    { word: 'station', week: 'الأسبوع 4' },
+    { word: 'open', week: 'الأسبوع 4' },
+    { word: 'close', week: 'الأسبوع 4' }
+  ]);
+  await expect(page.locator('#readiness')).toContainText('لا توجد عتبات نجاح أو قرار توسع آلي معتمد');
+  await expect(page.locator('#readiness')).not.toContainText('12/12 متحققة');
+});
