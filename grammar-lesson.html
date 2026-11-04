@@ -172,6 +172,7 @@
           const qfooter = safeText('div','quiz-footer');
           const qscore = safeText('span','quiz-count','');
           const qnext = safeText('button','btn primary','السؤال التالي ←');
+          qhead.append(qlabel,qcounter);
           qnext.type='button'; qnext.disabled=true;
           qfooter.append(qscore,qnext);
           target.append(qhead,qtrack,qtext,qoptions,qfeedback,qfooter);
