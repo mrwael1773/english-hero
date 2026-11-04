@@ -30,20 +30,20 @@ jobs:
           import re
           from pathlib import Path
 
-          html = Path("index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
-          inline_scripts = []
-          for attrs, script in scripts:
-              # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
-              if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
-                  continue
-              if script.strip():
-                  inline_scripts.append(script)
-          if not inline_scripts:
-              raise SystemExit("No inline JavaScript blocks found in index.html")
-          for i, script in enumerate(inline_scripts, 1):
-              Path(f"/tmp/english-hero-inline-{i}.js").write_text(script, encoding="utf-8")
-          print(f"Extracted {len(inline_scripts)} inline JavaScript block(s).")
+          inline_count = 0
+          for page_path in ["index.html", "grammar-lesson.html"]:
+              html = Path(page_path).read_text(encoding="utf-8")
+              scripts = re.findall(r"<script\\b([^>]*)>([\\s\\S]*?)</script\\s*>", html, re.I)
+              for attrs, script in scripts:
+                  # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
+                  if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
+                      continue
+                  if script.strip():
+                      inline_count += 1
+                      Path(f"/tmp/english-hero-inline-{inline_count}.js").write_text(script, encoding="utf-8")
+          if not inline_count:
+              raise SystemExit("No inline JavaScript blocks found in project HTML pages")
+          print(f"Extracted {inline_count} inline JavaScript block(s) from project HTML pages.")
           PY
           for file in /tmp/english-hero-inline-*.js; do
             echo "Checking $file"
@@ -55,6 +55,7 @@ jobs:
           node --check pro-dashboard.js
           node --check learning-expansion.js
           node --check english-hero-plus.js
+          node --check grammar-lessons.js
 
       - name: Validate JSON data and vocabulary count
         run: |
