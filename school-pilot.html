@@ -79,7 +79,9 @@ $('vaultOpen').onclick=async()=>{const p=$('vaultPassword').value;if(p.length<12
 function clearWorkspaceData(){
   ['rows','summary','wordGrid','itemScoreRows'].forEach(id=>$(id).replaceChildren());
   $('participantForm').reset();
-  document.querySelectorAll('#workspace input, #workspace select, #workspace textarea').forEach(el=>{
+  // participantForm.reset() restores each select's valid default option.
+  // Clear entered values without setting selects to an invalid empty value.
+  document.querySelectorAll('#workspace input, #workspace textarea').forEach(el=>{
     if(el.type==='checkbox')el.checked=false;
     else if(el.disabled&&el.getAttribute('aria-label')==='صيغة المؤجل C')el.value='C';
     else el.value='';
