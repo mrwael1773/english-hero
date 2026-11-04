@@ -30,22 +30,24 @@ jobs:
           import re
           from pathlib import Path
 
-          html = Path("index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
-          inline_scripts = []
-          for attrs, script in scripts:
-              # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
-              if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
-                  continue
-              if script.strip():
-                  inline_scripts.append(script)
-          if not inline_scripts:
-              raise SystemExit("No inline JavaScript blocks found in index.html")
-          for i, script in enumerate(inline_scripts, 1):
-              Path(f"/tmp/english-hero-inline-{i}.js").write_text(script, encoding="utf-8")
-          print(f"Extracted {len(inline_scripts)} inline JavaScript block(s).")
+          for page in ("index.html", "teacher-pilot.html"):
+              html = Path(page).read_text(encoding="utf-8")
+              scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
+              inline_scripts = []
+              for attrs, script in scripts:
+                  # JSON-LD is structured data, not JavaScript; external scripts are checked separately.
+                  if "src=" in attrs.lower() or "application/ld+json" in attrs.lower():
+                      continue
+                  if script.strip():
+                      inline_scripts.append(script)
+              if not inline_scripts:
+                  raise SystemExit(f"No inline JavaScript blocks found in {page}")
+              for i, script in enumerate(inline_scripts, 1):
+                  safe_page = page.replace("/", "-")
+                  Path(f"/tmp/english-hero-{safe_page}-{i}.js").write_text(script, encoding="utf-8")
+              print(f"{page}: extracted {len(inline_scripts)} inline JavaScript block(s).")
           PY
-          for file in /tmp/english-hero-inline-*.js; do
+          for file in /tmp/english-hero-*.js; do
             echo "Checking $file"
             node --check "$file"
           done
