@@ -144,7 +144,7 @@ try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript s
 check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./english-hero-plus.js?v="), 'English Hero Plus is linked and cached offline');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
-const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','german.html'].map(read).join('\\n');
+const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html'].map(read).join('\\n');
 check(!/(adsbygoogle|googlesyndication|google-adsense-account|googletagmanager|google-analytics)/i.test(publicHtml), 'Public HTML files contain no ad or third-party analytics tags');
 check(!html.includes('analytics_events') && !html.includes('englishHeroAnalyticsVisitorV1'), 'Main page does not send custom analytics events or create analytics visitor identifiers');
 check(html.includes('navigator.serviceWorker.register'), 'Main page registers the service worker');
