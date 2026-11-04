@@ -167,6 +167,23 @@ input,select,textarea,button{max-width:100%;min-width:0}
 .eh-world{position:relative;overflow:hidden;border:1px solid #44567e;border-radius:24px;padding:20px;margin-top:16px;background:radial-gradient(ellipse at 85% 8%,#40346a88,transparent 48%),linear-gradient(155deg,#172b46,#121729);box-shadow:0 14px 36px #0003}
 .eh-world-header{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}.eh-world-header h2{margin:5px 0}.eh-world-tag{font-size:12px;color:#b7e8ef}.eh-world-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}.eh-world-node{border:1px solid #46577c;border-radius:18px;padding:14px 10px;min-height:145px;background:#20334dbb;color:inherit;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;transition:transform .2s,box-shadow .2s}.eh-world-node:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 10px 28px #080c1d}.eh-world-node:focus-visible{outline:3px solid #6de6c3;outline-offset:2px}.eh-world-node strong{font-size:14px}.eh-world-node small{color:#b7cbe3;line-height:1.45}.eh-world-node .eh-emoji{font-size:30px}.eh-world-node.done{border-color:#6de6c3;background:#17433f}.eh-world-node.current{border-color:#ffc37a;background:#443a38;box-shadow:0 0 0 2px #ffc37a55}.eh-world-node.locked{opacity:.6;background:#1a263a}.eh-world-progress{height:10px;background:#0a1425;border-radius:99px;overflow:hidden;margin:14px 0 8px}.eh-world-progress>i{display:block;height:100%;background:linear-gradient(90deg,#6de6c3,#9a87ff);border-radius:inherit;transition:width .3s}.eh-world-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.eh-world-foot p{margin:4px 0;color:#c8d7ed;font-size:13px}.eh-world-next{padding:10px 18px;border:0;border-radius:12px;background:#6de6c3;color:#0a1523;font-weight:850}@media(max-width:640px){.eh-world{padding:14px}.eh-world-track{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.eh-world-node{min-height:132px;padding:10px 7px}}
 </style>
+
+<style>
+.learning-rule-card{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:220px;height:100%;color:var(--ink)!important;text-decoration:none!important;border-color:#3c4d6b;background:radial-gradient(circle at 95% 0%,#a394ff14,transparent 38%),linear-gradient(155deg,#1d2c45,#141f33);transition:transform .2s,border-color .2s,box-shadow .2s}
+.learning-rule-card:hover,.learning-rule-card:focus-visible{transform:translateY(-3px);border-color:var(--mint);box-shadow:0 14px 30px #050a1733}
+.learning-rule-card h3{font-size:18px;line-height:1.5;margin:0;color:var(--ink)}
+.learning-rule-card p{margin:0;line-height:1.75;flex:1}
+.learning-rule-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.learning-rule-duration{font-size:11px;color:var(--muted);white-space:nowrap}
+.learning-rule-formula{direction:ltr;text-align:left;unicode-bidi:plaintext;overflow-wrap:anywhere;border:1px solid #3a4a68;background:#101a2c;border-radius:12px;padding:10px 12px;color:#d8d2ff;font-size:12px;font-weight:750;line-height:1.55}
+.learning-rule-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--mint);font-size:12px;font-weight:900;padding-top:3px}
+.learning-rule-mark{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:#71e5c51c;border:1px solid #71e5c538;font-size:16px}
+.light .learning-rule-card{background:linear-gradient(155deg,#fff,#edf2ff);border-color:#d5deef;color:#172033!important}
+.light .learning-rule-card h3{color:#172033}.light .learning-rule-formula{background:#f2f0ff;color:#473a93;border-color:#ded8ff}
+@media(max-width:620px){.learning-rule-card{min-height:200px;padding:16px}.learning-rule-card h3{font-size:16px}.learning-rule-formula{font-size:11px;padding:9px}}
+</style>
+<script src="./grammar-lessons.js?v=1"></script>
+
 </head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
   <div style="text-align:center; padding:12px; margin:10px 0 20px;">
   <a href="privacy.html">سياسة الخصوصية</a>
@@ -236,8 +253,8 @@ input,select,textarea,button{max-width:100%;min-width:0}
 </section>
 <section class="view" id="lesson"><button class="btn ghost" data-page="courses">→ كل الدروس</button><div class="panel" style="margin-top:15px"><div class="row between"><h2 id="lessonTitle"></h2><span class="tag" id="lessonTag"></span></div><p class="muted" id="lessonDesc"></p><div class="progress"><i id="lessonProgress"></i></div><p class="small muted" id="lessonStep"></p><div class="flash"><div class="eyebrow" id="wordKind">NEW WORD</div><h1 id="wordEnglish"></h1><p id="wordArabic"></p><p id="wordExample" class="small" style="direction:ltr;color:#d0e2f8"></p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn ghost" id="sayWord">🔊 استمع</button><button class="btn ghost" id="bookmarkWord">☆ أضف للمراجعة</button></div></div><div class="row between"><button class="btn outline" id="prevWord">السابق</button><button class="btn primary" id="nextWord">التالي ←</button></div></div></section>
 <section class="view" id="learningHub"><div class="row between"><div><span class="eyebrow">LEARNING HUB</span><h2>📚 مركز التعلّم</h2><p class="muted">اختر ما تريد تعلّمه اليوم: الكلمات والمفردات أو القواعد أو الأزمنة.</p></div><span class="launch-mark" aria-hidden="true">✦</span></div><div class="grid learning-options"><button class="tile" data-page="courses" style="cursor:pointer"><div class="emoji">🔤</div><h3>الكلمات والمفردات</h3><p>تعلّم كلمات جديدة، وابحث في القاموس، واحفظ الكلمات للمراجعة.</p><span class="tag">دخول إلى المفردات ←</span></button><button class="tile" data-page="grammarView" style="cursor:pointer"><div class="emoji">📘</div><h3>القواعد الإنجليزية</h3><p>افهم القواعد الأساسية مع شرح عربي وأمثلة إنجليزية واضحة.</p><span class="tag">دخول إلى القواعد ←</span></button><button class="tile" data-page="tensesView" style="cursor:pointer"><div class="emoji">⏳</div><h3>الأزمنة الإنجليزية</h3><p>تعلّم استخدام الأزمنة وصيغها، مع أمثلة تساعدك على تكوين الجمل.</p><span class="tag">دخول إلى الأزمنة ←</span></button></div></section>
-<section class="view" id="grammarView"><h2>📘 القواعد الإنجليزية</h2><p class="muted">شرح مبسّط بالعربية مع أمثلة واضحة.</p><div class="grid" id="grammarLibrary"></div></section>
-<section class="view" id="tensesView"><h2>⏳ الأزمنة الإنجليزية</h2><p class="muted">تعرّف على زمن الجملة، استخدامه، وطريقة تكوينه.</p><div class="grid" id="tensesLibrary"></div></section>
+<section class="view" id="grammarView"><div class="row between"><h2>📘 مكتبة القواعد الإنجليزية</h2><span class="chip">37 درسًا تفاعليًا</span></div><p class="muted">اختر أي قاعدة لفتح درس مستقل يشرحها خطوة بخطوة، ثم تدرب عليها بتحدٍّ قصير.</p><div class="grid" id="grammarLibrary"></div></section>
+<section class="view" id="tensesView"><div class="row between"><h2>⏳ أكاديمية الأزمنة</h2><span class="chip">10 أزمنة ودروس</span></div><p class="muted">افهم متى تستخدم الزمن، وكيف تبني الجملة، ثم اختبر نفسك في صفحة خاصة لكل زمن.</p><div class="grid" id="tensesLibrary"></div></section>
 <section class="view" id="training"><div class="row between"><h2>🧩 مركز التحديات</h2><span class="chip">تعلم بالممارسة</span></div><div class="grid" id="trainingModes"></div><div id="quizArea" class="panel hidden" style="margin-top:18px"><div class="row between"><h3 id="quizHeading"></h3><button class="btn ghost" id="quitQuiz">إغلاق ✕</button></div><p class="muted" id="quizCounter"></p><div class="progress"><i id="quizProgress"></i></div><h2 id="question" style="margin-top:25px;direction:ltr;text-align:center"></h2><p id="questionHint" class="muted center"></p><div id="answerArea" class="answers"></div><div id="quizFeedback" class="feedback hidden" aria-live="polite"></div><button id="quizNext" class="btn primary full hidden">التالي ←</button></div></section>
 <section class="view" id="practice">
 <div class="row between"><h2>🎭 محاكي المواقف اليومية</h2><span class="tag">تحدّث بثقة</span></div>
@@ -1830,59 +1847,33 @@ $('lightMode').addEventListener('change',e=>{state.theme=e.target.checked?'light
 $('speechRate').addEventListener('change',e=>{const rate=Number(e.target.value);if(![0.7,0.9,1].includes(rate))return;state.rate=rate;save();$('settingsStatus').textContent='تم حفظ سرعة النطق: '+e.target.selectedOptions[0].textContent+'. اضغط «تجربة سرعة النطق» لسماعها.'});
 $('testSpeechRate').addEventListener('click',()=>{state.rate=Number($('speechRate').value);save();speak('Hello! This is a test of your English pronunciation speed.')});$('exportData').onclick=()=>{const b=new Blob([JSON.stringify({version:3,data:state},null,2)],{type:'application/json'}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download='english-hero-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};$('importData').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const v=JSON.parse(await f.text());if(!v||v.version!==3||!v.data||typeof v.data!=='object'||!Array.isArray(v.data.completed)||!Array.isArray(v.data.saved))throw Error('format');if(!confirm('استبدال التقدم الحالي بالنسخة المستوردة؟'))return;state={...defaults(),...v.data};state.xp=Math.max(0,Number.isFinite(Number(state.xp))?Math.floor(Number(state.xp)):0);state.best=Math.min(100,Math.max(0,Number.isFinite(Number(state.best))?Math.floor(Number(state.best)):0));state.quizzes=Math.max(0,Number.isFinite(Number(state.quizzes))?Math.floor(Number(state.quizzes)):0);state.streak=Math.max(0,Number.isFinite(Number(state.streak))?Math.floor(Number(state.streak)):0);state.completed=Array.isArray(state.completed)?[...new Set(state.completed.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))]:[];state.masteredLessons=normalizeMasteredLessons(state.masteredLessons);state.lessonStarted=Array.isArray(state.lessonStarted)?[...new Set(state.lessonStarted.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))]:[];state.lessonTrained=Array.isArray(state.lessonTrained)?[...new Set(state.lessonTrained.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))]:[];state.saved=Array.isArray(state.saved)?[...new Set(state.saved.filter(id=>Boolean(wordMap[id])))]:[];state.misses=state.misses&&typeof state.misses==='object'&&!Array.isArray(state.misses)?Object.fromEntries(Object.entries(state.misses).filter(([id,v])=>Boolean(wordMap[id])&&Boolean(v))):{};state.review=state.review&&typeof state.review==='object'&&!Array.isArray(state.review)?Object.fromEntries(Object.entries(state.review).filter(([id])=>Boolean(wordMap[id]))):{};state.daily={};state.theme=state.theme==='light'?'light':'dark';state.rate=[0.7,0.9,1].includes(Number(state.rate))?Number(state.rate):0.9;save();renderCourses();renderHome();renderProfile();toast('تم استيراد التقدم')}catch{toast('الملف غير صالح أو غير متوافق')}finally{e.target.value=''}};$('resetData').onclick=()=>{if(!confirm('هل تريد حذف تقدمك بالكامل؟ لا يمكن التراجع إلا بوجود نسخة احتياطية.'))return;state=defaults();save();theme();renderCourses();renderHome();renderProfile();toast('تم حذف التقدم')};
 
-const grammarLessons=[
-['ضمائر الفاعل','I, you, he, she, it, we, they','نستخدمها لتحديد من يقوم بالفعل.','I play football. = أنا ألعب كرة القدم.'],
-['فعل be: am / is / are','I am, he is, they are','نستخدم be مع الاسم أو الصفة أو المكان.','She is happy. / They are at school.'],
-['المضارع البسيط','فاعل + فعل؛ مع he/she/it نضيف s غالبًا','للعادات والحقائق والأمور المتكررة.','He plays football every day.'],
-['المضارع المستمر','am/is/are + verb-ing','لشيء يحدث الآن أو حول الوقت الحالي.','I am studying now.'],
-['الماضي البسيط','الفعل الماضي؛ والنفي did not + المصدر','لحدث انتهى في الماضي.','We visited our uncle yesterday.'],
-['الماضي المستمر','was/were + verb-ing','لفعل كان مستمرًا في وقت ماضٍ.','I was reading at eight.'],
-['المستقبل بـ will','will + المصدر','للتوقعات والقرارات التي تتخذ وقت الكلام.','I will help you.'],
-['المستقبل بـ going to','am/is/are going to + المصدر','للخطط أو النوايا، وللتوقع المبني على دليل.','I am going to learn English.'],
-['Present perfect','have/has + التصريف الثالث','لخبرة أو حدث له صلة بالحاضر.','I have finished my homework.'],
-['أدوات السؤال','what, where, when, why, who, how','تأتي أداة السؤال غالبًا في بداية السؤال.','Where do you live?'],
-['a / an / the','a قبل صوت ساكن، an قبل صوت متحرك، the لشيء محدد','اختيار الأداة يعتمد على الصوت والمعنى.','an apple / a book / the sun'],
-['حروف الجر للوقت','at للساعة، on لليوم والتاريخ، in للشهر والسنة والفترة','تساعدنا على تحديد وقت الحدث.','at 6:30 / on Friday / in July'],
-['المعدود وغير المعدود','many مع المعدود، much مع غير المعدود','انتبه إلى نوع الاسم عند السؤال عن الكمية.','many books / much water'],
-['like + ing','like + verb-ing أو like + to + verb','كلاهما صحيح للتعبير عن التفضيل.','I like playing football.'],
-['المقارنة','صفة قصيرة + er / more + صفة طويلة','نستخدمها للمقارنة بين شيئين.','Ali is taller than Omar.'],
-['الظروف','غالبًا نضيف -ly إلى الصفة لتكوين الظرف','الظرف يوضح كيف يحدث الفعل، لكن توجد استثناءات.','She speaks slowly.'],
-['النفي بـ do not / does not','do not أو don’t مع I/you/we/they؛ وdoes not أو doesn’t مع he/she/it','بعد don’t وdoesn’t نستخدم الفعل بصورته الأساسية دون s.','He doesn’t play tennis.'],
-['أسئلة المضارع البسيط','Do/Does + الفاعل + المصدر؟','نستخدم Does مع he/she/it، ثم يأتي الفعل دون s.','Does she speak English?'],
-['there is / there are','There is للمفرد، وThere are للجمع','نستخدمهما لذكر وجود شيء أو أشخاص.','There are two books on the table.'],
-['have / has','have مع I/you/we/they؛ وhas مع he/she/it','للتعبير عن الملكية أو امتلاك شيء.','She has a new phone.'],
-['صفات الملكية','my, your, his, her, its, our, their','تأتي صفة الملكية قبل الاسم.','This is my book.'],
-['ضمائر المفعول','me, you, him, her, it, us, them','تأتي بعد الفعل أو حرف الجر عندما يقع الفعل على الشخص أو الشيء.','Please help me.'],
-['some و any','some غالبًا في الإثبات؛ any غالبًا في النفي والسؤال','يتغير الاستخدام بحسب نوع الجملة والمعنى.','Do you have any questions?'],
-['much و many و a lot of','many للمعدود، much لغير المعدود، وa lot of لكليهما','نختار الأداة بحسب نوع الاسم والسياق.','I have many friends.'],
-['حروف الجر للمكان','in داخل، on على سطح، under أسفل، between بين','تصف موضع شخص أو شيء.','The cat is under the table.'],
-['can و can’t','can/can’t + الفعل الأساسي','للتعبير عن القدرة أو عدمها، ولا نضيف s للفعل بعدها.','I can swim.'],
-['must و should','must للضرورة القوية؛ should للنصيحة','يأتي الفعل الأساسي بعدهما مباشرة.','You should drink water.'],
-['صيغة الأمر','الفعل الأساسي في بداية الجملة','نستخدمها للتعليمات والطلبات؛ ويمكن إضافة please للتهذيب.','Please open the window.'],
-['because و so','because يقدّم السبب؛ so يقدّم النتيجة','لا نخلط بين السبب والنتيجة في ترتيب الجملة.','I was tired, so I went to bed.'],
-['one و ones','one للمفرد بدل اسم معروف؛ ones للجمع','نستخدمهما لتجنب تكرار الاسم.','I like the blue one.'],
-['too و enough','too + صفة؛ صفة + enough','too تعني أكثر من اللازم، وenough تعني بالقدر الكافي.','This bag is too heavy.'],
-['الأفعال بعد like و enjoy','like + verb-ing أو to + verb؛ وenjoy + verb-ing','بعد enjoy نستخدم غالبًا الفعل المنتهي بـ -ing.','I enjoy reading.'],
-['الشرط الأول','If + present simple, will + base verb','لنتيجة مستقبلية محتملة إذا تحقق الشرط.','If it rains, we will stay home.'],
-['المبني للمجهول','be + past participle','نستخدمه عندما يكون الفعل أو النتيجة أهم من الفاعل.','English is spoken here.'],
-['جمل الوصل: who / which / that','who للأشخاص، which للأشياء، وthat قد تُستخدم لكليهما','تضيف معلومات عن الاسم الذي قبلها.','The boy who won is my friend.'],
-['الكلام المنقول','ننقل ما قاله شخص دون استخدام كلماته حرفيًا','قد يتغير الزمن والضمائر بحسب سياق الكلام.','She said that she was tired.'],
-['الأفعال المركبة','فعل مع حرف جر أو ظرف يكوّن معنى جديدًا','تعلّم العبارة كاملة مع مثال بدل ترجمة كل كلمة منفردة.','Please turn off the light.']
-];
-const tenseLessons=[
-['Present simple — المضارع البسيط','العادات والحقائق والجداول الثابتة.','I/you/we/they + base verb; he/she/it + verb-s.','I go to school every day.','every day, usually, often'],
-['Present continuous — المضارع المستمر','شيء يحدث الآن أو في فترة مؤقتة.','am/is/are + verb-ing.','I am reading now.','now, at the moment'],
-['Past simple — الماضي البسيط','حدث انتهى في الماضي.','فاعل + past verb؛ النفي والسؤال يستخدمان did + المصدر.','She visited Riyadh yesterday.','yesterday, last week, ago'],
-['Past continuous — الماضي المستمر','فعل كان جاريًا في لحظة بالماضي أو قطعه حدث آخر.','was/were + verb-ing.','I was sleeping when you called.','while, when, at 8 yesterday'],
-['Present perfect — المضارع التام','خبرة أو نتيجة حالية أو حدث في فترة لم تنتهِ.','have/has + past participle.','I have finished my work.','already, yet, ever, never, since, for'],
-['Past perfect — الماضي التام','حدث وقع قبل حدث آخر في الماضي.','had + past participle.','They had left before I arrived.','before, after, by the time'],
-['Future with will — المستقبل','توقع أو قرار لحظي أو وعد.','will + base verb.','I will call you later.','I think, probably, tomorrow'],
-['Going to — المستقبل المخطط','خطة أو نية أو توقع عليه دليل.','am/is/are going to + base verb.','We are going to travel next week.','plan, intend, look at those clouds'],
-['Future continuous — المستقبل المستمر','فعل سيكون مستمرًا في وقت محدد بالمستقبل.','will be + verb-ing.','At 8, I will be studying.','this time tomorrow'],
-['Present perfect continuous — المضارع التام المستمر','نشاط بدأ في الماضي وما زال مستمرًا أو أثره ظاهر.','have/has been + verb-ing.','I have been studying for two hours.','for, since, all day']
-];
-function renderLearningLibrary(id,data){const root=$(id);root.replaceChildren(...data.map(item=>{const c=document.createElement('article');c.className='tile';const h=document.createElement('h3');h.textContent=item[0];const p=document.createElement('p');p.textContent=item[1];const rule=document.createElement('p');rule.textContent='التركيب: '+item[2];const ex=document.createElement('p');ex.dir='ltr';ex.textContent=item[3];const hint=document.createElement('span');hint.className='tag';hint.textContent=item[4]||'مثال';c.append(h,p,rule,ex,hint);return c}))}
-renderLearningLibrary('grammarLibrary',grammarLessons);renderLearningLibrary('tensesLibrary',tenseLessons);
+const grammarLessons=window.EnglishHeroLessons.grammar;
+const tenseLessons=window.EnglishHeroLessons.tenses;
+function renderLearningLibrary(id,data){
+  const root=$(id);
+  if(!root)return;
+  root.replaceChildren(...data.map(item=>{
+    const card=document.createElement('a');
+    card.className='tile learning-rule-card';
+    card.href='./grammar-lesson.html#'+item.slug;
+    card.setAttribute('aria-label','افتح درس '+item.title);
+    const meta=document.createElement('div');meta.className='learning-rule-meta';
+    const level=document.createElement('span');level.className='tag';level.textContent=item.level||'مبتدئ';
+    const duration=document.createElement('span');duration.className='learning-rule-duration';duration.textContent='⏱ '+item.minutes+' دقائق';
+    meta.append(level,duration);
+    const heading=document.createElement('h3');heading.textContent=item.title;
+    const summary=document.createElement('p');summary.textContent=item.summary;
+    const formula=document.createElement('div');formula.className='learning-rule-formula';formula.dir='ltr';formula.textContent=item.formula;
+    const footer=document.createElement('div');footer.className='learning-rule-footer';
+    const call=document.createElement('span');call.textContent='افتح الدرس وتعلّم ←';
+    const mark=document.createElement('span');mark.className='learning-rule-mark';mark.textContent='↗';
+    footer.append(call,mark);
+    card.append(meta,heading,summary,formula,footer);
+    return card;
+  }));
+}
+renderLearningLibrary('grammarLibrary',grammarLessons);
+renderLearningLibrary('tensesLibrary',tenseLessons);
 
 const STUDENT_TASKS_KEY='englishHeroStudentTasksV1';
 let studentTasks=[];
@@ -1900,7 +1891,7 @@ theme();renderStats();renderCourses();renderHome();
 <script src="config.js" defer></script>
 <script src="cloud-sync.js" defer></script>
 <script src="pro-dashboard.js?v=3" defer></script>
-<script src="learning-expansion.js?v=59" defer></script>
+<script src="learning-expansion.js?v=60" defer></script>
 <script src="english-hero-plus.js?v=67" defer></script>
 
 <footer style="text-align:center; padding:20px; font-size:14px;">
@@ -1990,6 +1981,6 @@ theme();renderStats();renderCourses();renderHome();
   window.addEventListener('storage',event=>{if(event.key==='english-hero-academy-3')render()});
 })();
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=93').catch(()=>{}));}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=95').catch(()=>{}));}</script>
 </body>
 </html>

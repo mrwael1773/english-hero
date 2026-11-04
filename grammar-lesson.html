@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10172a">
+  <meta name="description" content="درس تفاعلي في قواعد اللغة الإنجليزية مع شرح عربي وأمثلة مترجمة وتحديات قصيرة.">
+  <meta name="robots" content="index,follow">
+  <title>درس القواعد | English Hero</title>
+  <style>
+    :root{color-scheme:dark;--bg:#10172a;--surface:#18243a;--surface2:#202f49;--line:#344765;--ink:#f2f6ff;--muted:#a9b8d0;--mint:#71e5c5;--purple:#a394ff;--gold:#ffd18a;--red:#ff9baf;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:22px}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 85% -8%,#37336f66,transparent 38%),radial-gradient(ellipse at 0% 38%,#17645a20,transparent 38%),var(--bg);color:var(--ink);line-height:1.8}
+    button,a{font:inherit}button{cursor:pointer}a{color:inherit}.wrap{width:min(900px,calc(100% - 28px));margin:0 auto;padding:20px 0 54px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 22px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.1px}.brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--mint));color:#11182a;font-size:22px;box-shadow:0 8px 24px #8275ef33}
+    .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.back-link,.home-link{border:1px solid var(--line);background:#1a2941;color:var(--ink);text-decoration:none;border-radius:12px;padding:9px 13px;font-size:13px;font-weight:750}.home-link{background:transparent;color:var(--muted)}
+    .hero{position:relative;overflow:hidden;border:1px solid #5a5590;border-radius:28px;padding:clamp(22px,5vw,40px);background:radial-gradient(circle at 8% 18%,#8e7cff23,transparent 33%),linear-gradient(135deg,#292953,#1a3850 72%,#173b45);box-shadow:0 20px 55px #050a174d}
+    .hero:after{content:"Aa";position:absolute;left:16px;bottom:-36px;font-size:clamp(100px,19vw,180px);line-height:1;font-weight:1000;letter-spacing:-.1em;color:#ffffff0b;direction:ltr;pointer-events:none}
+    .eyebrow{font-size:11px;letter-spacing:1.6px;color:var(--mint);font-weight:900}.hero-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:13px}.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid #ffffff24;background:#ffffff12;border-radius:99px;padding:5px 10px;font-size:12px;color:#e1eaff}.hero h1{position:relative;z-index:1;margin:0;font-size:clamp(27px,5vw,42px);line-height:1.35}.hero-summary{position:relative;z-index:1;max-width:680px;color:#d6e0f2;font-size:clamp(15px,2.3vw,18px);line-height:1.9;margin:12px 0 20px}
+    .hero-actions{position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:11px 16px;font-weight:850}.btn.primary{background:linear-gradient(110deg,#89efd2,#66cdbd);color:#102133;box-shadow:0 8px 22px #62ddbf2a}.btn.secondary{border:1px solid #ffffff44;background:#ffffff12;color:#fff}.btn:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+    .route{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:18px 0 28px}.route a{display:flex;align-items:center;gap:8px;min-width:0;text-decoration:none;border:1px solid var(--line);background:#162239;border-radius:14px;padding:10px;color:var(--muted);font-size:12px;font-weight:750}.route a span:first-child{width:25px;height:25px;flex:0 0 25px;border-radius:9px;display:grid;place-items:center;background:#283852;color:var(--mint);font-size:12px}
+    .section{margin-top:24px}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:13px}.section-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:14px;background:#273653;border:1px solid #465b7c;font-size:20px}.section-head h2{margin:0;font-size:clamp(19px,3vw,24px)}.section-head p{margin:1px 0 0;color:var(--muted);font-size:12px}
+    .concept,.formula-card,.steps,.mistake,.quiz-card,.tip-card{border:1px solid var(--line);background:linear-gradient(145deg,var(--surface),#152138);border-radius:22px;padding:clamp(17px,3vw,25px);box-shadow:0 12px 30px #050a171f}
+    .concept{display:flex;gap:15px;align-items:flex-start}.concept-emoji{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:16px;background:#4b45762b;font-size:25px}.concept h3{margin:0 0 5px;font-size:17px}.concept p{margin:0;color:#c4d1e5;line-height:1.9}
+    .formula-card{border-color:#4b5180;background:radial-gradient(circle at 90% 0%,#9b8bff20,transparent 45%),linear-gradient(145deg,#202344,#1a2e45)}.formula-label{font-size:12px;color:var(--mint);font-weight:900}.formula{direction:ltr;text-align:center;unicode-bidi:plaintext;overflow-wrap:anywhere;font-size:clamp(18px,4vw,27px);font-weight:900;line-height:1.55;padding:14px 10px;margin:8px 0 0;color:#f2edff}
+    .step-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.step{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;min-width:0}.step-no{width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;border-radius:10px;background:#3b376b;color:#c6bdff;font-weight:900;font-size:13px}.step p{margin:0;color:#d2dced;font-size:14px;line-height:1.8}
+    .example-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.example{border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:16px;min-width:0}.example-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.example-tag{font-size:11px;color:var(--mint);font-weight:850}.example-en{direction:ltr;text-align:left;font-size:clamp(17px,2.8vw,21px);font-weight:850;line-height:1.5;margin:13px 0;color:#fff;overflow-wrap:anywhere}.example-ar{color:#d0dced;font-size:14px;margin:6px 0 0}.example-ar[hidden]{display:none}.reveal{border:1px solid #4a5b7a;color:#dfeaff;background:#22324b;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800}
+    .mistake{border-color:#704957;background:linear-gradient(145deg,#302237,#1e263b)}.mistake-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mistake-side{border-radius:14px;padding:13px;background:#111b2caa;border:1px solid #ffffff12}.mistake-side small{display:block;font-weight:900;font-size:11px;margin-bottom:7px}.mistake-side.wrong small{color:var(--red)}.mistake-side.correct small{color:var(--mint)}.mistake-text{direction:ltr;text-align:left;unicode-bidi:plaintext;font-weight:850;font-size:16px;line-height:1.55;overflow-wrap:anywhere}.why{color:#ced8e8;font-size:13px;margin:12px 0 0;line-height:1.8}
+    .tip-card{display:flex;gap:13px;align-items:flex-start;border-color:#796443;background:linear-gradient(145deg,#3b3429,#1b293c)}.tip-icon{font-size:24px}.tip-card p{margin:0;color:#f2dfbd;line-height:1.85;font-weight:700}
+    .quiz-card{border-color:#4b5180;background:radial-gradient(circle at 100% 0%,#8375ed20,transparent 42%),linear-gradient(145deg,#202543,#172b41)}.quiz-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.quiz-count{font-size:12px;color:var(--mint);font-weight:900}.quiz-track{height:8px;border-radius:99px;background:#34415a;overflow:hidden;margin:12px 0 20px}.quiz-track i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--mint),var(--purple));transition:width .2s}.question{font-size:clamp(17px,3vw,21px);font-weight:850;margin:12px 0 17px;line-height:1.6}.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.option{min-height:55px;min-width:0;border:1px solid #455777;background:#263651;color:#eff4ff;border-radius:13px;padding:10px;font-weight:800;overflow-wrap:anywhere}.option:hover:not(:disabled){border-color:var(--purple);background:#31375c}.option.good{border-color:var(--mint);background:#164c46;color:#d9fff3}.option.bad{border-color:var(--red);background:#512b3d;color:#ffe3ea}.option:disabled{cursor:default;opacity:1}.feedback{margin-top:14px;padding:13px 14px;border-radius:13px;background:#112d31;border:1px solid #2c7467;color:#d9fff3;font-size:13px;line-height:1.8}.feedback.bad{background:#3b2635;border-color:#885065;color:#ffe2e9}.quiz-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}.quiz-footer button:disabled{opacity:.35;cursor:not-allowed}.quiz-result{text-align:center;padding:20px 5px}.quiz-result .score{font-size:45px;font-weight:1000;color:var(--mint);line-height:1.3}.quiz-result h3{margin:7px 0}.quiz-result p{color:var(--muted);margin:4px 0 16px}
+    .bottom-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}.lesson-neighbor{display:flex;flex-direction:column;gap:3px;text-decoration:none;border:1px solid var(--line);background:#19263e;border-radius:14px;padding:10px 13px;min-width:0;max-width:48%}.lesson-neighbor small{font-size:10px;color:var(--muted)}.lesson-neighbor strong{font-size:13px;overflow-wrap:anywhere}.lesson-neighbor.next{margin-right:auto;text-align:left}.note{color:var(--muted);font-size:11px;line-height:1.8;text-align:center;margin:22px 0 0}
+    .not-found{padding:30px 18px;text-align:center;border:1px solid var(--line);background:var(--surface);border-radius:22px}.not-found h1{font-size:25px}.not-found p{color:var(--muted)}
+    @media(max-width:680px){.wrap{width:min(100% - 22px,900px);padding-top:12px}.topbar{align-items:flex-start}.brand{font-size:14px}.brand-mark{width:38px;height:38px}.back-link,.home-link{padding:8px 10px;font-size:11px}.hero{border-radius:22px}.route{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.route a{font-size:11px}.step-grid,.example-grid{grid-template-columns:1fr}.options{grid-template-columns:1fr}.mistake-grid{grid-template-columns:1fr}.section{margin-top:21px}.concept{gap:10px}.concept-emoji{width:40px;height:40px;flex-basis:40px}.bottom-nav{align-items:stretch}.lesson-neighbor{max-width:49%;padding:9px}.lesson-neighbor strong{font-size:12px}}
+    @media(max-width:360px){.topbar{flex-direction:column}.top-actions{width:100%}.back-link,.home-link{flex:1;text-align:center}.route a{padding:8px 7px}.section-head{gap:9px}.section-icon{width:36px;height:36px;flex-basis:36px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">E</span><span>English Hero <small style="display:block;color:var(--muted);font-size:10px;font-weight:600">تعلّم خطوة بخطوة</small></span></div>
+      <div class="top-actions">
+        <button class="back-link" id="backButton" type="button">→ العودة للقائمة</button>
+        <a class="home-link" href="./index.html">الرئيسية</a>
+      </div>
+    </header>
+
+    <div id="lessonRoot">
+      <section class="not-found"><h1>جارٍ فتح الدرس…</h1><p>نجهّز لك الشرح والأمثلة والتحدي.</p></section>
+    </div>
+  </main>
+
+  <script src="./grammar-lessons.js?v=1"></script>
+  <script>
+    (function () {
+      'use strict';
+      const $ = id => document.getElementById(id);
+      const root = $('lessonRoot');
+      const safeText = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = String(text);
+        return node;
+      };
+      let activeLesson = null;
+
+      function showMissing() {
+        root.replaceChildren();
+        const panel = safeText('section','not-found');
+        panel.append(safeText('h1','', 'لم نعثر على هذا الدرس'));
+        panel.append(safeText('p','', 'ارجع إلى فهرس القواعد والأزمنة واختر الدرس الذي تريد تعلمه.'));
+        const link = safeText('a','btn primary','العودة إلى بطل الإنجليزي');
+        link.href = './index.html';
+        link.style.display = 'inline-block';
+        link.style.textDecoration = 'none';
+        panel.append(link);
+        root.append(panel);
+        document.title = 'الدرس غير متاح | English Hero';
+      }
+
+      function makeSection(id, icon, title, subtitle) {
+        const section = safeText('section','section');
+        section.id = id;
+        const head = safeText('div','section-head');
+        head.append(safeText('span','section-icon',icon));
+        const copy = document.createElement('div');
+        copy.append(safeText('h2','',title),safeText('p','',subtitle));
+        head.append(copy);
+        section.append(head);
+        return section;
+      }
+
+      function renderExamples(examples) {
+        const section = makeSection('examples','💬','شاهد القاعدة داخل جملة','اقرأ الجملة الإنجليزية أولًا، ثم اكشف معناها العربي.');
+        const grid = safeText('div','example-grid');
+        examples.forEach((item,index) => {
+          const card = safeText('article','example');
+          const top = safeText('div','example-top');
+          top.append(safeText('span','example-tag','مثال '+(index+1)));
+          if (item.focus) top.append(safeText('span','pill',item.focus));
+          const english = safeText('p','example-en',item.en);
+          english.dir = 'ltr';
+          const reveal = safeText('button','reveal','أظهر الترجمة');
+          reveal.type = 'button';
+          reveal.setAttribute('aria-expanded','false');
+          const arabic = safeText('p','example-ar',item.ar);
+          arabic.hidden = true;
+          reveal.addEventListener('click',() => {
+            arabic.hidden = !arabic.hidden;
+            reveal.textContent = arabic.hidden ? 'أظهر الترجمة' : 'أخفِ الترجمة';
+            reveal.setAttribute('aria-expanded',String(!arabic.hidden));
+          });
+          card.append(top,english,reveal,arabic);
+          grid.append(card);
+        });
+        section.append(grid);
+        return section;
+      }
+
+      function renderQuiz(questions) {
+        const section = makeSection('challenge','🎯','تحدّي القاعدة','ثلاث جولات قصيرة. اختر إجابتك، واعرف السبب فورًا.');
+        const panel = safeText('div','quiz-card');
+        const header = safeText('div','quiz-header');
+        const label = safeText('span','quiz-count','تحدّي البطل');
+        const counter = safeText('span','quiz-count','');
+        const track = safeText('div','quiz-track');
+        const fill = document.createElement('i');
+        track.append(fill);
+        header.append(label,counter);
+        const question = safeText('h3','question','');
+        const options = safeText('div','options');
+        const feedback = safeText('div','feedback','');
+        feedback.hidden = true;
+        feedback.setAttribute('aria-live','polite');
+        const footer = safeText('div','quiz-footer');
+        const score = safeText('span','quiz-count','');
+        const next = safeText('button','btn primary','السؤال التالي ←');
+        next.type = 'button';
+        next.disabled = true;
+        footer.append(score,next);
+        panel.append(header,track,question,options,feedback,footer);
+        section.append(panel);
+
+        let index = 0;
+        let points = 0;
+        let answered = false;
+
+        function finish() {
+          panel.replaceChildren();
+          const result = safeText('div','quiz-result');
+          result.append(safeText('div','score',points+' / '+questions.length));
+          result.append(safeText('h3','',points === questions.length ? 'أبدعت! إجابات كاملة 🌟' : points >= 2 ? 'أحسنت! تقدّم جميل 👏' : 'بداية جيدة، أعد المحاولة 💪'));
+          result.append(safeText('p','', 'هذه نتيجة تدريب قصير وليست حكمًا نهائيًا على إتقان القاعدة. راجع الشرح ثم جرّب مرة أخرى.'));
+          const restart = safeText('button','btn primary','إعادة التحدي');
+          restart.type = 'button';
+          restart.addEventListener('click',() => { index = 0; points = 0; answered = false; panel.replaceChildren(); renderQuizInto(panel,questions); });
+          result.append(restart);
+          panel.append(result);
+        }
+
+        function renderQuizInto(target,items) {
+          const qhead = safeText('div','quiz-header');
+          const qlabel = safeText('span','quiz-count','تحدّي البطل');
+          const qcounter = safeText('span','quiz-count','');
+          const qtrack = safeText('div','quiz-track');
+          const qfill = document.createElement('i');
+          qtrack.append(qfill);
+          const qtext = safeText('h3','question','');
+          const qoptions = safeText('div','options');
+          const qfeedback = safeText('div','feedback','');
+          qfeedback.hidden = true;
+          qfeedback.setAttribute('aria-live','polite');
+          const qfooter = safeText('div','quiz-footer');
+          const qscore = safeText('span','quiz-count','');
+          const qnext = safeText('button','btn primary','السؤال التالي ←');
+          qnext.type='button'; qnext.disabled=true;
+          qfooter.append(qscore,qnext);
+          target.append(qhead,qtrack,qtext,qoptions,qfeedback,qfooter);
+
+          function draw() {
+            answered=false;
+            const item=items[index];
+            qcounter.textContent='السؤال '+(index+1)+' من '+items.length;
+            qfill.style.width=(index/items.length*100)+'%';
+            qtext.textContent=item.text;
+            qoptions.replaceChildren();
+            qfeedback.hidden=true;
+            qfeedback.textContent='';
+            qfeedback.classList.remove('bad');
+            qscore.textContent='إجابات صحيحة: '+points;
+            qnext.disabled=true;
+            items[index].options.forEach((option,optionIndex)=>{
+              const button=safeText('button','option',option);
+              button.type='button';
+              button.addEventListener('click',()=>{
+                if(answered)return;
+                answered=true;
+                const correct=optionIndex===item.answer;
+                if(correct)points++;
+                qoptions.querySelectorAll('button').forEach((choice,i)=>{
+                  choice.disabled=true;
+                  if(i===item.answer)choice.classList.add('good');
+                  else if(i===optionIndex&&!correct)choice.classList.add('bad');
+                });
+                qfeedback.textContent=(correct?'✅ صحيح! ':'💡 ليست الإجابة الصحيحة. ')+item.explain;
+                qfeedback.classList.toggle('bad',!correct);
+                qfeedback.hidden=false;
+                qscore.textContent='إجابات صحيحة: '+points;
+                qnext.disabled=false;
+                qfill.style.width=((index+1)/items.length*100)+'%';
+              });
+              qoptions.append(button);
+            });
+          }
+          qnext.addEventListener('click',()=>{
+            if(!answered)return;
+            index++;
+            if(index>=items.length){finish();return;}
+            draw();
+          });
+          draw();
+        }
+
+        panel.replaceChildren();
+        renderQuizInto(panel,questions);
+        return section;
+      }
+
+      function renderLesson() {
+        const slug = decodeURIComponent(location.hash.replace(/^#/,'').trim());
+        const data = window.EnglishHeroLessons;
+        activeLesson = data && Array.isArray(data.all) ? data.all.find(item=>item.slug===slug) : null;
+        if(!activeLesson){showMissing();return;}
+
+        const collection=activeLesson.type==='tense'?data.tenses:data.grammar;
+        const currentIndex=collection.findIndex(item=>item.slug===activeLesson.slug);
+        const previous=collection[currentIndex-1];
+        const following=collection[currentIndex+1];
+        document.title=activeLesson.title+' | English Hero';
+
+        root.replaceChildren();
+        const hero=safeText('section','hero');
+        const meta=safeText('div','hero-meta');
+        meta.append(safeText('span','eyebrow',activeLesson.type==='tense'?'ENGLISH TENSE':'ENGLISH GRAMMAR'));
+        meta.append(safeText('span','pill',activeLesson.level));
+        meta.append(safeText('span','pill','⏱ '+activeLesson.minutes+' دقائق'));
+        hero.append(meta,safeText('h1','',activeLesson.title),safeText('p','hero-summary',activeLesson.summary));
+        const actions=safeText('div','hero-actions');
+        const start=safeText('a','btn primary','ابدأ التعلّم ↓');
+        start.href='#concept';
+        const indexLink=safeText('a','btn secondary','كل الدروس');
+        indexLink.href='./index.html';
+        actions.append(start,indexLink);
+        hero.append(actions);
+        root.append(hero);
+
+        const route=safeText('nav','route');
+        route.setAttribute('aria-label','خطوات الدرس');
+        [['1','الفكرة','concept'],['2','تركيب الجملة','formula'],['3','الأمثلة','examples'],['4','التحدّي','challenge']].forEach(item=>{
+          const a=safeText('a','','');
+          const n=safeText('span','',item[0]);
+          const t=safeText('span','',item[1]);
+          a.href='#'+item[2];a.append(n,t);route.append(a);
+        });
+        root.append(route);
+
+        const concept=makeSection('concept','💡','أولًا: افهم الفكرة','اربط القاعدة بموقف تعرفه من حياتك.');
+        const conceptCard=safeText('div','concept');
+        conceptCard.append(safeText('span','concept-emoji','🧠'));
+        const conceptCopy=document.createElement('div');
+        conceptCopy.append(safeText('h3','','تخيّل هذا الموقف'),safeText('p','',activeLesson.everyday));
+        conceptCard.append(conceptCopy);concept.append(conceptCard);root.append(concept);
+
+        const formula=makeSection('formula','🧩','ثانيًا: ابنِ الجملة','احفظ شكل الجملة بعد أن تفهم لماذا نستخدمه.');
+        const formulaCard=safeText('div','formula-card');
+        formulaCard.append(safeText('span','formula-label','شكل القاعدة'));
+        const formulaText=safeText('div','formula',activeLesson.formula);
+        formulaText.dir='ltr';
+        formulaCard.append(formulaText);formula.append(formulaCard);
+        const steps=safeText('div','step-grid');
+        activeLesson.steps.forEach((line,index)=>{
+          const item=safeText('article','step');
+          item.append(safeText('span','step-no',index+1),safeText('p','',line));
+          steps.append(item);
+        });
+        formula.append(steps);root.append(formula);
+
+        root.append(renderExamples(activeLesson.examples));
+
+        const mistake=makeSection('mistake','🛑','ثالثًا: انتبه من هذا الخطأ','قارن بين الجملة غير الصحيحة والصيغة الصحيحة.');
+        const mistakeCard=safeText('div','mistake');
+        const comparison=safeText('div','mistake-grid');
+        const wrong=safeText('div','mistake-side wrong');
+        wrong.append(safeText('small','','✕ لا تقل'),safeText('div','mistake-text',activeLesson.mistake.wrong));
+        const right=safeText('div','mistake-side correct');
+        right.append(safeText('small','','✓ قل'),safeText('div','mistake-text',activeLesson.mistake.right));
+        comparison.append(wrong,right);
+        mistakeCard.append(comparison,safeText('p','why',activeLesson.mistake.why));
+        mistake.append(mistakeCard);root.append(mistake);
+
+        const tip=safeText('aside','tip-card');
+        tip.append(safeText('span','tip-icon','✨'),safeText('p','',activeLesson.tip));
+        root.append(tip);
+
+        root.append(renderQuiz(activeLesson.questions));
+
+        const nav=safeText('nav','bottom-nav');
+        nav.setAttribute('aria-label','التنقل بين الدروس');
+        if(previous){
+          const a=safeText('a','lesson-neighbor','');
+          a.href='./grammar-lesson.html#'+previous.slug;
+          a.append(safeText('small','','الدرس السابق'),safeText('strong','',previous.title));
+          nav.append(a);
+        } else {
+          const a=safeText('a','lesson-neighbor','');
+          a.href='./index.html';
+          a.append(safeText('small','','العودة إلى الفهرس'),safeText('strong','','كل القواعد والأزمنة'));
+          nav.append(a);
+        }
+        if(following){
+          const a=safeText('a','lesson-neighbor next','');
+          a.href='./grammar-lesson.html#'+following.slug;
+          a.append(safeText('small','','الدرس التالي ←'),safeText('strong','',following.title));
+          nav.append(a);
+        } else {
+          const a=safeText('a','lesson-neighbor next','');
+          a.href='./index.html';
+          a.append(safeText('small','','انتهيت من هذا المسار'),safeText('strong','','اختر مسارًا آخر'));
+          nav.append(a);
+        }
+        root.append(nav);
+        root.append(safeText('p','note','تدرّب بهدوء. نتيجة التحدّي تساعدك على معرفة ما تحتاج إلى مراجعته، ولا تعني وحدها أنك أتقنت القاعدة.'));
+      }
+
+      $('backButton').addEventListener('click',()=>{
+        if(document.referrer){
+          try{
+            const previous=new URL(document.referrer);
+            if(previous.origin===location.origin){history.back();return;}
+          }catch(_){}
+        }
+        location.href='./index.html';
+      });
+      window.addEventListener('hashchange',renderLesson);
+      renderLesson();
+    })();
+  </script>
+</body>
+</html>
