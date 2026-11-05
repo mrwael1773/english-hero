@@ -24,6 +24,8 @@ const config = read('config.js');
 const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-20000.json');
 const grammarLessonPage = read('grammar-lesson.html');
+const grammarLibraryPage = read('grammar-library.html');
+const grammarCategoryPage = read('grammar-category.html');
 const grammarLessonsRaw = read('grammar-lessons.js');
 const migrationPath = 'supabase/migrations/20261026151420_secure_rls_auto_enable_and_optimize_progress_policies.sql';
 const migration = read(migrationPath);
@@ -39,7 +41,7 @@ check(html.includes('englishHeroStudentTasksV1') && html.includes('function rend
 const idCounts = new Map();
 for (const match of html.matchAll(/\bid=["']([^"']+)["']/g)) idCounts.set(match[1], (idCounts.get(match[1]) || 0) + 1);
 check([...idCounts.values()].every(count => count === 1), 'HTML element IDs are unique');
-for (const path of ['manifest.webmanifest', 'privacy.html', 'contact.html', 'icon.svg', 'grammar-lesson.html', 'grammar-lessons.js']) {
+for (const path of ['manifest.webmanifest', 'privacy.html', 'contact.html', 'icon.svg', 'grammar-lesson.html', 'grammar-library.html', 'grammar-category.html', 'grammar-lessons.js']) {
   check(existsSync(join(root, path)), `Required public file exists: ${path}`);
 }
 try {
@@ -64,6 +66,8 @@ check(/src="\.\/grammar-lessons\.js\?v=2"/.test(html), 'Main page loads the shar
 check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
 check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.includes("makeSection('challenge'") && grammarLessonPage.includes("setAttribute('aria-live','polite')"), 'Dedicated lesson page provides a challenge area with accessible feedback');
 check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
+check(grammarLessonPage.includes("const start=safeText('button','btn primary','ابدأ التعلّم ↓')") && grammarLessonPage.includes('formulaArabic') && grammarLessonPage.includes("safeText('p','formula-ar'"), 'Lesson start action preserves the lesson slug and each formula has an Arabic explanation');
+check(grammarLibraryPage.includes('LEARNING MAP') && grammarCategoryPage.includes('window.EnglishHeroLessons.all') && sw.includes("'./grammar-library.html'") && sw.includes("'./grammar-category.html'"), 'Grammar and tense category pages are linked and cached offline');
 check(grammarLessonPage.includes("const stepNames=['افهم الفكرة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك']") && grammarLessonPage.includes('data-step-index') && grammarLessonPage.includes('lessonStepStatus'), 'Dedicated lesson page guides students through six focused learning steps');
 check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=2'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
 try {
@@ -75,6 +79,9 @@ try {
 try {
   const lessonData = new Function('window', grammarLessonsRaw + '; return window.EnglishHeroLessons;')({});
   const allLessons = [...lessonData.grammar, ...lessonData.tenses];
+  const categorySlugs = [...grammarCategoryPage.matchAll(/'((?:g|t)-[a-z0-9-]+)'/g)].map(match => match[1]);
+  const categoryUnique = new Set(categorySlugs);
+  check(categoryUnique.size === 47 && allLessons.every(item => categoryUnique.has(item.slug)) && [...categoryUnique].every(slug => allLessons.some(item => item.slug === slug)), 'All 47 lessons appear exactly once across grammar and tense categories');
   const slugs = allLessons.map(item => item.slug);
   const validQuestions = item => Array.isArray(item.questions) && item.questions.length >= 3 &&
     item.questions.every(q => q && typeof q.text === 'string' && q.text.trim() &&

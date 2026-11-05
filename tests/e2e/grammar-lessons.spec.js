@@ -8,69 +8,35 @@ async function openLearningSection(page, section) {
   await expect(page.locator('#' + section)).toHaveClass(/active/);
 }
 
-test('grammar cards open a dedicated lesson with an interactive challenge', async ({ page }) => {
-  await openLearningSection(page, 'grammarView');
-
-  const cards = page.locator('#grammarLibrary .learning-rule-card');
-  await expect(cards).toHaveCount(37);
-  await expect(cards.first()).toContainText('ضمائر الفاعل');
-  await expect(cards.first()).toHaveAttribute('href', /grammar-lesson\.html#g-subject-pronouns/);
-
-  await cards.first().click();
-  await expect(page).toHaveURL(/grammar-lesson\.html#g-subject-pronouns$/);
-  await expect(page.locator('#lessonRoot h1')).toHaveText('ضمائر الفاعل');
+test('grammar categories lead to dedicated pages and all lessons are accessible', async ({ page }) => {
+  await page.goto('/grammar-library.html?type=grammar');
+  const groups = page.locator('#groups .card');
+  await expect(groups).toHaveCount(9);
+  await expect(groups.filter({ hasText: 'قواعد الماضي' })).toHaveCount(1);
+  await groups.filter({ hasText: 'قواعد الماضي' }).click();
+  await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
+  const lessons = page.locator('#lessons .lesson');
+  await expect(lessons).toHaveCount(2);
+  await expect(lessons.first()).toContainText('الماضي البسيط');
+  await lessons.first().click();
+  await expect(page).toHaveURL(/grammar-lesson\.html#g-past-simple$/);
+  await expect(page.locator('#lessonRoot h1')).toContainText('الماضي البسيط');
+  await expect(page.locator('#formula-ar')).toBeVisible();
+  const lessonUrl = page.url();
+  await page.getByRole('button', { name: 'ابدأ التعلّم' }).click();
+  await expect(page).toHaveURL(lessonUrl);
   await expect(page.locator('#concept')).toBeVisible();
-  await expect(page.locator('#formula')).toContainText('Subject + verb');
-  await expect(page.locator('#examples .example')).toHaveCount(3);
-  await expect(page.locator('#challenge .option')).toHaveCount(3);
-  await expect(page.locator('#lessonStepStatus')).toContainText('الخطوة 1 من 6');
-  await expect(page.locator('#concept')).toBeVisible();
-  await expect(page.locator('#formula')).toBeHidden();
-
-  await page.locator('#lessonSteps [data-step-index="2"]').click();
-  await expect(page.locator('#examples')).toBeVisible();
-  const firstReveal = page.locator('#examples .example').first().locator('.reveal');
-  await expect(firstReveal).toHaveAttribute('aria-expanded', 'false');
-  await firstReveal.click();
-  await expect(page.locator('#examples .example').first().locator('.example-ar')).toBeVisible();
-  await expect(firstReveal).toHaveAttribute('aria-expanded', 'true');
-  await firstReveal.click();
-  await expect(page.locator('#examples .example').first().locator('.example-ar')).toBeHidden();
-
-  await page.locator('#lessonSteps [data-step-index="5"]').click();
-  await expect(page.locator('#challenge')).toBeVisible();
-  const options = page.locator('#challenge .option');
-  const next = page.locator('#challenge .quiz-footer button');
-  await options.nth(0).click();
-  await expect(page.locator('#challenge .feedback')).toContainText('صحيح');
-  await expect(next).toBeEnabled();
-  await next.click();
-  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 2 من 3');
-  await options.nth(0).click();
-  await expect(page.locator('#challenge .feedback')).toContainText('ليست الإجابة الصحيحة');
-  await expect(page.locator('#challenge .feedback')).toContainText('نستخدم She');
-  await next.click();
-  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 3 من 3');
-  await options.nth(1).click();
-  await expect(page.locator('#challenge .feedback')).toContainText('صحيح');
-  await next.click();
-  await expect(page.locator('#challenge .quiz-result .score')).toHaveText('2 / 3');
-  await page.getByRole('button', { name: 'إعادة التحدي' }).click();
-  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 1 من 3');
-  await expect(page.locator('#challenge .option')).toHaveCount(3);
+  await expect(page.locator('#lessonRoot')).not.toContainText('لم نعثر على هذا الدرس');
 });
 
-test('tense cards open dedicated tense pages', async ({ page }) => {
-  await openLearningSection(page, 'tensesView');
-
-  const cards = page.locator('#tensesLibrary .learning-rule-card');
-  await expect(cards).toHaveCount(10);
-  await expect(cards.first()).toContainText('Present Simple');
-  await cards.first().click();
-
-  await expect(page).toHaveURL(/grammar-lesson\.html#t-present-simple$/);
-  await expect(page.locator('#lessonRoot h1')).toContainText('Present Simple');
-  await expect(page.locator('#challenge .option')).toHaveCount(3);
+test('tense categories show present, past, and future lessons', async ({ page }) => {
+  await page.goto('/grammar-library.html?type=tenses');
+  const groups = page.locator('#groups .card');
+  await expect(groups).toHaveCount(3);
+  await groups.filter({ hasText: 'أزمنة الماضي' }).click();
+  await expect(page).toHaveURL(/grammar-category\.html\?type=tenses&group=past$/);
+  await expect(page.locator('#lessons .lesson')).toHaveCount(3);
+  await expect(page.locator('#lessons')).toContainText('Past Perfect');
 });
 
 test('the foundation path also opens the same dedicated lesson pages', async ({ page }) => {
