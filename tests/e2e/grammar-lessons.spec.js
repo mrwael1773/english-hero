@@ -25,7 +25,7 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await page.getByRole('button', { name: 'ابدأ التعلّم' }).click();
   await expect(page).toHaveURL(lessonUrl);
   await expect(page.locator('#concept')).toBeVisible();
-  await page.locator('#lessonSteps [data-step-index="1"]').click();
+  await page.locator('#lessonSteps [data-step-index="2"]').click();
   await expect(page.locator('.formula-ar')).toBeVisible();
   await expect(page.locator('#lessonRoot')).not.toContainText('لم نعثر على هذا الدرس');
 });
@@ -81,15 +81,42 @@ test('all 47 grammar and tense lesson slugs resolve to their own page content', 
     await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
     await expect(page.locator('#examples .example')).toHaveCount(3);
     await expect(page.locator('#challenge .option')).toHaveCount(lesson.slug === 'g-present-simple' ? 6 : 3);
+    await expect(page.locator('#lessonSteps button')).toHaveCount(7);
     await page.locator('#lessonSteps [data-step-index="1"]').click();
+    await expect(page.locator('#deep-guide .guide-card')).toHaveCount(5);
+    await expect(page.locator('#deep-guide')).toContainText('متى أستخدمها؟');
+    await page.locator('#lessonSteps [data-step-index="2"]').click();
     await expect(page.locator('.formula-ar')).toBeVisible();
     await expect(page.locator('.formula-ar')).not.toBeEmpty();
   }
 });
 
+test('all 47 lessons provide their own detailed beginner guide', async ({ page }) => {
+  await page.goto('/grammar-lesson.html#g-subject-pronouns');
+  const guideAudit = await page.evaluate(() => window.EnglishHeroLessons.all.map(item => ({
+    slug: item.slug,
+    guide: item.guide && {
+      idea: item.guide.idea,
+      use: item.guide.use,
+      build: item.guide.build,
+      compare: item.guide.compare,
+      watch: item.guide.watch
+    }
+  })));
+  expect(guideAudit).toHaveLength(47);
+  for (const item of guideAudit) {
+    expect(item.guide, item.slug + ' missing guide').toBeTruthy();
+    expect(item.guide.idea.length, item.slug + ' missing idea').toBeGreaterThan(25);
+    expect(item.guide.use.length, item.slug + ' missing usage context').toBeGreaterThan(20);
+    expect(item.guide.build.length, item.slug + ' missing build steps').toBeGreaterThanOrEqual(3);
+    expect(item.guide.compare.length, item.slug + ' missing comparison').toBeGreaterThan(20);
+    expect(item.guide.watch.length, item.slug + ' missing common pitfall').toBeGreaterThan(20);
+  }
+});
+
 test('present simple explains both subject groups and all s/es/ies spelling rules', async ({ page }) => {
   await page.goto('/grammar-lesson.html#g-present-simple');
-  await page.locator('#lessonSteps [data-step-index="1"]').click();
+  await page.locator('#lessonSteps [data-step-index="2"]').click();
   const explanation = page.locator('#formula');
   await expect(explanation).toContainText('I / you / we / they');
   await expect(explanation).toContainText('he / she / it');
@@ -101,7 +128,7 @@ test('present simple explains both subject groups and all s/es/ies spelling rule
   await expect(explanation).toContainText('Does he play?');
   await expect(explanation.locator('.step')).toHaveCount(12);
 
-  await page.locator('#lessonSteps [data-step-index="5"]').click();
+  await page.locator('#lessonSteps [data-step-index="6"]').click();
   await expect(page.locator('#challenge .option')).toHaveCount(6);
   await page.locator('#challenge .option').nth(1).click();
   await expect(page.locator('#challenge .feedback')).toContainText('Mona اسم مفرد');
@@ -129,30 +156,32 @@ test('lesson navigation labels match their actual home-page destinations', async
   await expect(lastNext).toHaveAttribute('href', './index.html');
 });
 
-test('grammar lesson guides the student through six focused steps', async ({ page }) => {
+test('grammar lesson guides the student through seven focused steps', async ({ page }) => {
   await page.goto('/grammar-lesson.html#g-present-simple');
   const steps = page.locator('#lessonSteps button');
-  await expect(steps).toHaveCount(6);
+  await expect(steps).toHaveCount(7);
   await expect(page.locator('#concept')).toBeVisible();
   await expect(page.locator('#formula')).toBeHidden();
 
   await page.locator('.step-controls button').last().click();
+  await expect(page.locator('#deep-guide')).toBeVisible();
+  await page.locator('.step-controls button').last().click();
   await expect(page.locator('#formula')).toBeVisible();
   await expect(page.locator('#concept')).toBeHidden();
-  await expect(page.locator('#lessonStepStatus')).toContainText('الخطوة 2 من 6');
+  await expect(page.locator('#lessonStepStatus')).toContainText('الخطوة 3 من 7');
 
-  await steps.nth(3).click();
+  await steps.nth(4).click();
   await expect(page.locator('#mistake')).toBeVisible();
   await expect(page.locator('#examples')).toBeHidden();
 
-  await page.locator('.step-controls button').first().click();
+  await steps.nth(3).click();
   await expect(page.locator('#examples')).toBeVisible();
   await expect(page.locator('#lessonSteps button[aria-current="step"]')).toContainText('شاهد الأمثلة');
 });
 
 test('challenge feedback and retry remain functional after category navigation changes', async ({ page }) => {
   await page.goto('/grammar-lesson.html#g-subject-pronouns');
-  await page.locator('#lessonSteps [data-step-index="5"]').click();
+  await page.locator('#lessonSteps [data-step-index="6"]').click();
   const options = page.locator('#challenge .option');
   const next = page.locator('#challenge .quiz-footer button');
   await options.nth(0).click();
@@ -176,7 +205,7 @@ test('challenge feedback and retry remain functional after category navigation c
 test('continuous and perfect tense formulas include Arabic explanations', async ({ page }) => {
   for (const slug of ['t-present-continuous','t-past-continuous','t-present-perfect']) {
     await page.goto('/grammar-lesson.html#' + slug);
-    await page.locator('#lessonSteps [data-step-index="1"]').click();
+    await page.locator('#lessonSteps [data-step-index="2"]').click();
     await expect(page.locator('.formula-ar')).toBeVisible();
     await expect(page.locator('.formula-ar')).not.toBeEmpty();
   }
