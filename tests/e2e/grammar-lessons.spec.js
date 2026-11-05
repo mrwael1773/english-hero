@@ -80,11 +80,31 @@ test('all 47 grammar and tense lesson slugs resolve to their own page content', 
     await page.evaluate(slug => { window.location.hash = slug; }, lesson.slug);
     await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
     await expect(page.locator('#examples .example')).toHaveCount(3);
-    await expect(page.locator('#challenge .option')).toHaveCount(3);
+    await expect(page.locator('#challenge .option')).toHaveCount(lesson.slug === 'g-present-simple' ? 6 : 3);
     await page.locator('#lessonSteps [data-step-index="1"]').click();
     await expect(page.locator('.formula-ar')).toBeVisible();
     await expect(page.locator('.formula-ar')).not.toBeEmpty();
   }
+});
+
+test('present simple explains both subject groups and all s/es/ies spelling rules', async ({ page }) => {
+  await page.goto('/grammar-lesson.html#g-present-simple');
+  await page.locator('#lessonSteps [data-step-index="1"]').click();
+  const explanation = page.locator('#formula');
+  await expect(explanation).toContainText('I / you / we / they');
+  await expect(explanation).toContainText('he / she / it');
+  await expect(explanation).toContainText('اسم مفرد');
+  await expect(explanation).toContainText('watch → watches');
+  await expect(explanation).toContainText('study → studies');
+  await expect(explanation).toContainText('play → plays');
+  await expect(explanation).toContainText('doesn’t play');
+  await expect(explanation).toContainText('Does he play?');
+  await expect(explanation.locator('.step')).toHaveCount(12);
+
+  await page.locator('#lessonSteps [data-step-index="5"]').click();
+  await expect(page.locator('#challenge .option')).toHaveCount(6);
+  await page.locator('#challenge .option').nth(1).click();
+  await expect(page.locator('#challenge .feedback')).toContainText('Mona اسم مفرد');
 });
 
 test('lesson navigation labels match their actual home-page destinations', async ({ page }) => {
