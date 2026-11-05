@@ -69,7 +69,7 @@ check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPa
 check(grammarLessonPage.includes("const start=safeText('button','btn primary','ابدأ التعلّم ↓')") && grammarLessonPage.includes('formulaArabic') && grammarLessonPage.includes("safeText('p','formula-ar'"), 'Lesson start action preserves the lesson slug and each formula has an Arabic explanation');
 check(grammarLibraryPage.includes('LEARNING MAP') && grammarCategoryPage.includes('window.EnglishHeroLessons.all') && sw.includes("'./grammar-library.html'") && sw.includes("'./grammar-category.html'"), 'Grammar and tense category pages are linked and cached offline');
 check(grammarLessonPage.includes("const stepNames=['افهم الفكرة','تفصيل القاعدة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك']") && grammarLessonPage.includes('data-step-index') && grammarLessonPage.includes('lessonStepStatus') && grammarLessonPage.includes('activeLesson.guide') && grammarLessonPage.includes('guide-card'), 'Dedicated lesson page guides students through seven detailed learning steps');
-check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=2'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
+check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=3'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
 try {
   new Function(grammarLessonsRaw);
   check(true, 'Grammar lesson catalogue JavaScript syntax is valid');
@@ -81,7 +81,7 @@ try {
   const allLessons = [...lessonData.grammar, ...lessonData.tenses];
   const categorySlugs = [...grammarCategoryPage.matchAll(/'((?:g|t)-[a-z0-9-]+)'/g)].map(match => match[1]);
   const categoryUnique = new Set(categorySlugs);
-  check(categoryUnique.size === 47 && allLessons.every(item => categoryUnique.has(item.slug)) && [...categoryUnique].every(slug => allLessons.some(item => item.slug === slug)), 'All 47 lessons appear exactly once across grammar and tense categories');
+  check(categoryUnique.size === 43 && allLessons.every(item => categoryUnique.has(item.slug)) && [...categoryUnique].every(slug => allLessons.some(item => item.slug === slug)), 'All 43 lessons appear exactly once across grammar and tense categories');
   const formulaMapMatch = grammarLessonPage.match(/const formulaArabic\s*=\s*(\{[\s\S]*?\n\s*\});/);
   const formulaMap = formulaMapMatch ? new Function('return (' + formulaMapMatch[1] + ')')() : {};
   const uniqueFormulas = [...new Set(allLessons.map(item => item.formula))];
@@ -98,7 +98,7 @@ try {
     Array.isArray(item.guide.build) && item.guide.build.length >= 3 &&
     typeof item.guide.compare === 'string' && item.guide.compare.trim().length > 20 &&
     typeof item.guide.watch === 'string' && item.guide.watch.trim().length > 20);
-  check(validGuides, 'All 47 lessons include a unique detailed guide with idea, use, build steps, comparison, and common pitfalls');
+  check(validGuides, 'All 43 lessons include a unique detailed guide with idea, use, build steps, comparison, and common pitfalls');
   const validQuestions = item => Array.isArray(item.questions) && item.questions.length >= 3 &&
     item.questions.every(q => q && typeof q.text === 'string' && q.text.trim() &&
       Array.isArray(q.options) && q.options.length === 3 &&
@@ -115,8 +115,8 @@ try {
     item.examples.every(example => example.en && example.ar) &&
     item.mistake && item.mistake.wrong && item.mistake.right && item.mistake.why &&
     typeof item.tip === 'string' && item.tip.trim() && validQuestions(item));
-  check(lessonData.grammar.length === 37 && lessonData.tenses.length === 10,
-    'Interactive catalogue includes all 37 grammar rules and 10 tense lessons');
+  check(lessonData.grammar.length === 37 && lessonData.tenses.length === 6,
+    'Interactive catalogue includes all 37 grammar rules and 6 additional tense lessons');
   check(new Set(slugs).size === allLessons.length && validLessons,
     'Every lesson has a unique slug, step-by-step explanation, examples, correction, tip, and valid practice questions');
 } catch (error) {
