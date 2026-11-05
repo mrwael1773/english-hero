@@ -231,7 +231,7 @@
   ];
 
   const tenses = [
-    lesson('t-past-perfect','Past Perfect — الماضي التام','وضّح أن حدثًا وقع قبل حدث آخر في الماضي.','وصلت إلى المحطة، لكن القطار كان قد غادر قبل وصولك. نحتاج زمنًا يوضح أن المغادرة حدثت أولًا.','had + past participle',
+    lesson('t-past-perfect','Past Perfect Simple — الماضي التام البسيط','وضّح أن حدثًا وقع قبل حدث آخر في الماضي.','وصلت إلى المحطة، لكن القطار كان قد غادر قبل وصولك. نحتاج زمنًا يوضح أن المغادرة حدثت أولًا.','had + past participle',
       ['استخدم had مع جميع الضمائر.','ضع التصريف الثالث للفعل بعد had.','استخدمه لحدث اكتمل قبل نقطة أو حدث آخر في الماضي.','قد تظهر معه before وafter وby the time.'],
       [{en:'The train had left before I arrived.',ar:'كان القطار قد غادر قبل أن أصل.',focus:'had left'},{en:'She had finished dinner when I called.',ar:'كانت قد أنهت العشاء عندما اتصلت.',focus:'had finished'},{en:'By the time we came, they had gone.',ar:'بحلول وصولنا، كانوا قد ذهبوا.',focus:'had gone'}],
       {wrong:'They had went home.',right:'They had gone home.',why:'بعد had نستخدم التصريف الثالث gone.'},
