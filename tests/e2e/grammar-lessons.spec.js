@@ -67,29 +67,37 @@ test('unknown lesson slugs show a safe fallback instead of a broken page', async
   await expect(page.locator('#lessonRoot a')).toHaveAttribute('href', './index.html');
 });
 
-test('all 47 grammar and tense lesson slugs resolve to their own page content', async ({ page }) => {
-  await page.goto('/grammar-lesson.html#g-subject-pronouns');
-  const lessons = await page.evaluate(() => window.EnglishHeroLessons.all.map(item => ({
-    slug: item.slug,
-    title: item.title
-  })));
-  expect(lessons).toHaveLength(47);
-  expect(new Set(lessons.map(item => item.slug)).size).toBe(47);
+const lessonResolutionBatches = [
+  { name: 'first 16', start: 0, end: 16 },
+  { name: 'next 16', start: 16, end: 32 },
+  { name: 'final 15', start: 32, end: 47 }
+];
 
-  for (const lesson of lessons) {
-    await page.evaluate(slug => { window.location.hash = slug; }, lesson.slug);
-    await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
-    await expect(page.locator('#examples .example')).toHaveCount(3);
-    await expect(page.locator('#challenge .option')).toHaveCount(3);
-    await expect(page.locator('#lessonSteps button')).toHaveCount(7);
-    await page.locator('#lessonSteps [data-step-index="1"]').click();
-    await expect(page.locator('#deep-guide .guide-card')).toHaveCount(5);
-    await expect(page.locator('#deep-guide')).toContainText('متى أستخدمها؟');
-    await page.locator('#lessonSteps [data-step-index="2"]').click();
-    await expect(page.locator('.formula-ar')).toBeVisible();
-    await expect(page.locator('.formula-ar')).not.toBeEmpty();
-  }
-});
+for (const batch of lessonResolutionBatches) {
+  test('all 47 grammar and tense lessons resolve correctly: ' + batch.name, async ({ page }) => {
+    await page.goto('/grammar-lesson.html#g-subject-pronouns');
+    const lessons = await page.evaluate(() => window.EnglishHeroLessons.all.map(item => ({
+      slug: item.slug,
+      title: item.title
+    })));
+    expect(lessons).toHaveLength(47);
+    expect(new Set(lessons.map(item => item.slug)).size).toBe(47);
+
+    for (const lesson of lessons.slice(batch.start, batch.end)) {
+      await page.evaluate(slug => { window.location.hash = slug; }, lesson.slug);
+      await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
+      await expect(page.locator('#examples .example')).toHaveCount(3);
+      await expect(page.locator('#challenge .option')).toHaveCount(3);
+      await expect(page.locator('#lessonSteps button')).toHaveCount(7);
+      await page.locator('#lessonSteps [data-step-index="1"]').click();
+      await expect(page.locator('#deep-guide .guide-card')).toHaveCount(5);
+      await expect(page.locator('#deep-guide')).toContainText('متى أستخدمها؟');
+      await page.locator('#lessonSteps [data-step-index="2"]').click();
+      await expect(page.locator('.formula-ar')).toBeVisible();
+      await expect(page.locator('.formula-ar')).not.toBeEmpty();
+    }
+  });
+}
 
 test('all 47 lessons provide their own detailed beginner guide', async ({ page }) => {
   await page.goto('/grammar-lesson.html#g-subject-pronouns');
