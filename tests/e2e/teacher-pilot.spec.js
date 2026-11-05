@@ -153,6 +153,52 @@ test('a partial retention quiz preserves the full mastery attempt after reload',
   expect(saved.lastRetention.passed).toBe(true);
 });
 
+test('a failed partial retention quiz keeps the historical mastery but flags review', async ({ page }) => {
+  const due = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  await page.evaluate((reviewDue) => {
+    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+      started: true,
+      trained: [0, 1, 2, 3, 4, 5],
+      attempts: 1,
+      mastered: true,
+      lastAttempt: { date: new Date().toISOString(), score: 89, correct: 16, total: 18 },
+      reviewDue,
+      wrong: ['Name'],
+    }));
+  }, due);
+  await page.reload();
+  await page.locator('[data-tab="review"]').click();
+  await page.locator('#reviewQuiz').click();
+
+  for (let i = 0; i < 3; i++) {
+    const prompt = await page.locator('#testArea h3').textContent();
+    if (await page.locator('#typedAnswer').count()) {
+      await page.locator('#typedAnswer').fill('not-the-answer');
+      await page.locator('#checkTypedAnswer').click();
+    } else if (prompt.includes('ما معنى كلمة Name')) {
+      await page.locator('#testArea [data-choice]').filter({ hasNotText: 'اسم' }).first().click();
+    } else {
+      await page.locator('#testArea [data-choice]').filter({ hasNotText: 'Name' }).first().click();
+    }
+    await page.locator('#nextQuestion').click();
+  }
+
+  await expect(page.locator('#resultArea')).toContainText('يحتاج التعلم إلى مراجعة إضافية');
+  await expect(page.locator('#lessonState')).toContainText('أتقن الدرس سابقًا • يحتاج مراجعة');
+  let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  expect(saved.mastered).toBe(true);
+  expect(saved.lastAttempt.total).toBe(18);
+  expect(saved.lastRetention.total).toBe(3);
+  expect(saved.lastRetention.passed).toBe(false);
+  expect(saved.wrong).toContain('Name');
+
+  await page.reload();
+  saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  expect(saved.mastered).toBe(true);
+  expect(saved.lastRetention.passed).toBe(false);
+  await expect(page.locator('#lessonState')).toContainText('يحتاج مراجعة');
+});
+
 test('invalid saved lesson state cannot unlock mastery or retention questions', async ({ page }) => {
   await page.evaluate(() => {
     localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
