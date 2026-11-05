@@ -268,15 +268,12 @@ const formulaArabic = {
 'will + base verb':'will (سوف) + الفعل الأساسي.',
 'am / is / are + going to + base verb':'am / is / are + going to (سوف/ينوي) + الفعل الأساسي.',
 'will be + verb-ing':'will be (سوف يكون) + الفعل مضافًا إليه ing.',
-'have / has been + verb-ing':'have / has been (ما زال/ظلّ) + الفعل مضافًا إليه ing.'
+'have / has been + verb-ing':'have / has been (ما زال/ظلّ) + الفعل مضافًا إليه ing.',
+'am / is / are + verb-ing':'am (أكون) / is (يكون) / are (تكون أو يكونون) + verb (الفعل) + -ing (لاحقة تُضاف للفعل لتكوين صيغة المستمر).',
+'was / were + verb-ing':'was (كان للمفرد) / were (كانوا أو كنتم) + verb (الفعل) + -ing (لاحقة تدل على استمرار الفعل في الماضي).',
+'have / has + past participle':'have (فعل مساعد مع I / you / we / they) / has (فعل مساعد مع he / she / it) + past participle (التصريف الثالث للفعل).'
 };
 
-      formulaArabic['am / is / are + verb-ing']='am / is / are (فعل be: أكون / يكون / تكون / يكونون) + verb (الفعل) + ing (نهاية تدل هنا على أن الفعل مستمر الآن).';
-      formulaArabic['am / is / are + verb-ing'] = 'am / is / are (فعل be: أكون / يكون / تكون / يكونون) + verb (الفعل) مضافًا إليه ing (نهاية تدل هنا على أن الفعل مستمر الآن).';
-      formulaArabic['was / were + verb-ing'] = 'was / were (كان / كانت / كانوا) + verb (الفعل) مضافًا إليه ing (نهاية تدل على أن الفعل كان مستمرًا في وقتٍ في الماضي).';
-      formulaArabic['have / has + past participle'] = 'have / has (فعل مساعد: have مع I / you / we / they و has مع he / she / it) + past participle (التصريف الثالث للفعل).';
-      formulaArabic['was / were + verb-ing']='was / were (كان / كانت / كانوا) + verb (الفعل) + ing (نهاية تدل على أن الفعل كان مستمرًا في وقتٍ في الماضي).';
-      formulaArabic['have / has + past participle']='have / has (فعل مساعد يختلف حسب الفاعل) + past participle (التصريف الثالث للفعل).';
       function renderLesson() {
         const slug = decodeURIComponent(location.hash.replace(/^#/,'').trim());
         const data = window.EnglishHeroLessons;
