@@ -270,6 +270,9 @@
   ];
 
 
+  const tenseOrder = ['t-present-perfect-continuous','t-past-perfect','t-past-perfect-continuous','t-future-continuous','t-future-perfect','t-future-perfect-continuous'];
+  tenses.sort((a, b) => tenseOrder.indexOf(a.slug) - tenseOrder.indexOf(b.slug));
+
   // شروح معمّقة مخصصة لكل درس؛ لا تُستبدل بشرح عام أو ترجمة حرفية للصيغة.
   const lessonGuides = {
     'g-subject-pronouns': {idea:'ضمير الفاعل هو الكلمة التي تحل محل اسم الشخص أو الشيء الذي يقوم بالفعل.',use:'استخدمه غالبًا قبل الفعل لتوضيح من يقوم به، وتجنب تكرار الاسم في الجمل المتتابعة.',build:['I = أنا، للشخص الذي يتكلم.','You = أنت أو أنتم، لمن تخاطبه.','He = هو لشخص مذكر، وShe = هي لشخص مؤنث، وIt لشيء أو حيوان بحسب السياق.','We = نحن عندما تكون أنت داخل المجموعة، وThey = هم/هن لمجموعة لا تشمل المتكلم.'],compare:'Ali is kind. He helps us. نستخدم He بدل تكرار Ali. أما Ali and I فتصبح We لأن المتكلم جزء من المجموعة.',watch:'لا تختَر الضمير بحسب قرب الاسم في الجملة فقط؛ اسأل: من المقصود؟ وهل هو المتكلم أم المخاطب أم شخص آخر؟'},
