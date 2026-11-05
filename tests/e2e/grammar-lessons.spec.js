@@ -12,7 +12,7 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await page.goto('/grammar-library.html?type=grammar');
   const groups = page.locator('#groups .card');
   await expect(groups).toHaveCount(8);
-  await expect(groups.filter({ hasText: 'قواعد الماضي' })).toHaveCount(1);
+  await expect(groups.filter({ hasText: 'قواعد وأزمنة الماضي' })).toHaveCount(1);
   await groups.filter({ hasText: 'قواعد الماضي' }).click();
   await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
   const lessons = page.locator('#lessons .lesson');
