@@ -68,7 +68,8 @@ test('the learning hub shows direct Basics and Grammar choices', async ({ page }
   const basicsEntry = page.locator('#grammarView a[href="./grammar-library.html?type=basics"]');
   const grammarEntry = page.locator('#grammarView a[href="./grammar-library.html?type=grammar"]');
 
-  await expect(page.locator('#grammarView a')).toHaveCount(2);
+  const directChoices = page.locator('#grammarView > .grid.learning-options > a');
+  await expect(directChoices).toHaveCount(2);
   await expect(basicsEntry).toContainText('الأساسيات');
   await expect(grammarEntry).toContainText('القواعد والأزمنة');
   await expect(page.locator('#grammarView')).not.toContainText('استكشف مكتبة القواعد والأزمنة');
