@@ -221,3 +221,32 @@ test('invalid saved lesson state cannot unlock mastery or retention questions', 
   expect(saved.reviewDue).toBeNull();
   expect(saved.attempts).toBe(10000);
 });
+
+test('word audio button invokes the browser speech engine from a user tap', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spokenWords = [];
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speaking: false,
+        pending: false,
+        resume() {},
+        cancel() {},
+        speak(utterance) {
+          window.__spokenWords.push({ text: utterance.text, lang: utterance.lang, rate: utterance.rate });
+        }
+      }
+    });
+    window.SpeechSynthesisUtterance = class {
+      constructor(text) { this.text = text; }
+    };
+  });
+  await page.reload();
+  await page.locator('[data-listen="0"]').click();
+  await expect.poll(() => page.evaluate(() => window.__spokenWords.length)).toBe(1);
+  expect(await page.evaluate(() => window.__spokenWords[0])).toEqual({
+    text: 'Name',
+    lang: 'en-US',
+    rate: 0.88
+  });
+});
