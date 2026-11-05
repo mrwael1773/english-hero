@@ -11,7 +11,7 @@ async function openLearningSection(page, section) {
 test('grammar categories lead to dedicated pages and all lessons are accessible', async ({ page }) => {
   await page.goto('/grammar-library.html?type=grammar');
   const groups = page.locator('#groups .card');
-  await expect(groups).toHaveCount(7);
+  await expect(groups).toHaveCount(8);
   await expect(groups.filter({ hasText: 'قواعد وأزمنة الماضي' })).toHaveCount(1);
   await groups.filter({ hasText: 'قواعد وأزمنة الماضي' }).click();
   await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
@@ -36,7 +36,7 @@ test('basics has its own tab beside the unified grammar library', async ({ page 
   await expect(page.locator('#basicsTab')).toBeVisible();
   await expect(page.locator('#grammarTab')).toBeVisible();
   await expect(page.locator('#tensesTab')).toHaveCount(0);
-  await expect(page.locator('#groups .card')).toHaveCount(7);
+  await expect(page.locator('#groups .card')).toHaveCount(8);
   await page.locator('#basicsTab').click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=basics$/);
   await expect(page.locator('#basicsTab')).toHaveClass(/active/);
@@ -49,13 +49,13 @@ test('basics has its own tab beside the unified grammar library', async ({ page 
 
 test('present, past, and future tenses are grouped inside grammar', async ({ page }) => {
   await page.goto('/grammar-library.html?type=grammar');
-  await expect(page.locator('#groups .card')).toHaveCount(7);
+  await expect(page.locator('#groups .card')).toHaveCount(8);
   await page.goto('/grammar-category.html?type=grammar&group=past');
   await expect(page.locator('#lessons .lesson')).toHaveCount(4);
   await expect(page.locator('#lessons')).toContainText('الماضي التام');
   await expect(page.locator('#lessons')).toContainText('الماضي التام المستمر');
   await page.goto('/grammar-category.html?type=grammar&group=present');
-  await expect(page.locator('#lessons .lesson')).toHaveCount(7);
+  await expect(page.locator('#lessons .lesson')).toHaveCount(8);
   await page.goto('/grammar-category.html?type=grammar&group=future');
   await expect(page.locator('#lessons .lesson')).toHaveCount(5);
   await expect(page.locator('#lessons')).toContainText('Future Perfect');
@@ -68,7 +68,7 @@ test('the home grammar entry opens the dedicated category library', async ({ pag
   await expect(entry).toHaveAttribute('href', './grammar-library.html?type=grammar');
   await entry.click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=grammar$/);
-  await expect(page.locator('#groups .card')).toHaveCount(7);
+  await expect(page.locator('#groups .card')).toHaveCount(8);
 });
 
 test('dedicated grammar lesson fits a narrow mobile viewport', async ({ page }) => {
