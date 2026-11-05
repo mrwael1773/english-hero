@@ -271,6 +271,9 @@ const formulaArabic = {
 'have / has been + verb-ing':'have / has been (ما زال/ظلّ) + الفعل مضافًا إليه ing.'
 };
 
+      formulaArabic['am / is / are + verb-ing']='am / is / are (فعل be: أكون / يكون / تكون / يكونون) + verb (الفعل) + ing (نهاية تدل هنا على أن الفعل مستمر الآن).';
+      formulaArabic['was / were + verb-ing']='was / were (كان / كانت / كانوا) + verb (الفعل) + ing (نهاية تدل على أن الفعل كان مستمرًا في وقتٍ في الماضي).';
+      formulaArabic['have / has + past participle']='have / has (فعل مساعد يختلف حسب الفاعل) + past participle (التصريف الثالث للفعل).';
       function renderLesson() {
         const slug = decodeURIComponent(location.hash.replace(/^#/,'').trim());
         const data = window.EnglishHeroLessons;
