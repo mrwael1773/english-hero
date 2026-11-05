@@ -19,7 +19,8 @@
     .hero-actions{position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:11px 16px;font-weight:850}.btn.primary{background:linear-gradient(110deg,#89efd2,#66cdbd);color:#102133;box-shadow:0 8px 22px #62ddbf2a}.btn.secondary{border:1px solid #ffffff44;background:#ffffff12;color:#fff}.btn:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     .route{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0 12px}.route button{display:flex;align-items:center;gap:9px;min-width:0;text-align:right;border:1px solid var(--line);background:#162239;border-radius:14px;padding:11px;color:var(--muted);font-size:12px;font-weight:800;transition:border-color .18s,background .18s,transform .18s}.route button span:first-child{width:29px;height:29px;flex:0 0 29px;border-radius:10px;display:grid;place-items:center;background:#283852;color:var(--mint);font-size:12px}.route button[aria-current="step"]{border-color:var(--mint);background:linear-gradient(135deg,#1b4a4a,#252c50);color:var(--ink);box-shadow:0 7px 20px #050a1733}.route button[aria-current="step"] span:first-child{background:var(--mint);color:#102133}.route button:disabled{opacity:.55;cursor:default}.step-status{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:12px;font-weight:800;margin:8px 2px}.step-progress{height:7px;background:#2b3b55;border-radius:99px;overflow:hidden;margin:0 0 18px}.step-progress i{display:block;width:16.666%;height:100%;background:linear-gradient(90deg,var(--mint),var(--purple));border-radius:inherit;transition:width .2s}.lesson-stages{min-height:280px}.lesson-stage{animation:stage-in .22s ease both}.lesson-stage[hidden]{display:none!important}@keyframes stage-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.step-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 4px;padding:14px;border:1px solid var(--line);background:#162239;border-radius:18px}.step-controls button{min-width:118px}.step-controls .step-back{border:1px solid var(--line);background:#202f49;color:var(--ink)}.step-controls button:disabled{opacity:.35;cursor:not-allowed}.step-controls span{font-size:11px;color:var(--muted);text-align:center}
     .section{margin-top:24px}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:13px}.section-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:14px;background:#273653;border:1px solid #465b7c;font-size:20px}.section-head h2{margin:0;font-size:clamp(19px,3vw,24px)}.section-head p{margin:1px 0 0;color:var(--muted);font-size:12px}
-    .concept,.formula-card,.steps,.mistake,.quiz-card,.tip-card{border:1px solid var(--line);background:linear-gradient(145deg,var(--surface),#152138);border-radius:22px;padding:clamp(17px,3vw,25px);box-shadow:0 12px 30px #050a171f}
+    .concept,.formula-card,.steps,.mistake,.quiz-card,.tip-card,.guide-card{border:1px solid var(--line);background:linear-gradient(145deg,var(--surface),#152138);border-radius:22px;padding:clamp(17px,3vw,25px);box-shadow:0 12px 30px #050a171f}
+    .guide-grid{display:grid;grid-template-columns:1fr;gap:11px}.guide-card{border-radius:18px;padding:16px}.guide-card h3{margin:0 0 7px;color:var(--mint);font-size:16px}.guide-card p{margin:0;color:#d2dced;line-height:1.9;font-size:14px}.guide-card ul{margin:8px 0 0;padding-right:22px;color:#d2dced}.guide-card li{margin:6px 0;line-height:1.85}.guide-card.compare{border-color:#466d80;background:linear-gradient(145deg,#183746,#172b41)}.guide-card.warning{border-color:#796443;background:linear-gradient(145deg,#3b3429,#1b293c)}
     .concept{display:flex;gap:15px;align-items:flex-start}.concept-emoji{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:16px;background:#4b45762b;font-size:25px}.concept h3{margin:0 0 5px;font-size:17px}.concept p{margin:0;color:#c4d1e5;line-height:1.9}
     .formula-card{border-color:#4b5180;background:radial-gradient(circle at 90% 0%,#9b8bff20,transparent 45%),linear-gradient(145deg,#202344,#1a2e45)}.formula-label{font-size:12px;color:var(--mint);font-weight:900}.formula-ar{margin:8px 0 0;padding:10px 12px;border-radius:12px;background:#ffffff0c;color:#d7e8ff;text-align:center;font-size:14px;line-height:1.9;font-weight:700}.formula{direction:ltr;text-align:center;unicode-bidi:plaintext;overflow-wrap:anywhere;font-size:clamp(18px,4vw,27px);font-weight:900;line-height:1.55;padding:14px 10px;margin:8px 0 0;color:#f2edff}
     .step-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.step{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;min-width:0}.step-no{width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;border-radius:10px;background:#3b376b;color:#c6bdff;font-weight:900;font-size:13px}.step p{margin:0;color:#d2dced;font-size:14px;line-height:1.8}
@@ -302,19 +303,19 @@ const formulaArabic = {
         hero.append(actions);
         root.append(hero);
 
-        const stepNames=['افهم الفكرة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك'];
+        const stepNames=['افهم الفكرة','تفصيل القاعدة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك'];
         const route=safeText('nav','route');
         route.id='lessonSteps';
         route.setAttribute('aria-label','مراحل تعلّم الدرس');
         const stageContainer=safeText('div','lesson-stages');
         const stageElements=[],stepButtons=[];
-        const status=safeText('div','step-status','الخطوة 1 من 6 • افهم الفكرة');
+        const status=safeText('div','step-status','الخطوة 1 من 7 • افهم الفكرة');
         status.id='lessonStepStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
         const progress=safeText('div','step-progress');
         progress.setAttribute('role','progressbar');
         progress.setAttribute('aria-label','تقدّمك في خطوات الدرس');
         progress.setAttribute('aria-valuemin','1');
-        progress.setAttribute('aria-valuemax','6');
+        progress.setAttribute('aria-valuemax','7');
         const progressFill=document.createElement('i');
         progress.append(progressFill);
         const controls=safeText('div','step-controls');
@@ -355,6 +356,29 @@ const formulaArabic = {
         const conceptCopy=document.createElement('div');
         conceptCopy.append(safeText('h3','','تخيّل هذا الموقف'),safeText('p','',activeLesson.everyday));
         conceptCard.append(conceptCopy);concept.append(conceptCard);stageElements.push(concept);stageContainer.append(concept);
+
+        const guide=activeLesson.guide;
+        if(!guide || !guide.idea || !guide.use || !Array.isArray(guide.build) || !guide.compare || !guide.watch){
+          throw new Error('شرح تفصيلي غير مكتمل للدرس: '+activeLesson.slug);
+        }
+        const deepSection=makeSection('deep-guide','🔎','ثانيًا: فكّك القاعدة وافهم تفاصيلها','لا تحفظ الشكل فقط؛ افهم متى تستخدمه، وكيف تُبنى الجملة، وما الفرق بينه وبين قاعدة قريبة.');
+        const deepGrid=safeText('div','guide-grid');
+        const addGuideCard=(title,body,kind='')=>{
+          const card=safeText('article','guide-card'+(kind?' '+kind:''));
+          card.append(safeText('h3','',title));
+          if(Array.isArray(body)){
+            const list=safeText('ul','');
+            body.forEach(line=>list.append(safeText('li','',line)));
+            card.append(list);
+          }else card.append(safeText('p','',body));
+          deepGrid.append(card);
+        };
+        addGuideCard('💡 الفكرة ببساطة',guide.idea);
+        addGuideCard('🕒 متى أستخدمها؟',guide.use);
+        addGuideCard('🧱 نفكّكها خطوة خطوة',guide.build);
+        addGuideCard('⚖️ لا تخلط بينها وبين غيرها',guide.compare,'compare');
+        addGuideCard('🚧 انتبه لهذا التفصيل',guide.watch,'warning');
+        deepSection.append(deepGrid);stageElements.push(deepSection);stageContainer.append(deepSection);
 
         const formula=makeSection('formula','🧩','ثانيًا: ابنِ الجملة','احفظ شكل الجملة بعد أن تفهم لماذا نستخدمه.');
         const formulaCard=safeText('div','formula-card');
