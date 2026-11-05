@@ -17,7 +17,7 @@
     .hero:after{content:"Aa";position:absolute;left:16px;bottom:-36px;font-size:clamp(100px,19vw,180px);line-height:1;font-weight:1000;letter-spacing:-.1em;color:#ffffff0b;direction:ltr;pointer-events:none}
     .eyebrow{font-size:11px;letter-spacing:1.6px;color:var(--mint);font-weight:900}.hero-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:13px}.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid #ffffff24;background:#ffffff12;border-radius:99px;padding:5px 10px;font-size:12px;color:#e1eaff}.hero h1{position:relative;z-index:1;margin:0;font-size:clamp(27px,5vw,42px);line-height:1.35}.hero-summary{position:relative;z-index:1;max-width:680px;color:#d6e0f2;font-size:clamp(15px,2.3vw,18px);line-height:1.9;margin:12px 0 20px}
     .hero-actions{position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:11px 16px;font-weight:850}.btn.primary{background:linear-gradient(110deg,#89efd2,#66cdbd);color:#102133;box-shadow:0 8px 22px #62ddbf2a}.btn.secondary{border:1px solid #ffffff44;background:#ffffff12;color:#fff}.btn:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
-    .route{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:18px 0 28px}.route a{display:flex;align-items:center;gap:8px;min-width:0;text-decoration:none;border:1px solid var(--line);background:#162239;border-radius:14px;padding:10px;color:var(--muted);font-size:12px;font-weight:750}.route a span:first-child{width:25px;height:25px;flex:0 0 25px;border-radius:9px;display:grid;place-items:center;background:#283852;color:var(--mint);font-size:12px}
+    .route{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0 12px}.route button{display:flex;align-items:center;gap:9px;min-width:0;text-align:right;border:1px solid var(--line);background:#162239;border-radius:14px;padding:11px;color:var(--muted);font-size:12px;font-weight:800;transition:border-color .18s,background .18s,transform .18s}.route button span:first-child{width:29px;height:29px;flex:0 0 29px;border-radius:10px;display:grid;place-items:center;background:#283852;color:var(--mint);font-size:12px}.route button[aria-current="step"]{border-color:var(--mint);background:linear-gradient(135deg,#1b4a4a,#252c50);color:var(--ink);box-shadow:0 7px 20px #050a1733}.route button[aria-current="step"] span:first-child{background:var(--mint);color:#102133}.route button:disabled{opacity:.55;cursor:default}.step-status{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:12px;font-weight:800;margin:8px 2px}.step-progress{height:7px;background:#2b3b55;border-radius:99px;overflow:hidden;margin:0 0 18px}.step-progress i{display:block;width:16.666%;height:100%;background:linear-gradient(90deg,var(--mint),var(--purple));border-radius:inherit;transition:width .2s}.lesson-stages{min-height:280px}.lesson-stage{animation:stage-in .22s ease both}.lesson-stage[hidden]{display:none!important}@keyframes stage-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.step-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 4px;padding:14px;border:1px solid var(--line);background:#162239;border-radius:18px}.step-controls button{min-width:118px}.step-controls .step-back{border:1px solid var(--line);background:#202f49;color:var(--ink)}.step-controls button:disabled{opacity:.35;cursor:not-allowed}.step-controls span{font-size:11px;color:var(--muted);text-align:center}
     .section{margin-top:24px}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:13px}.section-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:14px;background:#273653;border:1px solid #465b7c;font-size:20px}.section-head h2{margin:0;font-size:clamp(19px,3vw,24px)}.section-head p{margin:1px 0 0;color:var(--muted);font-size:12px}
     .concept,.formula-card,.steps,.mistake,.quiz-card,.tip-card{border:1px solid var(--line);background:linear-gradient(145deg,var(--surface),#152138);border-radius:22px;padding:clamp(17px,3vw,25px);box-shadow:0 12px 30px #050a171f}
     .concept{display:flex;gap:15px;align-items:flex-start}.concept-emoji{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:16px;background:#4b45762b;font-size:25px}.concept h3{margin:0 0 5px;font-size:17px}.concept p{margin:0;color:#c4d1e5;line-height:1.9}
@@ -29,7 +29,7 @@
     .quiz-card{border-color:#4b5180;background:radial-gradient(circle at 100% 0%,#8375ed20,transparent 42%),linear-gradient(145deg,#202543,#172b41)}.quiz-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.quiz-count{font-size:12px;color:var(--mint);font-weight:900}.quiz-track{height:8px;border-radius:99px;background:#34415a;overflow:hidden;margin:12px 0 20px}.quiz-track i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--mint),var(--purple));transition:width .2s}.question{font-size:clamp(17px,3vw,21px);font-weight:850;margin:12px 0 17px;line-height:1.6}.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.option{min-height:55px;min-width:0;border:1px solid #455777;background:#263651;color:#eff4ff;border-radius:13px;padding:10px;font-weight:800;overflow-wrap:anywhere}.option:hover:not(:disabled){border-color:var(--purple);background:#31375c}.option.good{border-color:var(--mint);background:#164c46;color:#d9fff3}.option.bad{border-color:var(--red);background:#512b3d;color:#ffe3ea}.option:disabled{cursor:default;opacity:1}.feedback{margin-top:14px;padding:13px 14px;border-radius:13px;background:#112d31;border:1px solid #2c7467;color:#d9fff3;font-size:13px;line-height:1.8}.feedback.bad{background:#3b2635;border-color:#885065;color:#ffe2e9}.quiz-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}.quiz-footer button:disabled{opacity:.35;cursor:not-allowed}.quiz-result{text-align:center;padding:20px 5px}.quiz-result .score{font-size:45px;font-weight:1000;color:var(--mint);line-height:1.3}.quiz-result h3{margin:7px 0}.quiz-result p{color:var(--muted);margin:4px 0 16px}
     .bottom-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}.lesson-neighbor{display:flex;flex-direction:column;gap:3px;text-decoration:none;border:1px solid var(--line);background:#19263e;border-radius:14px;padding:10px 13px;min-width:0;max-width:48%}.lesson-neighbor small{font-size:10px;color:var(--muted)}.lesson-neighbor strong{font-size:13px;overflow-wrap:anywhere}.lesson-neighbor.next{margin-right:auto;text-align:left}.note{color:var(--muted);font-size:11px;line-height:1.8;text-align:center;margin:22px 0 0}
     .not-found{padding:30px 18px;text-align:center;border:1px solid var(--line);background:var(--surface);border-radius:22px}.not-found h1{font-size:25px}.not-found p{color:var(--muted)}
-    @media(max-width:680px){.wrap{width:min(100% - 22px,900px);padding-top:12px}.topbar{align-items:flex-start}.brand{font-size:14px}.brand-mark{width:38px;height:38px}.back-link,.home-link{padding:8px 10px;font-size:11px}.hero{border-radius:22px}.route{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.route a{font-size:11px}.step-grid,.example-grid{grid-template-columns:1fr}.options{grid-template-columns:1fr}.mistake-grid{grid-template-columns:1fr}.section{margin-top:21px}.concept{gap:10px}.concept-emoji{width:40px;height:40px;flex-basis:40px}.bottom-nav{align-items:stretch}.lesson-neighbor{max-width:49%;padding:9px}.lesson-neighbor strong{font-size:12px}}
+    @media(max-width:680px){.wrap{width:min(100% - 22px,900px);padding-top:12px}.topbar{align-items:flex-start}.brand{font-size:14px}.brand-mark{width:38px;height:38px}.back-link,.home-link{padding:8px 10px;font-size:11px}.hero{border-radius:22px}.route{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.route button{font-size:11px;padding:9px 8px}.step-grid,.example-grid{grid-template-columns:1fr}.options{grid-template-columns:1fr}.mistake-grid{grid-template-columns:1fr}.section{margin-top:21px}.concept{gap:10px}.concept-emoji{width:40px;height:40px;flex-basis:40px}.bottom-nav{align-items:stretch}.lesson-neighbor{max-width:49%;padding:9px}.lesson-neighbor strong{font-size:12px}.step-controls{padding:10px}.step-controls button{min-width:0;flex:1}.step-controls span{max-width:76px}.lesson-stages{min-height:240px}}
     @media(max-width:360px){.topbar{flex-direction:column}.top-actions{width:100%}.back-link,.home-link{flex:1;text-align:center}.route a{padding:8px 7px}.section-head{gap:9px}.section-icon{width:36px;height:36px;flex-basis:36px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
   </style>
@@ -254,22 +254,59 @@
         hero.append(actions);
         root.append(hero);
 
+        const stepNames=['افهم الفكرة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك'];
         const route=safeText('nav','route');
-        route.setAttribute('aria-label','خطوات الدرس');
-        [['1','الفكرة','concept'],['2','تركيب الجملة','formula'],['3','الأمثلة','examples'],['4','التحدّي','challenge']].forEach(item=>{
-          const a=safeText('a','','');
-          const n=safeText('span','',item[0]);
-          const t=safeText('span','',item[1]);
-          a.href='#'+item[2];a.append(n,t);route.append(a);
+        route.id='lessonSteps';
+        route.setAttribute('aria-label','مراحل تعلّم الدرس');
+        const stageContainer=safeText('div','lesson-stages');
+        const stageElements=[],stepButtons=[];
+        const status=safeText('div','step-status','الخطوة 1 من 6 • افهم الفكرة');
+        status.id='lessonStepStatus';
+        const progress=safeText('div','step-progress');
+        progress.setAttribute('role','progressbar');
+        progress.setAttribute('aria-label','تقدّمك في خطوات الدرس');
+        progress.setAttribute('aria-valuemin','1');
+        progress.setAttribute('aria-valuemax','6');
+        const progressFill=document.createElement('i');
+        progress.append(progressFill);
+        const controls=safeText('div','step-controls');
+        const previousStep=safeText('button','step-back','→ السابق');
+        previousStep.type='button';previousStep.disabled=true;
+        const controlHint=safeText('span','','خذ كل خطوة على مهل');
+        const nextStep=safeText('button','btn primary','التالي ←');
+        nextStep.type='button';
+        controls.append(previousStep,controlHint,nextStep);
+        let currentStep=0;
+        function setActiveStep(index,scroll=true){
+          currentStep=Math.max(0,Math.min(stepNames.length-1,index));
+          stageElements.forEach((stage,i)=>{stage.hidden=i!==currentStep;});
+          stepButtons.forEach((button,i)=>{if(i===currentStep)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');});
+          status.textContent='الخطوة '+(currentStep+1)+' من '+stepNames.length+' • '+stepNames[currentStep];
+          progressFill.style.width=((currentStep+1)/stepNames.length*100)+'%';
+          progress.setAttribute('aria-valuenow',String(currentStep+1));
+          previousStep.disabled=currentStep===0;
+          nextStep.disabled=currentStep===stepNames.length-1;
+          nextStep.textContent=currentStep===stepNames.length-1?'وصلت إلى التحدّي':'التالي ←';
+          controlHint.textContent=currentStep===stepNames.length-1?'أجب عن الأسئلة لتعرف ما تحتاج إلى مراجعته':'أنجز هذه الخطوة ثم انتقل إلى التالية';
+          if(scroll)stageContainer.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+        stepNames.forEach((name,index)=>{
+          const button=safeText('button','', '');
+          button.type='button';button.dataset.stepIndex=String(index);
+          button.append(safeText('span','',String(index+1)),safeText('span','',name));
+          button.addEventListener('click',()=>setActiveStep(index));
+          stepButtons.push(button);route.append(button);
         });
-        root.append(route);
+        previousStep.addEventListener('click',()=>setActiveStep(currentStep-1));
+        nextStep.addEventListener('click',()=>setActiveStep(currentStep+1));
+        root.append(route,status,progress,stageContainer);
 
         const concept=makeSection('concept','💡','أولًا: افهم الفكرة','اربط القاعدة بموقف تعرفه من حياتك.');
         const conceptCard=safeText('div','concept');
         conceptCard.append(safeText('span','concept-emoji','🧠'));
         const conceptCopy=document.createElement('div');
         conceptCopy.append(safeText('h3','','تخيّل هذا الموقف'),safeText('p','',activeLesson.everyday));
-        conceptCard.append(conceptCopy);concept.append(conceptCard);root.append(concept);
+        conceptCard.append(conceptCopy);concept.append(conceptCard);stageElements.push(concept);stageContainer.append(concept);
 
         const formula=makeSection('formula','🧩','ثانيًا: ابنِ الجملة','احفظ شكل الجملة بعد أن تفهم لماذا نستخدمه.');
         const formulaCard=safeText('div','formula-card');
@@ -283,9 +320,9 @@
           item.append(safeText('span','step-no',index+1),safeText('p','',line));
           steps.append(item);
         });
-        formula.append(steps);root.append(formula);
+        formula.append(steps);stageElements.push(formula);stageContainer.append(formula);
 
-        root.append(renderExamples(activeLesson.examples));
+        const examples=renderExamples(activeLesson.examples);stageElements.push(examples);stageContainer.append(examples);
 
         const mistake=makeSection('mistake','🛑','ثالثًا: انتبه من هذا الخطأ','قارن بين الجملة غير الصحيحة والصيغة الصحيحة.');
         const mistakeCard=safeText('div','mistake');
@@ -296,13 +333,16 @@
         right.append(safeText('small','','✓ قل'),safeText('div','mistake-text',activeLesson.mistake.right));
         comparison.append(wrong,right);
         mistakeCard.append(comparison,safeText('p','why',activeLesson.mistake.why));
-        mistake.append(mistakeCard);root.append(mistake);
+        mistake.append(mistakeCard);stageElements.push(mistake);stageContainer.append(mistake);
 
         const tip=safeText('aside','tip-card');
+        tip.id='tip';tip.classList.add('section','lesson-stage');
         tip.append(safeText('span','tip-icon','✨'),safeText('p','',activeLesson.tip));
-        root.append(tip);
-
-        root.append(renderQuiz(activeLesson.questions));
+        stageElements.push(tip);stageContainer.append(tip);
+        const challenge=renderQuiz(activeLesson.questions);
+        stageElements.push(challenge);stageContainer.append(challenge);
+        setActiveStep(0,false);
+        root.append(controls);
 
         const nav=safeText('nav','bottom-nav');
         nav.setAttribute('aria-label','التنقل بين الدروس');
