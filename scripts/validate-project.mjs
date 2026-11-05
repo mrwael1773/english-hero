@@ -87,7 +87,7 @@ try {
   const uniqueFormulas = [...new Set(allLessons.map(item => item.formula))];
   const translatedFormulas = uniqueFormulas.every(formula =>
     typeof formulaMap[formula] === 'string' &&
-    /[\\u0600-\\u06FF]/.test(formulaMap[formula])
+    /[ء-ي]/.test(formulaMap[formula])
   );
   check(translatedFormulas, 'Every exact grammar and tense formula key has a non-empty Arabic translation');
 
