@@ -55,7 +55,32 @@ try{data=normalizeMastery(JSON.parse(localStorage.getItem(KEY)||'{}'));}catch{da
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}};
 save(); // Persist the validated state so corrupted local values cannot survive a reload.
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const say=s=>{if(!('speechSynthesis'in window)){alert('النطق غير مدعوم في هذا المتصفح.');return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s);u.lang='en-US';u.rate=.88;speechSynthesis.speak(u);};
+let speechRequest=0;
+const say=value=>{
+ const text=String(value??'').trim();
+ if(!text)return;
+ if(!('speechSynthesis'in window)||typeof window.SpeechSynthesisUtterance!=='function'){
+  alert('النطق غير مدعوم في هذا المتصفح. جرّب متصفحًا محدثًا.');
+  return;
+ }
+ const synth=window.speechSynthesis,request=++speechRequest;
+ const utterance=new window.SpeechSynthesisUtterance(text);
+ utterance.lang='en-US';
+ utterance.rate=.88;
+ utterance.onerror=event=>{
+  if(event.error!=='canceled'&&event.error!=='interrupted')alert('تعذر تشغيل النطق. تحقق من إعدادات الصوت في الجهاز ثم حاول مرة أخرى.');
+ };
+ try{synth.resume()}catch{}
+ const play=()=>{
+  if(request!==speechRequest)return;
+  try{synth.resume()}catch{}
+  try{synth.speak(utterance)}catch{alert('تعذر تشغيل النطق. حاول مرة أخرى.');}
+ };
+ if(synth.speaking||synth.pending){
+  try{synth.cancel()}catch{}
+  window.setTimeout(play,100);
+ }else play();
+};
 const render=()=>{
 $('lessonState').textContent=data.mastered?(data.lastRetention?.passed===false?'أتقن الدرس سابقًا • يحتاج مراجعة':'أتقن الدرس ✓'):data.lastAttempt?'لم يثبت الإتقان بعد':data.trained.length===6?'أكمل التدريب':data.started?'بدأ الدرس':'لم يبدأ الدرس';
 $('trainingBar').style.width=(data.trained.length/6*100)+'%';$('trainingCount').textContent=data.trained.length+' من 6 كلمات تمت دراستها';
