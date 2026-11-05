@@ -82,9 +82,9 @@ try {
   const categorySlugs = [...grammarCategoryPage.matchAll(/'((?:g|t)-[a-z0-9-]+)'/g)].map(match => match[1]);
   const categoryUnique = new Set(categorySlugs);
   check(categoryUnique.size === 47 && allLessons.every(item => categoryUnique.has(item.slug)) && [...categoryUnique].every(slug => allLessons.some(item => item.slug === slug)), 'All 47 lessons appear exactly once across grammar and tense categories');
-  const formulaMapMatch = grammarLessonPage.match(/const formulaArabic\\s*=\\s*(\\{[\\s\\S]*?\\n\\s*\\});/);
+  const formulaMapMatch = grammarLessonPage.match(/const formulaArabic\s*=\s*(\{[\s\S]*?\n\s*\});/);
   const formulaMap = formulaMapMatch ? new Function('return (' + formulaMapMatch[1] + ')')() : {};
-  const formulaAliases = [...grammarLessonPage.matchAll(/formulaArabic\\[['"]([^'"]+)['"]\\]\\s*=/g)].map(match => match[1]);
+  const formulaAliases = [...grammarLessonPage.matchAll(/formulaArabic\[['"]([^'"]+)['"]\]\s*=/g)].map(match => match[1]);
   const translatedFormulas = new Set([...Object.keys(formulaMap), ...formulaAliases]);
   check([...new Set(allLessons.map(item => item.formula))].every(formula => translatedFormulas.has(formula)), 'Every grammar and tense formula has an Arabic translation');
 
