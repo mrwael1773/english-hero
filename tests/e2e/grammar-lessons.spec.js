@@ -80,7 +80,7 @@ test('all 47 grammar and tense lesson slugs resolve to their own page content', 
     await page.evaluate(slug => { window.location.hash = slug; }, lesson.slug);
     await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
     await expect(page.locator('#examples .example')).toHaveCount(3);
-    await expect(page.locator('#challenge .option')).toHaveCount(lesson.slug === 'g-present-simple' ? 6 : 3);
+    await expect(page.locator('#challenge .option')).toHaveCount(3);
     await expect(page.locator('#lessonSteps button')).toHaveCount(7);
     await page.locator('#lessonSteps [data-step-index="1"]').click();
     await expect(page.locator('#deep-guide .guide-card')).toHaveCount(5);
@@ -129,9 +129,29 @@ test('present simple explains both subject groups and all s/es/ies spelling rule
   await expect(explanation.locator('.step')).toHaveCount(12);
 
   await page.locator('#lessonSteps [data-step-index="6"]').click();
-  await expect(page.locator('#challenge .option')).toHaveCount(6);
-  await page.locator('#challenge .option').nth(1).click();
-  await expect(page.locator('#challenge .feedback')).toContainText('Mona اسم مفرد');
+
+  const rounds = [
+    { question: 'My brother', feedback: 'My brother شخص واحد' },
+    { question: 'Mona', feedback: 'Mona اسم مفرد' },
+    { question: 'They', feedback: 'They من المجموعة الأولى' },
+    { question: 'He doesn’t', feedback: 'بعد doesn’t' },
+    { question: 'your sister', feedback: 'your sister مفرد' },
+    { question: 'اختر الجملة الصحيحة', feedback: 'مع she في الإثبات' }
+  ];
+
+  for (let index = 0; index < rounds.length; index++) {
+    const round = rounds[index];
+    await expect(page.locator('#challenge .question')).toContainText(round.question);
+    await expect(page.locator('#challenge .option')).toHaveCount(3);
+    await expect(page.locator('#challenge .quiz-header .quiz-count').nth(1))
+      .toHaveText('السؤال ' + (index + 1) + ' من 6');
+    await page.locator('#challenge .option').nth(1).click();
+    await expect(page.locator('#challenge .feedback')).toContainText(round.feedback);
+
+    if (index < rounds.length - 1) {
+      await page.getByRole('button', { name: 'السؤال التالي' }).click();
+    }
+  }
 });
 
 test('lesson navigation labels match their actual home-page destinations', async ({ page }) => {
