@@ -11,12 +11,12 @@ async function openLearningSection(page, section) {
 test('grammar categories lead to dedicated pages and all lessons are accessible', async ({ page }) => {
   await page.goto('/grammar-library.html?type=grammar');
   const groups = page.locator('#groups .card');
-  await expect(groups).toHaveCount(9);
-  await expect(groups.filter({ hasText: 'قواعد الماضي' })).toHaveCount(1);
-  await groups.filter({ hasText: 'قواعد الماضي' }).click();
-  await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
+  await expect(groups).toHaveCount(8);
+  await expect(groups.filter({ hasText: 'قواعد وأزمنة الماضي' })).toHaveCount(1);
+  await groups.filter({ hasText: 'قواعد وأزمنة الماضي' }).click();
+  await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past(?:&from=grammar)?$/);
   const lessons = page.locator('#lessons .lesson');
-  await expect(lessons).toHaveCount(2);
+  await expect(lessons).toHaveCount(4);
   await expect(lessons.first()).toContainText('الماضي البسيط');
   await lessons.first().click();
   await expect(page).toHaveURL(/grammar-lesson\.html#g-past-simple$/);
@@ -30,14 +30,36 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await expect(page.locator('#lessonRoot')).not.toContainText('لم نعثر على هذا الدرس');
 });
 
-test('tense categories show present, past, and future lessons', async ({ page }) => {
-  await page.goto('/grammar-library.html?type=tenses');
-  const groups = page.locator('#groups .card');
-  await expect(groups).toHaveCount(3);
-  await groups.filter({ hasText: 'أزمنة الماضي' }).click();
-  await expect(page).toHaveURL(/grammar-category\.html\?type=tenses&group=past$/);
-  await expect(page.locator('#lessons .lesson')).toHaveCount(3);
-  await expect(page.locator('#lessons')).toContainText('Past Perfect');
+
+test('basics has its own tab beside the unified grammar library', async ({ page }) => {
+  await page.goto('/grammar-library.html?type=grammar');
+  await expect(page.locator('#basicsTab')).toBeVisible();
+  await expect(page.locator('#grammarTab')).toBeVisible();
+  await expect(page.locator('#tensesTab')).toHaveCount(0);
+  await expect(page.locator('#groups .card')).toHaveCount(8);
+  await page.locator('#basicsTab').click();
+  await expect(page).toHaveURL(/grammar-library\.html\?type=basics$/);
+  await expect(page.locator('#basicsTab')).toHaveClass(/active/);
+  await expect(page.locator('#groups .card')).toHaveCount(1);
+  await expect(page.locator('#groups .card')).toContainText('الأساسيات والضمائر');
+  await page.locator('#groups .card').click();
+  await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=basics(?:&from=basics)?$/);
+  await expect(page.locator('#lessons .lesson')).toHaveCount(6);
+});
+
+test('present, past, and future tenses are grouped inside grammar', async ({ page }) => {
+  await page.goto('/grammar-library.html?type=grammar');
+  await expect(page.locator('#groups .card')).toHaveCount(8);
+  await page.goto('/grammar-category.html?type=grammar&group=past');
+  await expect(page.locator('#lessons .lesson')).toHaveCount(4);
+  await expect(page.locator('#lessons')).toContainText('الماضي التام');
+  await expect(page.locator('#lessons')).toContainText('الماضي التام المستمر');
+  await page.goto('/grammar-category.html?type=grammar&group=present');
+  await expect(page.locator('#lessons .lesson')).toHaveCount(8);
+  await page.goto('/grammar-category.html?type=grammar&group=future');
+  await expect(page.locator('#lessons .lesson')).toHaveCount(5);
+  await expect(page.locator('#lessons')).toContainText('Future Perfect');
+  await expect(page.locator('#lessons')).toContainText('Future Perfect Continuous');
 });
 
 test('the home grammar entry opens the dedicated category library', async ({ page }) => {
@@ -46,7 +68,7 @@ test('the home grammar entry opens the dedicated category library', async ({ pag
   await expect(entry).toHaveAttribute('href', './grammar-library.html?type=grammar');
   await entry.click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=grammar$/);
-  await expect(page.locator('#groups .card')).toHaveCount(9);
+  await expect(page.locator('#groups .card')).toHaveCount(8);
 });
 
 test('dedicated grammar lesson fits a narrow mobile viewport', async ({ page }) => {
@@ -68,20 +90,20 @@ test('unknown lesson slugs show a safe fallback instead of a broken page', async
 });
 
 const lessonResolutionBatches = [
-  { name: 'first 16', start: 0, end: 16 },
-  { name: 'next 16', start: 16, end: 32 },
-  { name: 'final 15', start: 32, end: 47 }
+  { name: 'first 15', start: 0, end: 15 },
+  { name: 'next 14', start: 15, end: 29 },
+  { name: 'final 14', start: 29, end: 43 }
 ];
 
 for (const batch of lessonResolutionBatches) {
-  test('all 47 grammar and tense lessons resolve correctly: ' + batch.name, async ({ page }) => {
+  test('all 43 grammar and tense lessons resolve correctly: ' + batch.name, async ({ page }) => {
     await page.goto('/grammar-lesson.html#g-subject-pronouns');
     const lessons = await page.evaluate(() => window.EnglishHeroLessons.all.map(item => ({
       slug: item.slug,
       title: item.title
     })));
-    expect(lessons).toHaveLength(47);
-    expect(new Set(lessons.map(item => item.slug)).size).toBe(47);
+    expect(lessons).toHaveLength(43);
+    expect(new Set(lessons.map(item => item.slug)).size).toBe(43);
 
     for (const lesson of lessons.slice(batch.start, batch.end)) {
       await page.evaluate(slug => { window.location.hash = slug; }, lesson.slug);
@@ -99,7 +121,7 @@ for (const batch of lessonResolutionBatches) {
   });
 }
 
-test('all 47 lessons provide their own detailed beginner guide', async ({ page }) => {
+test('all 43 lessons provide their own detailed beginner guide', async ({ page }) => {
   await page.goto('/grammar-lesson.html#g-subject-pronouns');
   const guideAudit = await page.evaluate(() => window.EnglishHeroLessons.all.map(item => ({
     slug: item.slug,
@@ -111,7 +133,7 @@ test('all 47 lessons provide their own detailed beginner guide', async ({ page }
       watch: item.guide.watch
     }
   })));
-  expect(guideAudit).toHaveLength(47);
+  expect(guideAudit).toHaveLength(43);
   for (const item of guideAudit) {
     expect(item.guide, item.slug + ' missing guide').toBeTruthy();
     expect(item.guide.idea.length, item.slug + ' missing idea').toBeGreaterThan(25);
@@ -175,11 +197,11 @@ test('lesson navigation labels match their actual home-page destinations', async
   await expect(page.locator('.hero-actions .secondary')).toHaveAttribute('href', './index.html');
 
   // Final lesson: only the next control returns home; the previous control opens lesson 46.
-  await page.goto('/grammar-lesson.html#t-present-perfect-continuous');
+  await page.goto('/grammar-lesson.html#t-future-perfect-continuous');
   const lastPrevious = page.locator('.bottom-nav .lesson-neighbor').first();
   const lastNext = page.locator('.bottom-nav .lesson-neighbor').last();
   await expect(lastPrevious).toContainText('الدرس السابق');
-  await expect(lastPrevious).toHaveAttribute('href', './grammar-lesson.html#t-future-continuous');
+  await expect(lastPrevious).toHaveAttribute('href', './grammar-lesson.html#t-future-perfect');
   await expect(lastNext).toContainText('العودة إلى الرئيسية');
   await expect(lastNext).toHaveAttribute('href', './index.html');
 });
@@ -231,7 +253,7 @@ test('challenge feedback and retry remain functional after category navigation c
 });
 
 test('continuous and perfect tense formulas include Arabic explanations', async ({ page }) => {
-  for (const slug of ['t-present-continuous','t-past-continuous','t-present-perfect']) {
+  for (const slug of ['g-present-continuous','g-past-continuous','g-present-perfect']) {
     await page.goto('/grammar-lesson.html#' + slug);
     await page.locator('#lessonSteps [data-step-index="2"]').click();
     await expect(page.locator('.formula-ar')).toBeVisible();
@@ -243,10 +265,9 @@ test('continuous and perfect tense formulas include Arabic explanations', async 
 test('every grammar and tense category opens a populated page with valid lesson links', async ({ page }) => {
   const cases = [
     { type: 'grammar', groups: [
-      ['basics', 6], ['present', 6], ['past', 2], ['future', 2],
-      ['perfect', 2], ['questions', 4], ['nouns', 6], ['describing', 4], ['advanced', 5]
-    ]},
-    { type: 'tenses', groups: [['present', 4], ['past', 3], ['future', 3]] }
+      ['basics', 6], ['present', 8], ['past', 4], ['future', 5],
+      ['perfect', 1], ['questions', 4], ['nouns', 6], ['describing', 4], ['advanced', 5]
+    ]}
   ];
 
   for (const collection of cases) {
