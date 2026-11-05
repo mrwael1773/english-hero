@@ -23,7 +23,12 @@ test('grammar cards open a dedicated lesson with an interactive challenge', asyn
   await expect(page.locator('#formula')).toContainText('Subject + verb');
   await expect(page.locator('#examples .example')).toHaveCount(3);
   await expect(page.locator('#challenge .option')).toHaveCount(3);
+  await expect(page.locator('#lessonStepStatus')).toContainText('الخطوة 1 من 6');
+  await expect(page.locator('#concept')).toBeVisible();
+  await expect(page.locator('#formula')).toBeHidden();
 
+  await page.locator('#lessonSteps [data-step-index="2"]').click();
+  await expect(page.locator('#examples')).toBeVisible();
   const firstReveal = page.locator('#examples .example').first().locator('.reveal');
   await expect(firstReveal).toHaveAttribute('aria-expanded', 'false');
   await firstReveal.click();
@@ -32,6 +37,8 @@ test('grammar cards open a dedicated lesson with an interactive challenge', asyn
   await firstReveal.click();
   await expect(page.locator('#examples .example').first().locator('.example-ar')).toBeHidden();
 
+  await page.locator('#lessonSteps [data-step-index="5"]').click();
+  await expect(page.locator('#challenge')).toBeVisible();
   const options = page.locator('#challenge .option');
   const next = page.locator('#challenge .quiz-footer button');
   await options.nth(0).click();
@@ -129,4 +136,25 @@ test('lesson navigation labels match their actual home-page destinations', async
   await expect(lastPrevious).toHaveAttribute('href', './grammar-lesson.html#t-future-continuous');
   await expect(lastNext).toContainText('العودة إلى الرئيسية');
   await expect(lastNext).toHaveAttribute('href', './index.html');
+});
+
+test('grammar lesson guides the student through six focused steps', async ({ page }) => {
+  await page.goto('/grammar-lesson.html#g-present-simple');
+  const steps = page.locator('#lessonSteps button');
+  await expect(steps).toHaveCount(6);
+  await expect(page.locator('#concept')).toBeVisible();
+  await expect(page.locator('#formula')).toBeHidden();
+
+  await page.locator('.step-controls button').last().click();
+  await expect(page.locator('#formula')).toBeVisible();
+  await expect(page.locator('#concept')).toBeHidden();
+  await expect(page.locator('#lessonStepStatus')).toContainText('الخطوة 2 من 6');
+
+  await steps.nth(3).click();
+  await expect(page.locator('#mistake')).toBeVisible();
+  await expect(page.locator('#examples')).toBeHidden();
+
+  await page.locator('.step-controls button').first().click();
+  await expect(page.locator('#examples')).toBeVisible();
+  await expect(page.locator('#lessonSteps button[aria-current="step"]')).toContainText('شاهد الأمثلة');
 });
