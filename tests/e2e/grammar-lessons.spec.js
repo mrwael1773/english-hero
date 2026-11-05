@@ -39,12 +39,13 @@ test('tense categories show present, past, and future lessons', async ({ page })
   await expect(page.locator('#lessons')).toContainText('Past Perfect');
 });
 
-test('the foundation path also opens the same dedicated lesson pages', async ({ page }) => {
+test('the home grammar entry opens the dedicated category library', async ({ page }) => {
   await openLearningSection(page, 'grammarView');
-  const starter = page.locator('#grammarAcademyGrid a').first();
-  await expect(starter).toHaveAttribute('href', /grammar-lesson\.html#g-subject-pronouns/);
-  await starter.click();
-  await expect(page).toHaveURL(/grammar-lesson\.html#g-subject-pronouns$/);
+  const entry = page.locator('#grammarView a.grammar-entry');
+  await expect(entry).toHaveAttribute('href', './grammar-library.html?type=grammar');
+  await entry.click();
+  await expect(page).toHaveURL(/grammar-library\.html\?type=grammar$/);
+  await expect(page.locator('#groups .card')).toHaveCount(9);
 });
 
 test('dedicated grammar lesson fits a narrow mobile viewport', async ({ page }) => {
@@ -123,4 +124,35 @@ test('grammar lesson guides the student through six focused steps', async ({ pag
   await page.locator('.step-controls button').first().click();
   await expect(page.locator('#examples')).toBeVisible();
   await expect(page.locator('#lessonSteps button[aria-current="step"]')).toContainText('شاهد الأمثلة');
+});
+
+test('challenge feedback and retry remain functional after category navigation changes', async ({ page }) => {
+  await page.goto('/grammar-lesson.html#g-subject-pronouns');
+  await page.locator('#lessonSteps [data-step-index="5"]').click();
+  const options = page.locator('#challenge .option');
+  const next = page.locator('#challenge .quiz-footer button');
+  await options.nth(0).click();
+  await expect(page.locator('#challenge .feedback')).toContainText('صحيح');
+  await expect(next).toBeEnabled();
+  await next.click();
+  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 2 من 3');
+  await options.nth(0).click();
+  await expect(page.locator('#challenge .feedback')).toContainText('ليست الإجابة الصحيحة');
+  await expect(page.locator('#challenge .feedback')).toContainText('نستخدم She');
+  await next.click();
+  await options.nth(1).click();
+  await expect(page.locator('#challenge .feedback')).toContainText('صحيح');
+  await next.click();
+  await expect(page.locator('#challenge .quiz-result .score')).toHaveText('2 / 3');
+  await page.getByRole('button', { name: 'إعادة التحدي' }).click();
+  await expect(page.locator('#challenge .quiz-count').nth(1)).toHaveText('السؤال 1 من 3');
+  await expect(page.locator('#challenge .option')).toHaveCount(3);
+});
+
+test('continuous and perfect tense formulas include Arabic explanations', async ({ page }) => {
+  for (const slug of ['t-present-continuous','t-past-continuous','t-present-perfect']) {
+    await page.goto('/grammar-lesson.html#' + slug);
+    await expect(page.locator('.formula-ar')).toBeVisible();
+    await expect(page.locator('.formula-ar')).not.toBeEmpty();
+  }
 });
