@@ -161,3 +161,31 @@ test('continuous and perfect tense formulas include Arabic explanations', async 
     await expect(page.locator('.formula-ar')).not.toBeEmpty();
   }
 });
+
+
+test('every grammar and tense category opens a populated page with valid lesson links', async ({ page }) => {
+  const cases = [
+    { type: 'grammar', groups: [
+      ['basics', 6], ['present', 6], ['past', 2], ['future', 2],
+      ['perfect', 2], ['questions', 4], ['nouns', 6], ['describing', 4], ['advanced', 5]
+    ]},
+    { type: 'tenses', groups: [['present', 4], ['past', 3], ['future', 3]] }
+  ];
+
+  for (const collection of cases) {
+    await page.goto('/grammar-library.html?type=' + collection.type);
+    for (const [group, expectedCount] of collection.groups) {
+      await page.goto('/grammar-category.html?type=' + collection.type + '&group=' + group);
+      const cards = page.locator('#lessons .lesson');
+      await expect(cards).toHaveCount(expectedCount);
+      const hrefs = await cards.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
+      expect(hrefs.every(href => /^\\.\\/grammar-lesson\\.html#(?:g|t)-[a-z0-9-]+$/.test(href))).toBeTruthy();
+      expect(new Set(hrefs).size).toBe(expectedCount);
+      for (const href of hrefs) {
+        await page.goto(href);
+        await expect(page.locator('#lessonRoot h1')).toBeVisible();
+        await expect(page.locator('#lessonRoot h1')).not.toBeEmpty();
+      }
+    }
+  }
+});
