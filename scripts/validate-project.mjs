@@ -84,9 +84,12 @@ try {
   check(categoryUnique.size === 47 && allLessons.every(item => categoryUnique.has(item.slug)) && [...categoryUnique].every(slug => allLessons.some(item => item.slug === slug)), 'All 47 lessons appear exactly once across grammar and tense categories');
   const formulaMapMatch = grammarLessonPage.match(/const formulaArabic\s*=\s*(\{[\s\S]*?\n\s*\});/);
   const formulaMap = formulaMapMatch ? new Function('return (' + formulaMapMatch[1] + ')')() : {};
-  const formulaAliases = [...grammarLessonPage.matchAll(/formulaArabic\[['"]([^'"]+)['"]\]\s*=/g)].map(match => match[1]);
-  const translatedFormulas = new Set([...Object.keys(formulaMap), ...formulaAliases]);
-  check([...new Set(allLessons.map(item => item.formula))].every(formula => translatedFormulas.has(formula)), 'Every grammar and tense formula has an Arabic translation');
+  const uniqueFormulas = [...new Set(allLessons.map(item => item.formula))];
+  const translatedFormulas = uniqueFormulas.every(formula =>
+    typeof formulaMap[formula] === 'string' &&
+    /[\\u0600-\\u06FF]/.test(formulaMap[formula].replace(/\\([^)]*\\)/g, ''))
+  );
+  check(translatedFormulas, 'Every exact grammar and tense formula key has a non-empty Arabic translation');
 
   const slugs = allLessons.map(item => item.slug);
   const validQuestions = item => Array.isArray(item.questions) && item.questions.length >= 3 &&
