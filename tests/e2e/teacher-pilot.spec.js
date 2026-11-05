@@ -221,3 +221,51 @@ test('invalid saved lesson state cannot unlock mastery or retention questions', 
   expect(saved.reviewDue).toBeNull();
   expect(saved.attempts).toBe(10000);
 });
+
+
+test('pilot word and listening controls invoke English speech playback', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spokenUtterances = [];
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speaking: false,
+        pending: false,
+        cancel() { this.speaking = false; this.pending = false; },
+        resume() {},
+        getVoices() { return [{name: 'Test English', lang: 'en-US', localService: true}]; },
+        speak(utterance) {
+          window.__spokenUtterances.push({text: utterance.text, lang: utterance.lang, rate: utterance.rate});
+        }
+      }
+    });
+    window.SpeechSynthesisUtterance = class {
+      constructor(text) { this.text = text; }
+    };
+  });
+  await page.reload();
+  await page.locator('[data-listen="0"]').click();
+  await expect.poll(() => page.evaluate(() => window.__spokenUtterances.length)).toBe(1);
+  expect(await page.evaluate(() => window.__spokenUtterances[0])).toMatchObject({
+    text: 'Name', lang: 'en-US', rate: 0.88
+  });
+
+  for (let i = 0; i < 6; i++) await page.locator('[data-trained]').nth(i).click();
+  await page.locator('#finishTraining').click();
+  await page.locator('#startTest').click();
+  for (let i = 0; i < 18 && !(await page.locator('#playQuestion').count()); i++) {
+    if (await page.locator('#typedAnswer').count()) {
+      await page.locator('#typedAnswer').fill('incorrect');
+      await page.locator('#checkTypedAnswer').click();
+    } else {
+      await page.locator('#testArea [data-choice]').first().click();
+    }
+    await page.locator('#nextQuestion').click();
+  }
+  await expect(page.locator('#playQuestion')).toBeVisible();
+  await page.locator('#playQuestion').click();
+  await expect.poll(() => page.evaluate(() => window.__spokenUtterances.length)).toBe(2);
+  const utterances = await page.evaluate(() => window.__spokenUtterances);
+  expect(utterances[1].lang).toBe('en-US');
+  expect(['Name', 'Student', 'From', 'Live', 'Like', 'Football']).toContain(utterances[1].text);
+});
