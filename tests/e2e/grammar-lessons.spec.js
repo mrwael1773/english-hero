@@ -11,9 +11,9 @@ async function openLearningSection(page, section) {
 test('grammar categories lead to dedicated pages and all lessons are accessible', async ({ page }) => {
   await page.goto('/grammar-library.html?type=grammar');
   const groups = page.locator('#groups .card');
-  await expect(groups).toHaveCount(8);
+  await expect(groups).toHaveCount(7);
   await expect(groups.filter({ hasText: 'قواعد وأزمنة الماضي' })).toHaveCount(1);
-  await groups.filter({ hasText: 'قواعد الماضي' }).click();
+  await groups.filter({ hasText: 'قواعد وأزمنة الماضي' }).click();
   await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
   const lessons = page.locator('#lessons .lesson');
   await expect(lessons).toHaveCount(2);
@@ -36,7 +36,7 @@ test('basics has its own tab beside the unified grammar library', async ({ page 
   await expect(page.locator('#basicsTab')).toBeVisible();
   await expect(page.locator('#grammarTab')).toBeVisible();
   await expect(page.locator('#tensesTab')).toHaveCount(0);
-  await expect(page.locator('#groups .card')).toHaveCount(8);
+  await expect(page.locator('#groups .card')).toHaveCount(7);
   await page.locator('#basicsTab').click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=basics$/);
   await expect(page.locator('#basicsTab')).toHaveClass(/active/);
@@ -49,13 +49,13 @@ test('basics has its own tab beside the unified grammar library', async ({ page 
 
 test('present, past, and future tenses are grouped inside grammar', async ({ page }) => {
   await page.goto('/grammar-library.html?type=grammar');
-  await expect(page.locator('#groups .card')).toHaveCount(8);
+  await expect(page.locator('#groups .card')).toHaveCount(7);
   await page.goto('/grammar-category.html?type=grammar&group=past');
   await expect(page.locator('#lessons .lesson')).toHaveCount(4);
   await expect(page.locator('#lessons')).toContainText('الماضي التام');
   await expect(page.locator('#lessons')).toContainText('الماضي التام المستمر');
   await page.goto('/grammar-category.html?type=grammar&group=present');
-  await expect(page.locator('#lessons .lesson')).toHaveCount(8);
+  await expect(page.locator('#lessons .lesson')).toHaveCount(7);
   await page.goto('/grammar-category.html?type=grammar&group=future');
   await expect(page.locator('#lessons .lesson')).toHaveCount(5);
   await expect(page.locator('#lessons')).toContainText('Future Perfect');
@@ -68,7 +68,7 @@ test('the home grammar entry opens the dedicated category library', async ({ pag
   await expect(entry).toHaveAttribute('href', './grammar-library.html?type=grammar');
   await entry.click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=grammar$/);
-  await expect(page.locator('#groups .card')).toHaveCount(8);
+  await expect(page.locator('#groups .card')).toHaveCount(7);
 });
 
 test('dedicated grammar lesson fits a narrow mobile viewport', async ({ page }) => {
@@ -110,7 +110,7 @@ for (const batch of lessonResolutionBatches) {
       await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
       await expect(page.locator('#examples .example')).toHaveCount(3);
       await expect(page.locator('#challenge .option')).toHaveCount(3);
-      await expect(page.locator('#lessonSteps button')).toHaveCount(8);
+      await expect(page.locator('#lessonSteps button')).toHaveCount(7);
       await page.locator('#lessonSteps [data-step-index="1"]').click();
       await expect(page.locator('#deep-guide .guide-card')).toHaveCount(5);
       await expect(page.locator('#deep-guide')).toContainText('متى أستخدمها؟');
@@ -209,7 +209,7 @@ test('lesson navigation labels match their actual home-page destinations', async
 test('grammar lesson guides the student through seven focused steps', async ({ page }) => {
   await page.goto('/grammar-lesson.html#g-present-simple');
   const steps = page.locator('#lessonSteps button');
-  await expect(steps).toHaveCount(8);
+  await expect(steps).toHaveCount(7);
   await expect(page.locator('#concept')).toBeVisible();
   await expect(page.locator('#formula')).toBeHidden();
 
