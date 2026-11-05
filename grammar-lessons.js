@@ -344,7 +344,7 @@
     't-future-continuous': {idea:'يصف فعلًا سيكون مستمرًا عند لحظة محددة في المستقبل.',use:'في مثل هذا الوقت غدًا سأكون أدرس؛ التركيز على النشاط الجاري في تلك اللحظة.',build:['will be ثابتة مع كل الضمائر.','أضف ing للفعل بعد be.','استخدم وقتًا مستقبليًا محددًا لتوضيح اللحظة.','يمكن استخدامه للسؤال بلطف عن خطط شخص: Will you be using the car?'],compare:'I will study at 8 قد يذكر فعلًا مستقبليًا؛ I will be studying at 8 يصور الفعل مستمرًا عند الثامنة.',watch:'لا تقل will studying؛ يجب be بين will والفعل ing.'},
     't-present-perfect-continuous': {idea:'يركز على نشاط بدأ في الماضي واستمر إلى الحاضر أو على مدته وآثاره.',use:'بدأت الدراسة قبل ساعتين وما زلت تدرس، أو انتهيت للتو وتظهر آثار النشاط.',build:['have been مع I/you/we/they، وhas been مع he/she/it.','أضف ing للفعل.','for تذكر مدة، وsince تذكر نقطة بداية.','قد يستمر النشاط حتى الآن أو يتوقف قريبًا مع بقاء أثره؛ السياق يوضح ذلك.'],compare:'I have read the book تركز على الإنجاز/النتيجة؛ I have been reading for two hours تركز على النشاط ومدته.',watch:'لا تخلط بين for وsince: for + مدة، since + نقطة بداية. ولا تنس been وing.'}
   };
+  grammar.concat(tenses).forEach(item => { item.guide = lessonGuides[item.slug] || null; });
   const all = grammar.map(item => ({...item, type:'grammar'})).concat(tenses.map(item => ({...item, type:'tense'})));
-  all.forEach(item => { item.guide = lessonGuides[item.slug] || null; });
   window.EnglishHeroLessons = { grammar, tenses, all };
 })();
