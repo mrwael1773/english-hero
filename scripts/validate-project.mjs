@@ -68,7 +68,7 @@ check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.include
 check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
 check(grammarLessonPage.includes("const start=safeText('button','btn primary','ابدأ التعلّم ↓')") && grammarLessonPage.includes('formulaArabic') && grammarLessonPage.includes("safeText('p','formula-ar'"), 'Lesson start action preserves the lesson slug and each formula has an Arabic explanation');
 check(grammarLibraryPage.includes('LEARNING MAP') && grammarCategoryPage.includes('window.EnglishHeroLessons.all') && sw.includes("'./grammar-library.html'") && sw.includes("'./grammar-category.html'"), 'Grammar and tense category pages are linked and cached offline');
-check(grammarLessonPage.includes("const stepNames=['افهم الفكرة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك']") && grammarLessonPage.includes('data-step-index') && grammarLessonPage.includes('lessonStepStatus'), 'Dedicated lesson page guides students through six focused learning steps');
+check(grammarLessonPage.includes("const stepNames=['افهم الفكرة','تفصيل القاعدة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك']") && grammarLessonPage.includes('data-step-index') && grammarLessonPage.includes('lessonStepStatus') && grammarLessonPage.includes('activeLesson.guide') && grammarLessonPage.includes('guide-card'), 'Dedicated lesson page guides students through seven detailed learning steps');
 check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=2'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
 try {
   new Function(grammarLessonsRaw);
@@ -92,6 +92,13 @@ try {
   check(translatedFormulas, 'Every exact grammar and tense formula key has a non-empty Arabic translation');
 
   const slugs = allLessons.map(item => item.slug);
+  const validGuides = allLessons.every(item => item.guide &&
+    typeof item.guide.idea === 'string' && item.guide.idea.trim().length > 25 &&
+    typeof item.guide.use === 'string' && item.guide.use.trim().length > 20 &&
+    Array.isArray(item.guide.build) && item.guide.build.length >= 3 &&
+    typeof item.guide.compare === 'string' && item.guide.compare.trim().length > 20 &&
+    typeof item.guide.watch === 'string' && item.guide.watch.trim().length > 20);
+  check(validGuides, 'All 47 lessons include a unique detailed guide with idea, use, build steps, comparison, and common pitfalls');
   const validQuestions = item => Array.isArray(item.questions) && item.questions.length >= 3 &&
     item.questions.every(q => q && typeof q.text === 'string' && q.text.trim() &&
       Array.isArray(q.options) && q.options.length === 3 &&
