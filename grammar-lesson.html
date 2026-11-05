@@ -261,7 +261,7 @@
         const stageContainer=safeText('div','lesson-stages');
         const stageElements=[],stepButtons=[];
         const status=safeText('div','step-status','الخطوة 1 من 6 • افهم الفكرة');
-        status.id='lessonStepStatus';
+        status.id='lessonStepStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
         const progress=safeText('div','step-progress');
         progress.setAttribute('role','progressbar');
         progress.setAttribute('aria-label','تقدّمك في خطوات الدرس');
