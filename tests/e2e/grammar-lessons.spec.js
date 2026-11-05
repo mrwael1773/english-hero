@@ -179,7 +179,7 @@ test('every grammar and tense category opens a populated page with valid lesson 
       const cards = page.locator('#lessons .lesson');
       await expect(cards).toHaveCount(expectedCount);
       const hrefs = await cards.evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
-      expect(hrefs.every(href => /^\\.\\/grammar-lesson\\.html#(?:g|t)-[a-z0-9-]+$/.test(href))).toBeTruthy();
+      expect(hrefs.every(href => /^\.\/grammar-lesson\.html#(?:g|t)-[a-z0-9-]+$/.test(href))).toBeTruthy();
       expect(new Set(hrefs).size).toBe(expectedCount);
       for (const href of hrefs) {
         await page.goto(href);
