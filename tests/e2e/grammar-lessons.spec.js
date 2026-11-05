@@ -14,7 +14,7 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await expect(groups).toHaveCount(8);
   await expect(groups.filter({ hasText: 'قواعد وأزمنة الماضي' })).toHaveCount(1);
   await groups.filter({ hasText: 'قواعد وأزمنة الماضي' }).click();
-  await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
+  await expect(page).toHaveURL(/grammar-category\\.html\\?type=grammar&group=past(?:&from=grammar)?$/);
   const lessons = page.locator('#lessons .lesson');
   await expect(lessons).toHaveCount(4);
   await expect(lessons.first()).toContainText('الماضي البسيط');
@@ -43,7 +43,7 @@ test('basics has its own tab beside the unified grammar library', async ({ page 
   await expect(page.locator('#groups .card')).toHaveCount(1);
   await expect(page.locator('#groups .card')).toContainText('الأساسيات والضمائر');
   await page.locator('#groups .card').click();
-  await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=basics$/);
+  await expect(page).toHaveURL(/grammar-category\\.html\\?type=grammar&group=basics(?:&from=basics)?$/);
   await expect(page.locator('#lessons .lesson')).toHaveCount(6);
 });
 
