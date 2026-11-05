@@ -21,11 +21,12 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await lessons.first().click();
   await expect(page).toHaveURL(/grammar-lesson\.html#g-past-simple$/);
   await expect(page.locator('#lessonRoot h1')).toContainText('الماضي البسيط');
-  await expect(page.locator('.formula-ar')).toBeVisible();
   const lessonUrl = page.url();
   await page.getByRole('button', { name: 'ابدأ التعلّم' }).click();
   await expect(page).toHaveURL(lessonUrl);
   await expect(page.locator('#concept')).toBeVisible();
+  await page.locator('#lessonSteps [data-step-index="1"]').click();
+  await expect(page.locator('.formula-ar')).toBeVisible();
   await expect(page.locator('#lessonRoot')).not.toContainText('لم نعثر على هذا الدرس');
 });
 
@@ -152,6 +153,7 @@ test('challenge feedback and retry remain functional after category navigation c
 test('continuous and perfect tense formulas include Arabic explanations', async ({ page }) => {
   for (const slug of ['t-present-continuous','t-past-continuous','t-present-perfect']) {
     await page.goto('/grammar-lesson.html#' + slug);
+    await page.locator('#lessonSteps [data-step-index="1"]').click();
     await expect(page.locator('.formula-ar')).toBeVisible();
     await expect(page.locator('.formula-ar')).not.toBeEmpty();
   }
