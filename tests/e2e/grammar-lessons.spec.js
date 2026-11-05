@@ -21,7 +21,7 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await lessons.first().click();
   await expect(page).toHaveURL(/grammar-lesson\.html#g-past-simple$/);
   await expect(page.locator('#lessonRoot h1')).toContainText('الماضي البسيط');
-  await expect(page.locator('#formula-ar')).toBeVisible();
+  await expect(page.locator('.formula-ar')).toBeVisible();
   const lessonUrl = page.url();
   await page.getByRole('button', { name: 'ابدأ التعلّم' }).click();
   await expect(page).toHaveURL(lessonUrl);
