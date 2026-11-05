@@ -11,7 +11,7 @@ async function openLearningSection(page, section) {
 test('grammar categories lead to dedicated pages and all lessons are accessible', async ({ page }) => {
   await page.goto('/grammar-library.html?type=grammar');
   const groups = page.locator('#groups .card');
-  await expect(groups).toHaveCount(9);
+  await expect(groups).toHaveCount(8);
   await expect(groups.filter({ hasText: 'قواعد الماضي' })).toHaveCount(1);
   await groups.filter({ hasText: 'قواعد الماضي' }).click();
   await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
@@ -30,6 +30,23 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await expect(page.locator('#lessonRoot')).not.toContainText('لم نعثر على هذا الدرس');
 });
 
+
+test('basics has its own tab beside grammar and tenses', async ({ page }) => {
+  await page.goto('/grammar-library.html?type=grammar');
+  await expect(page.locator('#basicsTab')).toBeVisible();
+  await expect(page.locator('#grammarTab')).toBeVisible();
+  await expect(page.locator('#tensesTab')).toBeVisible();
+  await expect(page.locator('#groups .card')).toHaveCount(8);
+  await page.locator('#basicsTab').click();
+  await expect(page).toHaveURL(/grammar-library\\.html\\?type=basics$/);
+  await expect(page.locator('#basicsTab')).toHaveClass(/active/);
+  await expect(page.locator('#groups .card')).toHaveCount(1);
+  await expect(page.locator('#groups .card')).toContainText('الأساسيات والضمائر');
+  await page.locator('#groups .card').click();
+  await expect(page).toHaveURL(/grammar-category\\.html\\?type=grammar&group=basics$/);
+  await expect(page.locator('#lessons .lesson')).toHaveCount(6);
+});
+
 test('tense categories show present, past, and future lessons', async ({ page }) => {
   await page.goto('/grammar-library.html?type=tenses');
   const groups = page.locator('#groups .card');
@@ -46,7 +63,7 @@ test('the home grammar entry opens the dedicated category library', async ({ pag
   await expect(entry).toHaveAttribute('href', './grammar-library.html?type=grammar');
   await entry.click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=grammar$/);
-  await expect(page.locator('#groups .card')).toHaveCount(9);
+  await expect(page.locator('#groups .card')).toHaveCount(8);
 });
 
 test('dedicated grammar lesson fits a narrow mobile viewport', async ({ page }) => {
