@@ -62,11 +62,19 @@ test('present, past, and future tenses are grouped inside grammar', async ({ pag
   await expect(page.locator('#lessons')).toContainText('Future Perfect Continuous');
 });
 
-test('the home grammar entry opens the dedicated category library', async ({ page }) => {
+test('the learning hub shows direct Basics and Grammar choices', async ({ page }) => {
   await openLearningSection(page, 'grammarView');
-  const entry = page.locator('#grammarView a.grammar-entry');
-  await expect(entry).toHaveAttribute('href', './grammar-library.html?type=grammar');
-  await entry.click();
+
+  const basicsEntry = page.locator('#grammarView a[href="./grammar-library.html?type=basics"]');
+  const grammarEntry = page.locator('#grammarView a[href="./grammar-library.html?type=grammar"]');
+
+  const directChoices = page.locator('#grammarView > .grid.learning-options > a');
+  await expect(directChoices).toHaveCount(2);
+  await expect(basicsEntry).toContainText('الأساسيات');
+  await expect(grammarEntry).toContainText('القواعد والأزمنة');
+  await expect(page.locator('#grammarView')).not.toContainText('استكشف مكتبة القواعد والأزمنة');
+
+  await grammarEntry.click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=grammar$/);
   await expect(page.locator('#groups .card')).toHaveCount(8);
 });
