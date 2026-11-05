@@ -21,7 +21,7 @@
     .section{margin-top:24px}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:13px}.section-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:14px;background:#273653;border:1px solid #465b7c;font-size:20px}.section-head h2{margin:0;font-size:clamp(19px,3vw,24px)}.section-head p{margin:1px 0 0;color:var(--muted);font-size:12px}
     .concept,.formula-card,.steps,.mistake,.quiz-card,.tip-card{border:1px solid var(--line);background:linear-gradient(145deg,var(--surface),#152138);border-radius:22px;padding:clamp(17px,3vw,25px);box-shadow:0 12px 30px #050a171f}
     .concept{display:flex;gap:15px;align-items:flex-start}.concept-emoji{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:16px;background:#4b45762b;font-size:25px}.concept h3{margin:0 0 5px;font-size:17px}.concept p{margin:0;color:#c4d1e5;line-height:1.9}
-    .formula-card{border-color:#4b5180;background:radial-gradient(circle at 90% 0%,#9b8bff20,transparent 45%),linear-gradient(145deg,#202344,#1a2e45)}.formula-label{font-size:12px;color:var(--mint);font-weight:900}.formula{direction:ltr;text-align:center;unicode-bidi:plaintext;overflow-wrap:anywhere;font-size:clamp(18px,4vw,27px);font-weight:900;line-height:1.55;padding:14px 10px;margin:8px 0 0;color:#f2edff}
+    .formula-card{border-color:#4b5180;background:radial-gradient(circle at 90% 0%,#9b8bff20,transparent 45%),linear-gradient(145deg,#202344,#1a2e45)}.formula-label{font-size:12px;color:var(--mint);font-weight:900}.formula-ar{margin:8px 0 0;padding:10px 12px;border-radius:12px;background:#ffffff0c;color:#d7e8ff;text-align:center;font-size:14px;line-height:1.9;font-weight:700}.formula{direction:ltr;text-align:center;unicode-bidi:plaintext;overflow-wrap:anywhere;font-size:clamp(18px,4vw,27px);font-weight:900;line-height:1.55;padding:14px 10px;margin:8px 0 0;color:#f2edff}
     .step-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.step{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;min-width:0}.step-no{width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;border-radius:10px;background:#3b376b;color:#c6bdff;font-weight:900;font-size:13px}.step p{margin:0;color:#d2dced;font-size:14px;line-height:1.8}
     .example-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.example{border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:16px;min-width:0}.example-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.example-tag{font-size:11px;color:var(--mint);font-weight:850}.example-en{direction:ltr;text-align:left;font-size:clamp(17px,2.8vw,21px);font-weight:850;line-height:1.5;margin:13px 0;color:#fff;overflow-wrap:anywhere}.example-ar{color:#d0dced;font-size:14px;margin:6px 0 0}.example-ar[hidden]{display:none}.reveal{border:1px solid #4a5b7a;color:#dfeaff;background:#22324b;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:800}
     .mistake{border-color:#704957;background:linear-gradient(145deg,#302237,#1e263b)}.mistake-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mistake-side{border-radius:14px;padding:13px;background:#111b2caa;border:1px solid #ffffff12}.mistake-side small{display:block;font-weight:900;font-size:11px;margin-bottom:7px}.mistake-side.wrong small{color:var(--red)}.mistake-side.correct small{color:var(--mint)}.mistake-text{direction:ltr;text-align:left;unicode-bidi:plaintext;font-weight:850;font-size:16px;line-height:1.55;overflow-wrap:anywhere}.why{color:#ced8e8;font-size:13px;margin:12px 0 0;line-height:1.8}
@@ -226,6 +226,51 @@
         return section;
       }
 
+const formulaArabic = {
+'Subject + verb':'الفاعل + الفعل.',
+'Subject + am / is / are + noun / adjective / place':'الفاعل + فعل be المناسب + اسم أو صفة أو مكان.',
+'I / you / we / they + base verb — he / she / it + verb-s':'أنا / أنت / نحن / هم + الفعل بصورته الأساسية — هو / هي / لغير العاقل + الفعل مع s أو es.',
+'Subject + am / is / are + verb-ing':'الفاعل + فعل be (am / is / are) + الفعل مضافًا إليه ing.',
+'Subject + past verb — negative: did not + base verb':'الفاعل + الفعل بصيغة الماضي — في النفي: did not (لم) + الفعل بصورته الأساسية.',
+'Subject + was / were + verb-ing':'الفاعل + was أو were (كان/كانوا) + الفعل مضافًا إليه ing.',
+'Subject + will + base verb':'الفاعل + will (سوف) + الفعل بصورته الأساسية.',
+'Subject + am / is / are + going to + base verb':'الفاعل + am / is / are + going to (ينوي/سوف) + الفعل بصورته الأساسية.',
+'Subject + have / has + past participle':'الفاعل + have أو has + التصريف الثالث للفعل.',
+'Question word + auxiliary / be + subject + ...?':'أداة السؤال + الفعل المساعد أو be + الفاعل + بقية السؤال؟',
+'a + singular noun — an + vowel sound — the + specific noun':'a أو an + اسم مفرد غير محدد — the + اسم محدد ومعروف.',
+'at + clock time — on + day/date — in + month/year/period':'at + وقت الساعة — on + يوم أو تاريخ — in + شهر أو سنة أو فترة.',
+'many + countable plural — much + uncountable — a lot of + both':'many مع جمع معدود — much مع غير المعدود — a lot of مع الاثنين.',
+'like + verb-ing — like + to + base verb':'like (يحب) + فعل ينتهي بـ ing — أو like + to + الفعل الأساسي.',
+'short adjective + -er + than — more + long adjective + than':'صفة قصيرة + er + than (من) — more + صفة طويلة + than (من).',
+'verb + adverb — often adjective + -ly':'الفعل + الظرف الذي يوضح كيف حدث — وغالبًا الصفة + ly لتكوين الظرف.',
+'I / you / we / they + don’t + base verb — he / she / it + doesn’t + base verb':'أنا / أنت / نحن / هم + don’t (لا) + الفعل الأساسي — هو / هي + doesn’t (لا) + الفعل الأساسي.',
+'Do / Does + subject + base verb + ...?':'Do أو Does + الفاعل + الفعل الأساسي + بقية السؤال؟',
+'There is + singular — There are + plural':'There is (يوجد) + مفرد — There are (يوجد) + جمع.',
+'I / you / we / they + have — he / she / it + has':'I / you / we / they + have (لديّ/لدينا) — he / she / it + has (لديه/لديها).',
+'possessive adjective + noun':'صفة ملكية + اسم: my (لي)، your (لك)، his (له)، her (لها)، our (لنا)، their (لهم).',
+'verb / preposition + object pronoun':'فعل أو حرف جر + ضمير مفعول به مثل me (إياي) وhim (إياه).',
+'some: often in affirmative / offers — any: often in negatives and questions':'some (بعض) غالبًا في الإثبات والعروض — any (أي/بعض) غالبًا في النفي والأسئلة.',
+'preposition of place + noun':'حرف جر للمكان + اسم.',
+'subject + can / can’t + base verb':'الفاعل + can (يستطيع) أو can’t (لا يستطيع) + الفعل الأساسي.',
+'must / should + base verb':'must (يجب) أو should (ينبغي) + الفعل الأساسي.',
+'base verb + ... — negative: Don’t + base verb':'الفعل الأساسي مباشرة — في النهي: Don’t (لا) + الفعل الأساسي.',
+'result + because + reason — reason + so + result':'النتيجة + because (لأن) + السبب — السبب + so (لذلك) + النتيجة.',
+'one = singular noun replacement — ones = plural noun replacement':'one تُستخدم بدل اسم مفرد — ones تُستخدم بدل اسم جمع.',
+'too + adjective — adjective + enough — enough + noun':'too (أكثر من اللازم) + صفة — صفة + enough (بما يكفي) — enough + اسم.',
+'enjoy + verb-ing':'enjoy (يستمتع) + فعل ينتهي بـ ing.',
+'If + present simple, will + base verb':'If (إذا) + المضارع البسيط، will (سوف) + الفعل الأساسي.',
+'subject + be (correct tense) + past participle':'الفاعل + فعل be بالزمن المناسب + التصريف الثالث للفعل.',
+'person + who / thing + which — that can refer to people or things':'الشخص + who (الذي) / الشيء + which (الذي) — that قد تشير إلى شخص أو شيء.',
+'said (that) + reported clause':'said (قال) + that (أنّ) + الجملة المنقولة.',
+'verb + particle (adverb / preposition) = a new meaning':'فعل + كلمة مصاحبة (ظرف أو حرف جر) = معنى جديد.',
+'past verb — negative / question: did + base verb':'الفعل الماضي — في النفي أو السؤال: did + الفعل الأساسي.',
+'had + past participle':'had (كان قد) + التصريف الثالث للفعل.',
+'will + base verb':'will (سوف) + الفعل الأساسي.',
+'am / is / are + going to + base verb':'am / is / are + going to (سوف/ينوي) + الفعل الأساسي.',
+'will be + verb-ing':'will be (سوف يكون) + الفعل مضافًا إليه ing.',
+'have / has been + verb-ing':'have / has been (ما زال/ظلّ) + الفعل مضافًا إليه ing.'
+};
+
       function renderLesson() {
         const slug = decodeURIComponent(location.hash.replace(/^#/,'').trim());
         const data = window.EnglishHeroLessons;
@@ -246,8 +291,9 @@
         meta.append(safeText('span','pill','⏱ '+activeLesson.minutes+' دقائق'));
         hero.append(meta,safeText('h1','',activeLesson.title),safeText('p','hero-summary',activeLesson.summary));
         const actions=safeText('div','hero-actions');
-        const start=safeText('a','btn primary','ابدأ التعلّم ↓');
-        start.href='#concept';
+        const start=safeText('button','btn primary','ابدأ التعلّم ↓');
+        start.type='button';
+        start.addEventListener('click',()=>document.getElementById('concept')?.scrollIntoView({behavior:'smooth',block:'start'}));
         const indexLink=safeText('a','btn secondary','الرئيسية');
         indexLink.href='./index.html';
         actions.append(start,indexLink);
@@ -313,7 +359,9 @@
         formulaCard.append(safeText('span','formula-label','شكل القاعدة'));
         const formulaText=safeText('div','formula',activeLesson.formula);
         formulaText.dir='ltr';
-        formulaCard.append(formulaText);formula.append(formulaCard);
+        formulaCard.append(formulaText);
+        const formulaAr=safeText('p','formula-ar',formulaArabic[activeLesson.formula]||'اقرأ الصيغة من اليسار إلى اليمين، ثم راجع معنى كل جزء في الخطوات التالية.');
+        formulaCard.append(formulaAr);formula.append(formulaCard);
         const steps=safeText('div','step-grid');
         activeLesson.steps.forEach((line,index)=>{
           const item=safeText('article','step');
