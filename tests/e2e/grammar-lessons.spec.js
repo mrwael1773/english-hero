@@ -31,11 +31,11 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
 });
 
 
-test('basics has its own tab beside grammar and tenses', async ({ page }) => {
+test('basics has its own tab beside the unified grammar library', async ({ page }) => {
   await page.goto('/grammar-library.html?type=grammar');
   await expect(page.locator('#basicsTab')).toBeVisible();
   await expect(page.locator('#grammarTab')).toBeVisible();
-  await expect(page.locator('#tensesTab')).toBeVisible();
+  await expect(page.locator('#tensesTab')).toHaveCount(0);
   await expect(page.locator('#groups .card')).toHaveCount(8);
   await page.locator('#basicsTab').click();
   await expect(page).toHaveURL(/grammar-library\.html\?type=basics$/);
