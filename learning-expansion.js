@@ -153,7 +153,7 @@
         ['✅','إجابات صحيحة مسجلة',correct + ' / ' + count],
         ['📚','الدروس المتقنة',state.masteredLessons.length + (typeof lessons !== 'undefined' ? ' / ' + lessons.length : '')],
         ['⚡','نقاط الخبرة',state.xp],
-        ['🧠','أخطاء تحتاج مراجعة',Object.keys(state.misses || {}).length]
+        ['🧠','مراجعات معلقة',typeof pendingReviewCount==='function'?pendingReviewCount():Object.keys(state.misses || {}).length]
       ];
       report.replaceChildren(...data.map(([emoji,label,value]) => {
         const card = document.createElement('div'); card.className = 'stat';

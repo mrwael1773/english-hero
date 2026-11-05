@@ -175,7 +175,7 @@ try {
   fail.push('General grammar quiz bank can be parsed and validated: ' + error.message);
 }
 check(learningExpansion.includes('ehFontScale') && learningExpansion.includes('ehReduceMotion'), 'Font-size and reduced-motion customization controls are present');
-check(learningExpansion.includes('متوسط نتائج الاختبارات') && learningExpansion.includes('أخطاء تحتاج مراجعة'), 'Progress report includes quiz averages and review needs');
+check(learningExpansion.includes('متوسط نتائج الاختبارات') && learningExpansion.includes('مراجعات معلقة') && html.includes('function pendingReviewCount()'), 'Progress report counts pending practice and retention reviews');
 try { new Function(learningExpansion); check(true, 'Learning expansion JavaScript syntax is valid'); } catch (error) { fail.push(`learning-expansion.js has a syntax error: ${error.message}`); }
 check(html.includes('id="proDashboard"') && html.includes('id="weeklyActivity"') && html.includes('id="quizHistoryList"') && html.includes('id="quizMistakesList"'), 'Professional statistics, quiz history, and error review UI exist');
 check(progressDashboard.includes('state.masteredLessons.includes(l.id)?l.words.length:0') && !progressDashboard.includes('state.masteredLessons.includes(i)?l.words.length:0'), 'Mastered-word totals use lesson IDs including extra lessons');
