@@ -47,7 +47,7 @@ const normalizeMastery=value=>{
  const retentionRaw=raw.lastRetention&&typeof raw.lastRetention==='object'?raw.lastRetention:null;
  const retentionTotal=Number(retentionRaw?.total),retentionCorrect=Number(retentionRaw?.correct),retentionScore=Number(retentionRaw?.score),retentionDate=Date.parse(retentionRaw?.date||'');
  const validRetention=Number.isInteger(retentionTotal)&&retentionTotal>=1&&retentionTotal<=18&&Number.isInteger(retentionCorrect)&&retentionCorrect>=0&&retentionCorrect<=retentionTotal&&Number.isInteger(retentionScore)&&retentionScore===Math.round(retentionCorrect/retentionTotal*100)&&Number.isFinite(retentionDate)&&typeof retentionRaw.passed==='boolean'&&retentionRaw.passed===(retentionScore>=80);
- const due=typeof raw.reviewDue==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(raw.reviewDue)&&Number.isFinite(Date.parse(raw.reviewDue+'T00:00:00Z'))?raw.reviewDue:null;
+ const due=typeof raw.reviewDue==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.reviewDue)&&Number.isFinite(Date.parse(raw.reviewDue+'T00:00:00Z'))?raw.reviewDue:null;
  return {started:!!raw.started||trained.length>0,trained,attempts:Number.isInteger(Number(raw.attempts))?Math.max(0,Math.min(10000,Number(raw.attempts))):0,mastered:!!(validAttempt&&score>=80),lastAttempt:validAttempt?{date:new Date(date).toISOString(),score,correct,total}:null,lastRetention:validRetention?{date:new Date(retentionDate).toISOString(),score:retentionScore,correct:retentionCorrect,total:retentionTotal,passed:retentionRaw.passed}:null,reviewDue:due,wrong};
 };
 let data={started:false,trained:[],attempts:0,mastered:false,lastAttempt:null,reviewDue:null,wrong:[]};
