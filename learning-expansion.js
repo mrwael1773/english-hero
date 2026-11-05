@@ -207,49 +207,6 @@
     if (valid.length !== bank.length && typeof console !== 'undefined') console.warn('English Hero: invalid or duplicate grammar questions removed from lesson', lessonIndex + 1);
     return valid;
   });
-  const renderGrammarAcademy = () => {
-    const host = $('grammarLibrary');
-    if (!host || $('grammarAcademy')) return;
-    const section = document.createElement('section');
-    section.id = 'grammarAcademy';
-    section.className = 'section';
-    const title = document.createElement('h2');
-    title.textContent = '🎓 المسار التأسيسي — ابدأ من الأساسيات';
-    const intro = document.createElement('p');
-    intro.className = 'muted';
-    intro.textContent = 'هذه عشر محطات مقترحة للمبتدئ. افتح كل محطة في صفحة شرح مستقلة، ثم أكمل أمثلتها وتحدّيها القصير.';
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    grid.id = 'grammarAcademyGrid';
-    const routeSlugs = [
-      'g-subject-pronouns','g-be-verb','g-present-simple','g-present-continuous',
-      'g-past-simple','g-future-will','g-question-words','g-place-prepositions',
-      'g-comparatives','g-can-cant'
-    ];
-    grid.replaceChildren(...grammarLessons.map((lesson,index) => {
-      const detail = window.EnglishHeroLessons?.grammar?.find(item => item.slug === routeSlugs[index]);
-      const card = document.createElement('a');
-      card.className = 'tile eh-grammar-path-link';
-      card.href = 'grammar-lesson.html#' + routeSlugs[index];
-      card.setAttribute('aria-label','افتح درس ' + (detail?.title || lesson[0]));
-      card.style.cssText = 'display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;min-height:160px';
-      const meta = document.createElement('span');
-      meta.className = 'tag';
-      meta.textContent = 'المحطة ' + (index+1);
-      const heading = document.createElement('h3');
-      heading.textContent = detail?.title || lesson[0];
-      const desc = document.createElement('p');
-      desc.textContent = detail?.summary || lesson[2];
-      const open = document.createElement('span');
-      open.className = 'small';
-      open.style.cssText = 'margin-top:auto;color:var(--mint);font-weight:850';
-      open.textContent = 'افتح صفحة الدرس ←';
-      card.append(meta,heading,desc,open);
-      return card;
-    }));
-    section.append(title,intro,grid);
-    host.parentElement.insertBefore(section,host);
-  };
   const addExam = () => {
     const root = $('trainingModes');
     if (!root || $('professionalExamButton')) return;
@@ -367,7 +324,7 @@
     });
   };
   const initialize = () => {
-    ensureState(); addStyles(); installHooks(); renderGrammarAcademy(); addExam(); addCustomization(); applyPreferences(); renderLevel(); renderProfessionalReport();
+    ensureState(); addStyles(); installHooks(); addExam(); addCustomization(); applyPreferences(); renderLevel(); renderProfessionalReport();
     if (typeof renderProfile === 'function') renderProfile();
     if (typeof renderInsights === 'function') renderInsights();
   };

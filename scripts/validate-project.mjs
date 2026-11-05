@@ -139,7 +139,7 @@ check(/src="learning-expansion\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./l
 check(learningExpansion.includes('100 * n + 25 * n * Math.max(0, n - 1)') && learningExpansion.includes('level <= 50'), 'XP requirements increase with each level and cap at level 50');
 check(learningExpansion.includes("title:'شارة المستوى ' + level") && learningExpansion.includes('rewards.some(reward => reward.level === level)'), 'Every progression level has a displayed reward');
 check(learningExpansion.includes('الاختبار الاحترافي الموقّت') && learningExpansion.includes('12 * 60'), 'Professional timed mixed assessment is available');
-check(learningExpansion.includes('grammarAcademyGrid') && learningExpansion.includes('grammarLessons'), 'Progressive grammar academy lessons are present');
+check(!learningExpansion.includes('grammarAcademyGrid') && !learningExpansion.includes('renderGrammarAcademy') && grammarLibraryPage.includes('id="basicsTab"') && grammarLibraryPage.includes('id="grammarTab"'), 'Learning library has only the Foundations and Grammar & Tenses entry tabs without a duplicate station path');
 check(learningExpansion.includes('reviewedAcademyQuestions') && learningExpansion.includes('new Set(options).size !== 4'), 'Grammar academy filters malformed and duplicate-choice questions');
 try {
   const bankMatch = learningExpansion.match(/const academyQuestions = ([\s\S]*?);\s*\/\/ Validate every lesson bank/);
