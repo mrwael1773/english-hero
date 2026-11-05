@@ -370,17 +370,17 @@ test('review mastery badge stays locked until delayed retention is completed', a
 
 test('review wording distinguishes adding words from mastering or saving them', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('[data-page="courses"]')).toContainText('أضفها للمراجعة');
+  await expect(page.locator('.launch-card[data-page="courses"]')).toContainText('أضفها للمراجعة');
   await expect(page.locator('#vocabBrowser')).toContainText('أضفها للمراجعة');
   await expect(page.locator('[data-vocab-action="saved"]')).toContainText('كلماتي للمراجعة');
   await expect(page.locator('#savedStart')).toContainText('اختبر الكلمات المضافة');
   await expect(page.locator('#review')).toContainText('الكلمات المضافة للمراجعة');
 
   await page.evaluate(() => window.page('courses'));
-  const firstCard = page.locator('.vocab-card').first();
-  await expect(firstCard).toBeVisible();
-  const word = (await firstCard.locator('.vocab-card-word').innerText()).trim();
-  const addButton = firstCard.locator('button[aria-label="أضف للمراجعة"]');
+  const focusCard = page.locator('.vocab-focus-stage');
+  await expect(focusCard).toBeVisible();
+  const word = (await focusCard.locator('.vocab-focus-word').innerText()).trim();
+  const addButton = focusCard.locator('button[aria-label="أضف للمراجعة"]');
   await expect(addButton).toBeVisible();
   await addButton.click();
 
