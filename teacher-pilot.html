@@ -55,7 +55,38 @@ try{data=normalizeMastery(JSON.parse(localStorage.getItem(KEY)||'{}'));}catch{da
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}};
 save(); // Persist the validated state so corrupted local values cannot survive a reload.
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const say=s=>{if(!('speechSynthesis'in window)){alert('النطق غير مدعوم في هذا المتصفح.');return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s);u.lang='en-US';u.rate=.88;speechSynthesis.speak(u);};
+let speechRequestId=0;
+const say=s=>{
+ const text=String(s??'').trim();
+ if(!text)return;
+ if(!('speechSynthesis'in window)||typeof window.SpeechSynthesisUtterance!=='function'){
+  alert('النطق غير مدعوم في هذا المتصفح. جرّب متصفحًا محدثًا.');
+  return;
+ }
+ const synth=window.speechSynthesis,requestId=++speechRequestId;
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.lang='en-US';utterance.rate=.88;utterance.pitch=1;
+ const voices=typeof synth.getVoices==='function'?synth.getVoices():[];
+ const english=voices.filter(v=>/^en(-|$)/i.test(v.lang||''));
+ const preferred=english.find(v=>/^en-US$/i.test(v.lang||''))||english[0];
+ if(preferred)utterance.voice=preferred;
+ utterance.onerror=event=>{
+  if(requestId===speechRequestId&&!['canceled','interrupted'].includes(event.error))
+   alert('تعذر تشغيل النطق. تحقق من صوت الجهاز وحاول مرة أخرى.');
+ };
+ try{synth.resume()}catch{}
+ if(requestId!==speechRequestId)return;
+ if(synth.speaking||synth.pending){
+  try{synth.cancel()}catch{}
+  setTimeout(()=>{
+   if(requestId!==speechRequestId)return;
+   try{synth.resume()}catch{}
+   try{synth.speak(utterance)}catch{alert('تعذر تشغيل النطق. حاول مرة أخرى.');}
+  },100);
+ }else{
+  try{synth.speak(utterance)}catch{alert('تعذر تشغيل النطق. حاول مرة أخرى.');}
+ }
+};
 const render=()=>{
 $('lessonState').textContent=data.mastered?(data.lastRetention?.passed===false?'أتقن الدرس سابقًا • يحتاج مراجعة':'أتقن الدرس ✓'):data.lastAttempt?'لم يثبت الإتقان بعد':data.trained.length===6?'أكمل التدريب':data.started?'بدأ الدرس':'لم يبدأ الدرس';
 $('trainingBar').style.width=(data.trained.length/6*100)+'%';$('trainingCount').textContent=data.trained.length+' من 6 كلمات تمت دراستها';
