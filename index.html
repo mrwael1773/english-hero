@@ -1556,8 +1556,9 @@ Promise.resolve(translateFoundation(String(word),meaning)).finally(()=>{meaning.
 const speakButton=makeButton('🔊 استمع للنطق',()=>window.speak(String(word)),'btn ghost vocab-focus-action');
 const saved=()=>state.foundationSaved.includes(String(word));
 const saveBtn=makeButton(saved()?'★ في المراجعة':'☆ أضف للمراجعة',()=>{
-state.foundationSaved=saved()?state.foundationSaved.filter(w=>w!==String(word)):[...state.foundationSaved,String(word)];save();saveBtn.textContent=saved()?'★ في المراجعة':'☆ أضف للمراجعة';toast(saved()?'أُضيفت الكلمة إلى قائمة المراجعة':'أُزيلت من قائمة المراجعة');
+state.foundationSaved=saved()?state.foundationSaved.filter(w=>w!==String(word)):[...state.foundationSaved,String(word)];save();saveBtn.textContent=saved()?'★ في المراجعة':'☆ أضف للمراجعة';saveBtn.setAttribute('aria-label',saved()?'إزالة من قائمة المراجعة':'أضف للمراجعة');saveBtn.title=saved()?'إزالة من قائمة المراجعة':'أضف للمراجعة';toast(saved()?'أُضيفت الكلمة إلى قائمة المراجعة':'أُزيلت من قائمة المراجعة');
 },'btn ghost vocab-focus-action');
+saveBtn.type='button';saveBtn.setAttribute('aria-label',saved()?'إزالة من قائمة المراجعة':'أضف للمراجعة');saveBtn.title=saved()?'إزالة من قائمة المراجعة':'أضف للمراجعة';
 actions.append(reveal,speakButton,saveBtn);
 const nav=document.createElement('div');nav.className='vocab-focus-nav';
 const moveToVocabulary=index=>{state.vocabPosition=index;state.vocabSearchText=$('vocabSearch')?.value.trim().slice(0,80)||'';save();renderFocusedVocabulary(index);};
