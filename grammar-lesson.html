@@ -362,10 +362,24 @@ const formulaArabic = {
         const formulaText=safeText('div','formula',activeLesson.formula);
         formulaText.dir='ltr';
         formulaCard.append(formulaText);
-        const formulaAr=safeText('p','formula-ar',formulaArabic[activeLesson.formula]||'اقرأ الصيغة من اليسار إلى اليمين، ثم راجع معنى كل جزء في الخطوات التالية.');
+        const formulaAr=safeText('p','formula-ar',activeLesson.slug==='g-present-simple'?'الفاعل هو من يقوم بالفعل. مع I / you / we / they نستخدم الفعل كما هو. مع he / she / it أو اسم مفرد نضيف علامة s إلى الفعل في الجملة المثبتة. في النفي والسؤال نستخدم does، لذلك يعود الفعل بعدها إلى صورته الأساسية دون s.':(formulaArabic[activeLesson.formula]||'اقرأ الصيغة من اليسار إلى اليمين، ثم راجع معنى كل جزء في الخطوات التالية.'));
         formulaCard.append(formulaAr);formula.append(formulaCard);
         const steps=safeText('div','step-grid');
-        activeLesson.steps.forEach((line,index)=>{
+        const lessonSteps=activeLesson.slug==='g-present-simple'?[
+          'أولًا: ما معنى المضارع البسيط؟ نستخدمه للعادة والروتين والحقائق؛ مثل شيء تفعله كل يوم أو حقيقة معروفة. مثال: I drink water every day = أشرب الماء كل يوم.',
+          'قبل اختيار شكل الفعل، حدّد الفاعل: من الذي يقوم بالفعل؟ I = أنا، you = أنت/أنتم، we = نحن، they = هم. هذه المجموعة لا نضيف معها s إلى الفعل.',
+          'المجموعة الثانية: he = هو، she = هي، it = هو/هي لشيء أو حيوان، وكذلك أي اسم مفرد مثل Ali أو my mother أو the cat. في الجملة المثبتة نضيف علامة s إلى الفعل مع هذه المجموعة.',
+          'قارن: I play = أنا ألعب، لكن He plays = هو يلعب. المعنى لم يتغير؛ الذي تغيّر هو شكل الفعل لأن الفاعل أصبح he. لا تحفظها عشوائيًا: اسأل نفسك هل الفاعل he/she/it أو اسم مفرد؟',
+          'القاعدة الأساسية للكتابة: أغلب الأفعال نضيف لها s فقط: read → reads، work → works، eat → eats. مثال: She reads a book = هي تقرأ كتابًا.',
+          'إذا انتهى الفعل غالبًا بـ sh أو ch أو ss أو x أو z أو o نضيف es: watch → watches، wash → washes، fix → fixes، go → goes. مثال: He watches TV = هو يشاهد التلفاز.',
+          'إذا انتهى الفعل بحرف ساكن ثم y، نحذف y ونكتب ies: study → studies، try → tries. لكن إذا كان قبل y حرف علة (a/e/i/o/u) نضيف s فقط: play → plays، enjoy → enjoys.',
+          'انتبه: have فعل غير منتظم مع he/she/it ويتحول إلى has: I have a book / She has a book. وفعل be له قاعدة خاصة (am/is/are) وتتعلمه في درس مستقل.',
+          'في النفي لا نقول She not plays. نستخدم doesn’t مع he/she/it، ثم نكتب الفعل الأساسي دون s: She doesn’t play. ومع I/you/we/they نستخدم don’t: They don’t play.',
+          'في السؤال نبدأ بـ Does مع he/she/it أو Do مع I/you/we/they: Does he play? / Do they play? وبعد does لا تضع s على الفعل؛ لأن علامة الشخص موجودة في does.',
+          'تذكّر الفرق المهم: He plays (إثبات: s على الفعل)، He doesn’t play (نفي: s في doesn’t والفعل play كما هو)، Does he play? (سؤال: s في does والفعل play كما هو).',
+          'خطوات الحل: 1) حدّد الفاعل. 2) هل الجملة إثبات أم نفي أم سؤال؟ 3) في الإثبات فقط افحص هل الفاعل he/she/it أو اسم مفرد لتضيف s/es/ies. 4) مع do/does استخدم الفعل الأساسي.'
+        ]:activeLesson.steps;
+        lessonSteps.forEach((line,index)=>{
           const item=safeText('article','step');
           item.append(safeText('span','step-no',index+1),safeText('p','',line));
           steps.append(item);
@@ -389,7 +403,15 @@ const formulaArabic = {
         tip.id='tip';tip.classList.add('section','lesson-stage');
         tip.append(safeText('span','tip-icon','✨'),safeText('p','',activeLesson.tip));
         stageElements.push(tip);stageContainer.append(tip);
-        const challenge=renderQuiz(activeLesson.questions);
+        const presentSimpleQuestions=[
+          {text:'My brother ___ football every Friday.',options:['play','plays','playing'],answer:1,explain:'My brother شخص واحد، ويمكن استبداله بـ he؛ لذلك نضيف s: plays.'},
+          {text:'Mona ___ English every day.',options:['study','studies','studys'],answer:1,explain:'Mona اسم مفرد، والفعل study ينتهي بحرف ساكن + y؛ نحذف y ونضيف ies.'},
+          {text:'They ___ to school by bus.',options:['goes','go','going'],answer:1,explain:'They من المجموعة الأولى؛ نستخدم الفعل الأساسي go دون s.'},
+          {text:'He doesn’t ___ coffee.',options:['drinks','drink','drinking'],answer:1,explain:'بعد doesn’t نستخدم الفعل الأساسي دون s: drink.'},
+          {text:'___ your sister like reading?',options:['Do','Does','Is'],answer:1,explain:'your sister مفرد ويمكن استبدالها بـ she؛ لذلك نبدأ السؤال بـ Does.'},
+          {text:'اختر الجملة الصحيحة:',options:['She watch TV.','She watches TV.','She watching TV.'],answer:1,explain:'مع she في الإثبات نضيف es لأن watch تنتهي بـ ch.'}
+        ];
+        const challenge=renderQuiz(activeLesson.slug==='g-present-simple'?presentSimpleQuestions:activeLesson.questions);
         stageElements.push(challenge);stageContainer.append(challenge);
         setActiveStep(0,false);
         root.append(controls);
