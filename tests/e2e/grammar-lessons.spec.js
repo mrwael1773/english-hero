@@ -38,12 +38,12 @@ test('basics has its own tab beside grammar and tenses', async ({ page }) => {
   await expect(page.locator('#tensesTab')).toBeVisible();
   await expect(page.locator('#groups .card')).toHaveCount(8);
   await page.locator('#basicsTab').click();
-  await expect(page).toHaveURL(/grammar-library\\.html\\?type=basics$/);
+  await expect(page).toHaveURL(/grammar-library\.html\?type=basics$/);
   await expect(page.locator('#basicsTab')).toHaveClass(/active/);
   await expect(page.locator('#groups .card')).toHaveCount(1);
   await expect(page.locator('#groups .card')).toContainText('الأساسيات والضمائر');
   await page.locator('#groups .card').click();
-  await expect(page).toHaveURL(/grammar-category\\.html\\?type=grammar&group=basics$/);
+  await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=basics$/);
   await expect(page.locator('#lessons .lesson')).toHaveCount(6);
 });
 
