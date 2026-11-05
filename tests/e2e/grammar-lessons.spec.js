@@ -16,7 +16,7 @@ test('grammar categories lead to dedicated pages and all lessons are accessible'
   await groups.filter({ hasText: 'قواعد وأزمنة الماضي' }).click();
   await expect(page).toHaveURL(/grammar-category\.html\?type=grammar&group=past$/);
   const lessons = page.locator('#lessons .lesson');
-  await expect(lessons).toHaveCount(2);
+  await expect(lessons).toHaveCount(4);
   await expect(lessons.first()).toContainText('الماضي البسيط');
   await lessons.first().click();
   await expect(page).toHaveURL(/grammar-lesson\.html#g-past-simple$/);
