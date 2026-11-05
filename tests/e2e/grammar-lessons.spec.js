@@ -253,7 +253,7 @@ test('challenge feedback and retry remain functional after category navigation c
 });
 
 test('continuous and perfect tense formulas include Arabic explanations', async ({ page }) => {
-  for (const slug of ['t-present-continuous','t-past-continuous','t-present-perfect']) {
+  for (const slug of ['g-present-continuous','g-past-continuous','g-present-perfect']) {
     await page.goto('/grammar-lesson.html#' + slug);
     await page.locator('#lessonSteps [data-step-index="2"]').click();
     await expect(page.locator('.formula-ar')).toBeVisible();
