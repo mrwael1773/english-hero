@@ -113,6 +113,7 @@ test('lesson navigation labels match their actual home-page destinations', async
   await page.goto('/grammar-lesson.html#g-subject-pronouns');
   await expect(page.locator('.hero-actions .secondary')).toHaveText('الرئيسية');
   await expect(page.locator('.bottom-nav .lesson-neighbor').first()).toContainText('الرئيسية');
+  await expect(page.locator('.bottom-nav .lesson-neighbor').first()).toContainText('العودة إلى الرئيسية');
   await expect(page.locator('.bottom-nav .lesson-neighbor').last()).toContainText('العودة إلى الرئيسية');
   await expect(page.locator('.hero-actions .secondary')).toHaveAttribute('href', './index.html');
 });
