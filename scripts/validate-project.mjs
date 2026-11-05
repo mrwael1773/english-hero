@@ -62,7 +62,7 @@ const registeredVersion = html.match(/sw\.js\?v=(\d+)/)?.[1];
 const cacheVersion = sw.match(/english-hero-shell-v(\d+)/)?.[1];
 check(Boolean(registeredVersion && cacheVersion && registeredVersion === cacheVersion), 'Service worker registration and cache versions match');
 check(sw.includes("fetch(request)") && sw.includes("request.mode === 'navigate'"), 'Service worker refreshes navigation from network first');
-check(/src="\.\/grammar-lessons\.js\?v=2"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
+check(/src="\.\/grammar-lessons\.js\?v=3"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
 check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
 check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.includes("makeSection('challenge'") && grammarLessonPage.includes("setAttribute('aria-live','polite')"), 'Dedicated lesson page provides a challenge area with accessible feedback');
 check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
