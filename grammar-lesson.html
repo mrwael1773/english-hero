@@ -292,7 +292,7 @@
         }
         stepNames.forEach((name,index)=>{
           const button=safeText('button','', '');
-          button.type='button';button.dataset.stepIndex=String(index);
+          button.type='button';button.setAttribute('data-step-index',String(index));
           button.append(safeText('span','',String(index+1)),safeText('span','',name));
           button.addEventListener('click',()=>setActiveStep(index));
           stepButtons.push(button);route.append(button);
