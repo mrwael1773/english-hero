@@ -64,6 +64,7 @@ check(/src="\.\/grammar-lessons\.js\?v=2"/.test(html), 'Main page loads the shar
 check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
 check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.includes("makeSection('challenge'") && grammarLessonPage.includes("setAttribute('aria-live','polite')"), 'Dedicated lesson page provides a challenge area with accessible feedback');
 check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
+check(grammarLessonPage.includes("const stepNames=['افهم الفكرة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك']") && grammarLessonPage.includes('data-step-index') && grammarLessonPage.includes('lessonStepStatus'), 'Dedicated lesson page guides students through six focused learning steps');
 check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=2'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
 try {
   new Function(grammarLessonsRaw);
