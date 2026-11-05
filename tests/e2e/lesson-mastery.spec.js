@@ -334,3 +334,36 @@ test('review sync keeps the newest per-word state and does not resurrect resolve
   expect(result.newerPracticeMisses['0-0']).toBe(true);
   expect(result.legacy['0-0'].stage).toBe('practice');
 });
+
+
+test('review mastery badge stays locked until delayed retention is completed', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({
+      masteredLessons: [0],
+      quizzes: 3,
+      misses: {},
+      review: {'0-0': {stage: 'retention', due: '2099-12-31', last: '2026-11-05'}},
+      quizHistory: [{date: '2026-11-05', mode: 'mistakes', label: 'مراجعة الأخطاء', score: 100, correct: 3, total: 3}],
+      saved: []
+    }));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('profile'));
+  const badge = page.locator('#badges .badgeitem').nth(10);
+  await expect(badge).toHaveClass(/locked/);
+  const pendingCard = page.locator('#progressReport .stat').filter({hasText: 'مراجعات معلقة'});
+  await expect(pendingCard).toContainText('1');
+  expect(await page.evaluate(() => window.pendingReviewCount())).toBe(1);
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('english-hero-academy-3'));
+    state.review['0-0'] = {stage: 'retained', due: '', last: '2026-11-05'};
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(state));
+  });
+  await page.reload();
+  await page.evaluate(() => window.page('profile'));
+  await expect(page.locator('#badges .badgeitem').nth(10)).not.toHaveClass(/locked/);
+  await expect(page.locator('#progressReport .stat').filter({hasText: 'مراجعات معلقة'})).toContainText('0');
+  expect(await page.evaluate(() => window.pendingReviewCount())).toBe(0);
+});
