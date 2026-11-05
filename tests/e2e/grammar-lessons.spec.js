@@ -24,6 +24,18 @@ test('grammar cards open a dedicated lesson with an interactive challenge', asyn
   await expect(page.locator('#examples .example')).toHaveCount(3);
   await expect(page.locator('#challenge .option')).toHaveCount(3);
 
+  const firstExample = page.locator('#examples .example').first();
+  const reveal = firstExample.locator('.reveal');
+  const translation = firstExample.locator('.example-ar');
+  await expect(reveal).toHaveAttribute('aria-expanded', 'false');
+  await expect(translation).toBeHidden();
+  await reveal.click();
+  await expect(reveal).toHaveAttribute('aria-expanded', 'true');
+  await expect(translation).toBeVisible();
+  await reveal.click();
+  await expect(reveal).toHaveAttribute('aria-expanded', 'false');
+  await expect(translation).toBeHidden();
+
   const firstReveal = page.locator('#examples .example').first().locator('.reveal');
   await expect(firstReveal).toHaveAttribute('aria-expanded', 'false');
   await firstReveal.click();
