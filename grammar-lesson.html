@@ -279,7 +279,7 @@
         let currentStep=0;
         function setActiveStep(index,scroll=true){
           currentStep=Math.max(0,Math.min(stepNames.length-1,index));
-          stageElements.forEach((stage,i)=>{stage.hidden=i!==currentStep;});
+          stageElements.forEach((stage,i)=>{stage.classList.add('lesson-stage');stage.hidden=i!==currentStep;});
           stepButtons.forEach((button,i)=>{if(i===currentStep)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');});
           status.textContent='الخطوة '+(currentStep+1)+' من '+stepNames.length+' • '+stepNames[currentStep];
           progressFill.style.width=((currentStep+1)/stepNames.length*100)+'%';
