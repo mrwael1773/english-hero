@@ -81,6 +81,9 @@ test('all 47 grammar and tense lesson slugs resolve to their own page content', 
     await expect(page.locator('#lessonRoot h1')).toHaveText(lesson.title);
     await expect(page.locator('#examples .example')).toHaveCount(3);
     await expect(page.locator('#challenge .option')).toHaveCount(3);
+    await page.locator('#lessonSteps [data-step-index="1"]').click();
+    await expect(page.locator('.formula-ar')).toBeVisible();
+    await expect(page.locator('.formula-ar')).not.toBeEmpty();
   }
 });
 
