@@ -248,7 +248,7 @@
         const actions=safeText('div','hero-actions');
         const start=safeText('a','btn primary','ابدأ التعلّم ↓');
         start.href='#concept';
-        const indexLink=safeText('a','btn secondary','كل الدروس');
+        const indexLink=safeText('a','btn secondary','الرئيسية');
         indexLink.href='./index.html';
         actions.append(start,indexLink);
         hero.append(actions);
@@ -314,7 +314,7 @@
         } else {
           const a=safeText('a','lesson-neighbor','');
           a.href='./index.html';
-          a.append(safeText('small','','العودة إلى الفهرس'),safeText('strong','','كل القواعد والأزمنة'));
+          a.append(safeText('small','','الرئيسية'),safeText('strong','','العودة إلى الرئيسية'));
           nav.append(a);
         }
         if(following){
@@ -325,7 +325,7 @@
         } else {
           const a=safeText('a','lesson-neighbor next','');
           a.href='./index.html';
-          a.append(safeText('small','','انتهيت من هذا المسار'),safeText('strong','','اختر مسارًا آخر'));
+          a.append(safeText('small','','انتهيت من هذا المسار'),safeText('strong','','العودة إلى الرئيسية'));
           nav.append(a);
         }
         root.append(nav);

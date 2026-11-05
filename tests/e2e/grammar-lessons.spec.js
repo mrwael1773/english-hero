@@ -108,3 +108,25 @@ test('all 47 grammar and tense lesson slugs resolve to their own page content', 
     await expect(page.locator('#challenge .option')).toHaveCount(3);
   }
 });
+
+test('lesson navigation labels match their actual home-page destinations', async ({ page }) => {
+  // First lesson: only the previous control returns home; the next control opens lesson 2.
+  await page.goto('/grammar-lesson.html#g-subject-pronouns');
+  await expect(page.locator('.hero-actions .secondary')).toHaveText('الرئيسية');
+  const firstPrevious = page.locator('.bottom-nav .lesson-neighbor').first();
+  const firstNext = page.locator('.bottom-nav .lesson-neighbor').last();
+  await expect(firstPrevious).toContainText('العودة إلى الرئيسية');
+  await expect(firstPrevious).toHaveAttribute('href', './index.html');
+  await expect(firstNext).toContainText('فعل be: am / is / are');
+  await expect(firstNext).toHaveAttribute('href', './grammar-lesson.html#g-be-verb');
+  await expect(page.locator('.hero-actions .secondary')).toHaveAttribute('href', './index.html');
+
+  // Final lesson: only the next control returns home; the previous control opens lesson 46.
+  await page.goto('/grammar-lesson.html#t-present-perfect-continuous');
+  const lastPrevious = page.locator('.bottom-nav .lesson-neighbor').first();
+  const lastNext = page.locator('.bottom-nav .lesson-neighbor').last();
+  await expect(lastPrevious).toContainText('الدرس السابق');
+  await expect(lastPrevious).toHaveAttribute('href', './grammar-lesson.html#t-future-continuous');
+  await expect(lastNext).toContainText('العودة إلى الرئيسية');
+  await expect(lastNext).toHaveAttribute('href', './index.html');
+});
