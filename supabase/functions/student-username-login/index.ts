@@ -66,13 +66,19 @@ Deno.serve(async (request: Request) => {
   if (rateError) return json({ error: "Authentication service unavailable" }, 503);
   if (allowed !== true) return json({ error: "محاولات كثيرة. انتظر 15 دقيقة ثم حاول مجددًا." }, 429);
 
-  const { data: email, error: lookupError } = await admin.rpc("resolve_student_login_email", {
+  const { data: userId, error: lookupError } = await admin.rpc("resolve_student_login_user_id", {
     p_username: username,
   });
   if (lookupError) return json({ error: "Authentication service unavailable" }, 503);
 
+  // Resolve the current email from Auth at sign-in time; no email copy is kept in the profile lookup table.
+  const userResult = typeof userId === "string"
+    ? await admin.auth.admin.getUserById(userId)
+    : { data: { user: null }, error: null };
+  if (userResult.error) return json({ error: "Authentication service unavailable" }, 503);
+
   // Keep the response generic so callers cannot distinguish unknown usernames from bad passwords.
-  const loginEmail = typeof email === "string" ? email : `unregistered-${attemptKey.slice(0, 16)}@invalid.example`;
+  const loginEmail = userResult.data.user?.email ?? `unregistered-${attemptKey.slice(0, 16)}@invalid.example`;
   const { data, error } = await auth.auth.signInWithPassword({ email: loginEmail, password });
   if (error || !data.session) {
     return json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة." }, 401);
