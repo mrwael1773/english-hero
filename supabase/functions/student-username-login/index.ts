@@ -35,15 +35,21 @@ Deno.serve(async (request: Request) => {
     return json({ error: "Authentication service unavailable" }, 503);
   }
 
-  let body: { username?: unknown; password?: unknown };
+  let body: unknown;
   try {
-    body = await request.json();
+    const rawBody = await request.text();
+    if (rawBody.length > 2048) return json({ error: "Request too large" }, 413);
+    body = JSON.parse(rawBody);
   } catch {
     return json({ error: "Invalid request" }, 400);
   }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return json({ error: "Invalid request" }, 400);
+  }
 
-  const username = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
-  const password = typeof body.password === "string" ? body.password : "";
+  const payload = body as { username?: unknown; password?: unknown };
+  const username = typeof payload.username === "string" ? payload.username.trim().toLowerCase() : "";
+  const password = typeof payload.password === "string" ? payload.password : "";
   if (!/^[a-z0-9_]{3,24}$/.test(username) || password.length < 8 || password.length > 128) {
     return json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة." }, 400);
   }
