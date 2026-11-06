@@ -11,7 +11,7 @@ async function installAuthMock(page) {
         getUser:()=>user,
         getProfile:async()=>profile,
         signInWithUsername:async()=>{user={id:'mock-student'};profile={username:'mock_student',display_name:'طالب تجريبي'};return user;},
-        signInWithGoogle:async()=>{user={id:'google-student'};profile=null;window.dispatchEvent(new CustomEvent('englishhero:authstate'));},
+        signInWithGoogle:async()=>{user={id:'google-student'};profile=null;window.dispatchEvent(new CustomEvent('englishhero:authstate'));throw new Error('Mock OAuth callback completed without navigation');},
         setPassword:async()=>{},
         claimProfile:async(username,displayName)=>{profile={username,display_name:displayName};return profile;}
       };
