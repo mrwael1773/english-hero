@@ -87,6 +87,8 @@
     }
     // Queue writes in invocation order. Each write owns an immutable snapshot.
     const write=async()=>{
+      // Skip obsolete queued snapshots and writes belonging to a previous auth identity.
+      if(!user||user.id!==syncUserId||!ready||current!==revision)return false;
       try {
         const {error}=await cloudRequest(client.from('learning_progress').upsert({
           user_id:syncUserId, progress:snapshot, updated_at:new Date().toISOString()
