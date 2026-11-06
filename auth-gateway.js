@@ -8,6 +8,7 @@
   const tabs=[...gateway.querySelectorAll('[data-auth-mode]')];
   let cloud=null;
   let busy=false;
+  let sessionCheckId=0;
   function say(text,kind='info'){message.textContent=text;message.dataset.kind=kind;}
   function setBusy(value){busy=value;gateway.querySelectorAll('button').forEach(button=>{button.disabled=value;});}
   function showPane(name){
@@ -39,6 +40,7 @@
   }
   function lock(){gateway.hidden=false;document.body.classList.add('auth-gateway-pending');}
   async function inspectSession(){
+    const checkId=++sessionCheckId;
     const user=cloud.getUser();
     if(!user){lock();showPane('login');return;}
     // Do not expose learning screens until this account's cloud progress has loaded.
@@ -49,10 +51,14 @@
     }
     try{
       const profile=await cloud.getProfile();
+      // A newer auth event (especially SIGNED_OUT or account switching) invalidates
+      // this request. Never unlock based on a profile response for a stale session.
+      if(checkId!==sessionCheckId || cloud.getUser()?.id!==user.id)return;
       if(profile){unlock();return;}
       lock();showPane('onboarding');
       say('أهلًا بك! أكمل بيانات حسابك لتجهيز ملفك وحفظ تقدمك على هذا الحساب.');
     }catch(error){
+      if(checkId!==sessionCheckId || cloud.getUser()?.id!==user.id)return;
       // A profile-read failure is not proof that this is a new account.
       // Fail closed: never show onboarding or allow a profile claim on a transient read error.
       lock();showPane('login');
