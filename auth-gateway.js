@@ -53,8 +53,10 @@
       lock();showPane('onboarding');
       say('أهلًا بك! أكمل بيانات حسابك لتجهيز ملفك وحفظ تقدمك على هذا الحساب.');
     }catch(error){
-      lock();showPane('onboarding');
-      say('تعذر قراءة ملف الحساب. تحقق من الاتصال ثم أعد المحاولة.','error');
+      // A profile-read failure is not proof that this is a new account.
+      // Fail closed: never show onboarding or allow a profile claim on a transient read error.
+      lock();showPane('login');
+      say('تعذر التحقق من ملف الحساب. لم نعرض نموذج إنشاء الحساب حتى لا نغيّر بيانات حساب قائم. تحقق من الاتصال ثم أعد المحاولة.','error');
     }
   }
   async function start(){
