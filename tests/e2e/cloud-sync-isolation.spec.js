@@ -40,8 +40,9 @@ test('anonymous device progress is backed up and never merged into a new student
         from: () => ({
           select() { return this; },
           eq() { return this; },
-          maybeSingle: async () => ({ data: null, error: null }),
-          upsert: async payload => { window.__uploadedProgress = payload.progress; return { error: null }; }
+          maybeSingle() { return this; },
+          upsert(payload) { window.__uploadedProgress = payload.progress; return this; },
+          abortSignal() { return Promise.resolve({ data: null, error: null }); }
         })
       })
     };
