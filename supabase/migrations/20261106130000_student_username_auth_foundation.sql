@@ -159,3 +159,23 @@ revoke all on function private.consume_student_login_attempt(text) from public, 
 revoke all on function private.resolve_student_login_email(text) from public, anon, authenticated;
 grant execute on function private.consume_student_login_attempt(text) to service_role;
 grant execute on function private.resolve_student_login_email(text) to service_role;
+
+-- PostgREST-facing wrappers are callable only with the server-side service role.
+create or replace function public.consume_student_login_attempt(p_attempt_key text)
+returns boolean
+language sql
+security definer
+set search_path = pg_catalog, private
+as $ select private.consume_student_login_attempt(p_attempt_key); $;
+
+create or replace function public.resolve_student_login_email(p_username text)
+returns text
+language sql
+security definer
+set search_path = pg_catalog, private
+as $ select private.resolve_student_login_email(p_username); $;
+
+revoke all on function public.consume_student_login_attempt(text) from public, anon, authenticated;
+revoke all on function public.resolve_student_login_email(text) from public, anon, authenticated;
+grant execute on function public.consume_student_login_attempt(text) to service_role;
+grant execute on function public.resolve_student_login_email(text) to service_role;
