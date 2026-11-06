@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/authenticated-test.js';
 
 test('offers direct section navigation on long guide pages', async ({ page }) => {
   await page.goto('/english-tenses-guide.html');
