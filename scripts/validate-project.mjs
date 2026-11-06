@@ -145,7 +145,7 @@ try {
   fail.push('Interactive grammar catalogue can be parsed and checked: ' + error.message);
 }
 
-check(cloud.includes("from('learning_progress')") && cloud.includes('signInWithPassword') && cloud.includes('signUp'), 'Cloud progress and email auth flows are present');
+check(cloud.includes("from('learning_progress')") && cloud.includes('window.EnglishHeroCloud') && cloud.includes('signInWithUsername') && cloud.includes('claim_student_username') && cloud.includes('updateUser({password})'), 'Cloud progress sync and username/Google gateway API are present');
 check(cloud.includes('async function cloudRequest(query, timeoutMs=15000)') && cloud.includes('query.abortSignal(controller.signal)'), 'Cloud progress requests abort after a bounded timeout');
 check(cloud.includes("English Hero sign out:") && cloud.includes('finally {\n      setSignedInUI();\n    }'), 'Sign-out failures restore the account UI safely');
 check(html.includes("'weekly'") && html.includes('20 سؤالًا متنوعًا') && html.includes('state.weeklyTestLast'), 'Weekly assessment includes mixed questions and stores its result');
