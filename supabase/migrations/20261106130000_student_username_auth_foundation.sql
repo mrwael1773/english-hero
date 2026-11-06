@@ -46,8 +46,7 @@ create policy "Students can update own profile"
 create table if not exists private.student_login_lookup (
   user_id uuid primary key references auth.users(id) on delete cascade,
   username text not null unique,
-  email text not null unique
-);
+ );
 revoke all on private.student_login_lookup from public, anon, authenticated, service_role;
 grant select, insert, update, delete on private.student_login_lookup to service_role;
 
@@ -64,7 +63,7 @@ declare
   v_user_id uuid := auth.uid();
   v_username text := lower(trim(coalesce(p_username, '')));
   v_display_name text := trim(coalesce(p_display_name, ''));
-  v_email text;
+  v_email_confirmed_at timestamptz;
 begin
   if v_user_id is null then
     raise exception 'Authentication required' using errcode = '28000';
@@ -76,11 +75,11 @@ begin
     raise exception 'Invalid display name' using errcode = '22023';
   end if;
 
-  select email into v_email
+  select email_confirmed_at into v_email_confirmed_at
   from auth.users
-  where id = v_user_id and email_confirmed_at is not null;
+  where id = v_user_id;
 
-  if v_email is null then
+  if v_email_confirmed_at is null then
     raise exception 'A verified email is required' using errcode = '42501';
   end if;
 
@@ -91,11 +90,10 @@ begin
         display_name = excluded.display_name,
         updated_at = now();
 
-  insert into private.student_login_lookup(user_id, username, email)
-  values (v_user_id, v_username, v_email)
+  insert into private.student_login_lookup(user_id, username)
+  values (v_user_id, v_username)
   on conflict (user_id) do update
-    set username = excluded.username,
-        email = excluded.email;
+    set username = excluded.username;
 
   return jsonb_build_object('username', v_username, 'display_name', v_display_name);
 end;
@@ -146,22 +144,22 @@ begin
 end;
 $$;
 
-create or replace function private.resolve_student_login_email(p_username text)
-returns text
+create or replace function private.resolve_student_login_user_id(p_username text)
+returns uuid
 language sql
 security definer
 set search_path = pg_catalog, private
-as $$
-  select email
+as $
+  select user_id
   from private.student_login_lookup
   where username = lower(trim(coalesce(p_username, '')))
   limit 1;
 $$;
 
 revoke all on function private.consume_student_login_attempt(text) from public, anon, authenticated;
-revoke all on function private.resolve_student_login_email(text) from public, anon, authenticated;
+revoke all on function private.resolve_student_login_user_id(text) from public, anon, authenticated;
 grant execute on function private.consume_student_login_attempt(text) to service_role;
-grant execute on function private.resolve_student_login_email(text) to service_role;
+grant execute on function private.resolve_student_login_user_id(text) to service_role;
 
 -- PostgREST-facing wrappers are callable only with the server-side service role.
 create or replace function public.consume_student_login_attempt(p_attempt_key text)
@@ -171,14 +169,14 @@ security definer
 set search_path = pg_catalog, private
 as $ select private.consume_student_login_attempt(p_attempt_key); $;
 
-create or replace function public.resolve_student_login_email(p_username text)
-returns text
+create or replace function public.resolve_student_login_user_id(p_username text)
+returns uuid
 language sql
 security definer
 set search_path = pg_catalog, private
-as $ select private.resolve_student_login_email(p_username); $;
+as $ select private.resolve_student_login_user_id(p_username); $;
 
 revoke all on function public.consume_student_login_attempt(text) from public, anon, authenticated;
-revoke all on function public.resolve_student_login_email(text) from public, anon, authenticated;
+revoke all on function public.resolve_student_login_user_id(text) from public, anon, authenticated;
 grant execute on function public.consume_student_login_attempt(text) to service_role;
-grant execute on function public.resolve_student_login_email(text) to service_role;
+grant execute on function public.resolve_student_login_user_id(text) to service_role;
