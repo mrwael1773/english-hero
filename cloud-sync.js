@@ -191,19 +191,17 @@
           try { localStorage.setItem('english-hero-unclaimed-local-backup',JSON.stringify(state)); } catch {}
           replaceProgress(remoteProgress);
         } else if(!localOwner && !remoteProgress){
-          // The device may have anonymous study progress. Ask before attaching it to a new account.
+          // Never attach anonymous device progress to a newly signed-in learner.
+          // Shared school devices may contain another student's unclaimed local state.
           const localState=state||{};
-          const hasLocalProgress=(Number(localState.xp)||0)>0 ||
-            (Array.isArray(localState.completed)&&localState.completed.length>0) ||
-            (Array.isArray(localState.foundationSaved)&&localState.foundationSaved.length>0) ||
-            (Array.isArray(localState.saved)&&localState.saved.length>0) ||
-            (Number(localState.quizzes)||0)>0;
-          const keepLocal=hasLocalProgress && window.confirm('وجدنا تقدمًا محفوظًا على هذا الجهاز. هل تريد دمجه مع حسابك السحابي الجديد؟ اختر «إلغاء» لبدء حساب مستقل؛ سنحتفظ بنسخة محلية من التقدم السابق.');
-          if(hasLocalProgress && !keepLocal){
-            try { localStorage.setItem('english-hero-unclaimed-local-backup',JSON.stringify(localState)); } catch {}
-            replaceProgress(typeof defaults==='function'?defaults():{});
-            status('بدأ الحساب بتقدم مستقل. احتُفظ بنسخة محلية من التقدم السابق على هذا الجهاز.');
-          }
+          try {
+            const prefix='english-hero-unclaimed-local-backup-';
+            const backupKeys=Object.keys(localStorage).filter(key=>key.startsWith(prefix)).sort();
+            while(backupKeys.length>=3) localStorage.removeItem(backupKeys.shift());
+            localStorage.setItem(prefix+Date.now(),JSON.stringify(localState));
+          } catch {}
+          replaceProgress(typeof defaults==='function'?defaults():{});
+          status('بدأ الحساب بتقدم مستقل. لم ندمج أي تقدم مجهول من هذا الجهاز؛ احتُفظ بنسخة محلية منفصلة.');
         } else if(remoteProgress){
           mergeProgress(remoteProgress);
         }
