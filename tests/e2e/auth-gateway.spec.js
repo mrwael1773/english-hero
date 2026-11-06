@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 async function installAuthMock(page) {
-  await page.route('**/cloud-sync.js', route => route.fulfill({
+  await page.route('**/cloud-sync.js*', route => route.fulfill({
     contentType: 'application/javascript',
     body: `
       let user=null, profile=null, ready=true;
