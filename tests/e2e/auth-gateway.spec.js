@@ -111,7 +111,9 @@ test('profile lookup errors fail closed instead of opening onboarding', async ({
 });
 
 test('local-only student data is isolated by account on shared devices', async ({ page }) => {
-  await page.addInitScript(() => {
+  await installAuthMock(page);
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
     localStorage.setItem('englishHeroStudentTasksV1', JSON.stringify([
       { id: 'legacy-task', subject: 'قديم', text: 'مهمة قديمة غير مرتبطة بحساب', done: false }
     ]));
@@ -137,7 +139,6 @@ test('local-only student data is isolated by account on shared devices', async (
       last: '', points: 10, theme: 'default', avatar: '🦊', title: 'متعلّم'
     }));
   });
-  await installAuthMock(page);
   await page.goto('/');
   await page.locator('#authLoginUsername').fill('mock_student');
   await page.locator('#authLoginPassword').fill('safe-password-123');
