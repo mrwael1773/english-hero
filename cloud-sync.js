@@ -245,6 +245,7 @@
       client.auth.onAuthStateChange((event,session)=>{
         const previousUser=user;
         user=session?.user||null;
+        if(previousUser?.id!==user?.id) ready=false;
         setSignedInUI();
         if(event==='SIGNED_IN' && user) setTimeout(async()=>{
           await syncNow();
