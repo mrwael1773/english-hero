@@ -8,7 +8,7 @@ export const test = base.extend({
       contentType: 'application/javascript',
       body: `window.EnglishHeroCloudReady=Promise.resolve(true);
         window.EnglishHeroCloud={getUser:()=>({id:'e2e-student'}),isConfigured:()=>true,
-        getProfile:async()=>({username:'e2e_student',display_name:'E2E Student'})};`
+        getProfile:async()=>({username:'e2e_student',display_name:'E2E Student'}),isReady:()=>true};`
     }));
     await page.route('**/cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
       contentType: 'application/javascript',
