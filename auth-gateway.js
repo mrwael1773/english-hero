@@ -26,10 +26,16 @@
       return target.pathname+target.search+target.hash;
     }catch{return null;}
   }
+  const requestedNextPath=safeNextPath();
+  // Never leave an untrusted redirect target in the address bar after validation.
+  if(new URLSearchParams(location.search).has('next')){
+    const cleanUrl=new URL(location.href);
+    cleanUrl.searchParams.delete('next');
+    history.replaceState(history.state,'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+  }
   function unlock(){
     gateway.hidden=true;document.body.classList.remove('auth-gateway-pending');
-    const next=safeNextPath();
-    if(next)location.replace(next);
+    if(requestedNextPath)location.replace(requestedNextPath);
   }
   function lock(){gateway.hidden=false;document.body.classList.add('auth-gateway-pending');}
   async function inspectSession(){
@@ -62,7 +68,7 @@
   gateway.querySelectorAll('[data-google-auth]').forEach(button=>button.addEventListener('click',async()=>{
     if(busy)return;
     setBusy(true);say('جارٍ تحويلك إلى Google لإتمام التحقق...');
-    try{await cloud.signInWithGoogle();}
+    try{await cloud.signInWithGoogle();setBusy(false);}
     catch(error){say('تعذر بدء تسجيل الدخول عبر Google. تحقق من إعدادات Google OAuth ثم حاول مجددًا.','error');setBusy(false);}
   }));
   byId('authLoginForm').addEventListener('submit',async event=>{
