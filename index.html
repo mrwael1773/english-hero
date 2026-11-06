@@ -185,7 +185,51 @@ input,select,textarea,button{max-width:100%;min-width:0}
 <script src="./grammar-lessons.js?v=3"></script>
 
   <link rel="stylesheet" href="./site-quick-nav.css?v=1">
-</head><body><div class="app"><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
+  <link rel="stylesheet" href="./auth-gateway.css?v=1">
+</head><body><script>document.body.classList.add('auth-gateway-pending');</script><div class="app"><section id="authGateway" class="auth-gateway" aria-label="بوابة الدخول إلى بطل الإنجليزي">
+<div class="auth-gateway-shell">
+<div class="auth-gateway-intro">
+<div class="auth-gateway-brand"><span class="auth-gateway-logo" aria-hidden="true">E</span><div><strong>English Hero</strong><small>LEARN • PRACTICE • GROW</small></div></div>
+<span class="eyebrow">YOUR ENGLISH JOURNEY STARTS HERE</span>
+<h1>خطوتك الأولى نحو <span>إنجليزية أقوى</span></h1>
+<p>مساحة تعلم تجمع الكلمات والقواعد والاستماع والتدريب، وتحفظ تقدمك في حسابك لتكمل رحلتك من أي جهاز.</p>
+<div class="auth-gateway-points"><span class="auth-gateway-point">✦ تقدمك محفوظ بحسابك</span><span class="auth-gateway-point">◈ تعلم منظم وواضح</span><span class="auth-gateway-point">✓ حساب شخصي آمن</span></div>
+</div>
+<div class="auth-gateway-card">
+<div id="authLoginPane" class="auth-gateway-pane">
+<h2>مرحبًا بعودتك</h2><p class="auth-gateway-subtitle">سجّل الدخول لمتابعة رحلتك التعليمية.</p>
+<div class="auth-gateway-tabs"><button type="button" data-auth-mode="login" aria-selected="true">تسجيل الدخول</button><button type="button" data-auth-mode="register" aria-selected="false">إنشاء حساب</button></div>
+<form id="authLoginForm">
+<div class="auth-gateway-field"><label for="authLoginUsername">اسم المستخدم</label><input id="authLoginUsername" name="username" autocomplete="username" maxlength="24" required placeholder="اكتب اسم المستخدم" dir="ltr"></div>
+<div class="auth-gateway-field"><label for="authLoginPassword">كلمة المرور</label><input id="authLoginPassword" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required placeholder="كلمة مرور حسابك" dir="ltr"></div>
+<button class="auth-gateway-primary" type="submit">دخول إلى حسابي <span aria-hidden="true">←</span></button>
+</form>
+<div class="auth-gateway-divider">أو</div>
+<button class="auth-gateway-google" type="button" data-google-auth><span aria-hidden="true">G</span> المتابعة باستخدام Google</button>
+</div>
+<div id="authRegisterPane" class="auth-gateway-pane" hidden>
+<h2>أنشئ حسابك</h2><p class="auth-gateway-subtitle">ابدأ بحساب Google، ثم اختر اسم المستخدم وكلمة المرور الخاصة بك.</p>
+<div class="auth-gateway-tabs"><button type="button" data-auth-mode="login" aria-selected="false">تسجيل الدخول</button><button type="button" data-auth-mode="register" aria-selected="true">إنشاء حساب</button></div>
+<button class="auth-gateway-google" type="button" data-google-auth><span aria-hidden="true">G</span> إنشاء الحساب باستخدام Google</button>
+<p class="auth-gateway-note">بعد التحقق من حساب Google ستنتقل لإكمال اسمك واسم المستخدم وكلمة المرور.</p>
+</div>
+<div id="authOnboardingPane" class="auth-gateway-pane" hidden>
+<button class="auth-gateway-back" type="button" data-auth-back>← العودة</button>
+<div class="auth-gateway-progress"><span></span> الخطوة الأخيرة: إعداد ملفك الشخصي</div>
+<h2>أكمل بيانات حسابك</h2><p class="auth-gateway-subtitle">هذه البيانات تربط تقدمك بحسابك نفسه، حتى لا تفقد ما تعلمته عند تغيير الجهاز.</p>
+<form id="authOnboardingForm">
+<div class="auth-gateway-field"><label for="authDisplayName">الاسم</label><input id="authDisplayName" autocomplete="name" maxlength="48" required placeholder="اسمك الذي سيظهر في الموقع"></div>
+<div class="auth-gateway-field"><label for="authNewUsername">اسم المستخدم</label><input id="authNewUsername" autocomplete="username" minlength="3" maxlength="24" pattern="[a-zA-Z0-9_]{3,24}" required placeholder="مثال: wael_2026" dir="ltr"><small style="color:#8e9cba">3–24 حرفًا: أحرف إنجليزية صغيرة وأرقام وشرطة سفلية فقط.</small></div>
+<div class="auth-gateway-field"><label for="authNewPassword">كلمة المرور</label><input id="authNewPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="8 أحرف على الأقل" dir="ltr"></div>
+<div class="auth-gateway-field"><label for="authConfirmPassword">تأكيد كلمة المرور</label><input id="authConfirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="أعد كتابة كلمة المرور" dir="ltr"></div>
+<button class="auth-gateway-primary" type="submit">حفظ البيانات وبدء التعلم</button>
+</form>
+</div>
+<p id="authGatewayMessage" class="auth-gateway-message" role="status" aria-live="polite"></p>
+<p class="auth-gateway-note">نستخدم بيانات الحساب لحفظ تقدمك وعرضه لك فقط. لا تشارك كلمة المرور مع أي شخص.</p>
+</div>
+</div>
+</section><header class="top"><div class="brand"><div class="logo">E</div><div>English Hero <span style="color:var(--a)">3.3</span><div class="muted small" style="font-weight:400">LEARN • PRACTICE • GROW</div></div></div><div class="row" style="justify-content:flex-end"><span class="chip hidden" id="topDisplayName" dir="auto"></span><span class="chip" id="topXP">⚡ 0 XP</span></div></header>
   <div style="text-align:center; padding:12px; margin:10px 0 20px;">
   <a href="privacy.html">سياسة الخصوصية</a>
   &nbsp; | &nbsp;
@@ -1893,6 +1937,7 @@ theme();renderStats();renderCourses();renderHome();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="config.js" defer></script>
 <script src="cloud-sync.js" defer></script>
+<script src="auth-gateway.js?v=1" defer></script>
 <script src="pro-dashboard.js?v=3" defer></script>
 <script src="learning-expansion.js?v=62" defer></script>
 <script src="english-hero-plus.js?v=67" defer></script>
@@ -1984,7 +2029,7 @@ theme();renderStats();renderCourses();renderHome();
   window.addEventListener('storage',event=>{if(event.key==='english-hero-academy-3')render()});
 })();
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=108').catch(()=>{}));}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=109').catch(()=>{}));}</script>
   <script src="./site-quick-nav.js?v=1"></script>
 </body>
 </html>
