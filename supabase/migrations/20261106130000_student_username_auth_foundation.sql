@@ -34,17 +34,7 @@ create policy "Students can read own profile"
   on public.student_profiles for select to authenticated
   using (auth.uid() = user_id);
 
-drop policy if exists "Students can create own profile" on public.student_profiles;
-create policy "Students can create own profile"
-  on public.student_profiles for insert to authenticated
-  with check (auth.uid() = user_id);
-
-drop policy if exists "Students can update own profile" on public.student_profiles;
-create policy "Students can update own profile"
-  on public.student_profiles for update to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
+-- Writes are allowed only through claim_student_username so the private lookup stays in sync.
 -- Private mapping used only by the username-login Edge Function.
 create table if not exists private.student_login_lookup (
   user_id uuid primary key references auth.users(id) on delete cascade,
