@@ -40,6 +40,7 @@ create table if not exists private.student_login_lookup (
   user_id uuid primary key references auth.users(id) on delete cascade,
   username text not null unique
 );
+alter table private.student_login_lookup enable row level security;
 revoke all on private.student_login_lookup from public, anon, authenticated, service_role;
 grant select, insert, update, delete on private.student_login_lookup to service_role;
 
@@ -101,6 +102,7 @@ create table if not exists private.student_login_attempts (
   window_started_at timestamptz not null default now(),
   attempts integer not null default 0
 );
+alter table private.student_login_attempts enable row level security;
 revoke all on private.student_login_attempts from public, anon, authenticated, service_role;
 grant select, insert, update, delete on private.student_login_attempts to service_role;
 
