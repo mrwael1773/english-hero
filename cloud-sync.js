@@ -242,9 +242,6 @@
       if(error) throw error;
       user=data.session?.user||null;
       setSignedInUI();
-      resolveCloudInitialization(true);
-      if(user) await syncNow();
-      else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
       client.auth.onAuthStateChange((event,session)=>{
         const previousUser=user;
         user=session?.user||null;
@@ -263,6 +260,9 @@
         }
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
+      resolveCloudInitialization(true);
+      if(user) await syncNow();
+      else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
     } catch(e) {
       status('تعذر تهيئة تسجيل الدخول. تحقق من إعدادات Supabase والاتصال بالإنترنت.');
       console.error('English Hero cloud init:',e.message);
