@@ -36,6 +36,9 @@ test('anonymous device progress is backed up and never merged into a new student
     window.__confirmCalled = false;
     window.confirm = () => { window.__confirmCalled = true; return true; };
     window.__uploadedProgress = null;
+    window.__upsertCalls = [];
+    window.__delayNextUpsert = false;
+    window.__releaseDelayedUpsert = null;
     window.supabase = {
       createClient: () => ({
         auth: {
@@ -53,8 +56,14 @@ test('anonymous device progress is backed up and never merged into a new student
           select() { return this; },
           eq() { return this; },
           maybeSingle() { return this; },
-          upsert(payload) { window.__uploadedProgress = payload.progress; return this; },
-          abortSignal() { return Promise.resolve({ data: null, error: null }); }
+          upsert(payload) { window.__uploadedProgress = payload.progress; window.__upsertCalls.push(payload.progress); return this; },
+          abortSignal() {
+            if (window.__delayNextUpsert) {
+              window.__delayNextUpsert = false;
+              return new Promise(resolve => { window.__releaseDelayedUpsert = () => resolve({ data: null, error: null }); });
+            }
+            return Promise.resolve({ data: null, error: null });
+          }
         })
       })
     };
@@ -83,6 +92,26 @@ test('anonymous device progress is backed up and never merged into a new student
   expect(result.backupXp).toBe(90);
   expect(result.confirmCalled).toBe(false);
   expect(result.uploadedXp).toBe(0);
+
+  // A newer progress snapshot must be written after an older in-flight request,
+  // rather than being lost behind a delayed upsert.
+  await page.evaluate(() => {
+    window.__delayNextUpsert = true;
+    window.state.xp = 10;
+    window.queueCloudSave();
+  });
+  await expect.poll(() => page.evaluate(() => typeof window.__releaseDelayedUpsert)).toBe('function');
+  await page.evaluate(() => {
+    window.state.xp = 20;
+    window.queueCloudSave();
+  });
+  await page.waitForTimeout(1100);
+  const firstWrite = await page.evaluate(() => window.__upsertCalls.map(progress => progress.xp));
+  expect(firstWrite.at(-1)).toBe(10);
+  await page.evaluate(() => window.__releaseDelayedUpsert());
+  await expect.poll(() => page.evaluate(() => window.__upsertCalls.filter(progress => progress.xp === 20).length)).toBe(1);
+  const orderedWrites = await page.evaluate(() => window.__upsertCalls.map(progress => progress.xp));
+  expect(orderedWrites.slice(-2)).toEqual([10, 20]);
 
   // Exercise the real cloud-sync sign-out button and its auth-state cleanup.
   await page.evaluate(() => {
