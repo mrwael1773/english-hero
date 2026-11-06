@@ -35,7 +35,7 @@ body.auth-gateway-pending .app>:not(#authGateway){visibility:hidden;pointer-even
 .auth-gateway-divider:before,.auth-gateway-divider:after{content:"";height:1px;flex:1;background:var(--eh-auth-line)}
 .auth-gateway-message{min-height:24px;margin:14px 0 0;color:#b9c9e8;font-size:12px;line-height:1.7}
 .auth-gateway-message[data-kind=error]{color:#ffb4bd}.auth-gateway-message[data-kind=success]{color:#8df0d8}
-.auth-gateway-note{margin:17px 0 0;text-align:center;color:#8290ad;font-size:10px;line-height:1.8}
+.auth-gateway-note{margin:17px 0 0;text-align:center;color:#8290ad;font-size:10px;line-height:1.8}.auth-gateway-note a{color:var(--eh-auth-aqua);text-decoration:none}.auth-gateway-note a:hover{text-decoration:underline}
 .auth-gateway-back{border:0;background:none;color:var(--eh-auth-aqua);font:inherit;font-size:12px;font-weight:800;cursor:pointer;margin:0 0 14px;padding:0}
 .auth-gateway-progress{display:flex;align-items:center;gap:8px;color:#9eadd0;font-size:11px;margin-bottom:18px}
 .auth-gateway-progress span{height:4px;flex:1;border-radius:9px;background:linear-gradient(90deg,#6fe4d0,#9a8cff)}
