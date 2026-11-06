@@ -4,14 +4,15 @@ This change is intentionally prepared for review only. Do not deploy it to the s
 
 ## 1. Supabase database
 
-1. Review and apply `supabase/migrations/20261106130000_student_username_auth_foundation.sql` to an isolated Supabase project first.
-2. Apply `supabase/migrations/20261106140000_learning_progress_owner_scope.sql` after the username-auth foundation migration. The gateway waits for `public.learning_progress`; without this table, authenticated students remain locked out when the initial cloud sync fails.
-3. Verify that `public.student_profiles` and `public.learning_progress` both have RLS and FORCE RLS enabled. Confirm that each authenticated user can read their own profile and read/write only their own progress row.
-4. Verify that `private.student_login_lookup` and `private.student_login_attempts` are not exposed through the Data API. The lookup stores only the Auth user ID and username; the current email is retrieved from Supabase Auth during login.
-5. Verify that only `service_role` can execute the two public wrapper RPCs used by the Edge Function.
-6. Verify that `claim_student_username` is executable only by authenticated users and cannot claim a profile for another user.
-7. Apply `supabase/migrations/20261106150000_require_google_identity_for_student_profiles.sql` after the progress migration. Verify that onboarding rejects a verified email/password-only account and accepts a verified Google identity. The `SECURITY DEFINER` advisor warning is expected for this narrowly scoped RPC; retain the `auth.uid()` ownership check, verified-email and Google-provider checks, and fixed `search_path`.
-7. Test progress isolation with two separate test accounts: account A must not read or modify account B's row, including through direct PostgREST requests.
+1. Check migration history before applying anything. If `student_username_auth_foundation` is already recorded, compare its stored SQL with `supabase/migrations/20261106130000_student_username_auth_foundation.sql`; a different timestamp alone does not mean the migration is missing. Never edit migration history manually or replay an already-applied foundation migration.
+2. Apply `supabase/migrations/20261106140000_learning_progress_owner_scope.sql` only if the table and its owner-scoped policies are not already present. The gateway waits for `public.learning_progress`; without this table, authenticated students remain locked out when the initial cloud sync fails.
+3. Explicitly expose only `public.learning_progress` to the Data API in **Integrations > Data API**. Supabase no longer automatically exposes newly created public tables by default. Do not expose the `private` schema or its tables. Confirm the table is reachable by the client only after its least-privilege grants and RLS policies are in place.
+4. Verify that `public.student_profiles` and `public.learning_progress` both have RLS and FORCE RLS enabled. Confirm that each authenticated user can read their own profile and read/write only their own progress row.
+5. Verify that `private.student_login_lookup` and `private.student_login_attempts` are not exposed through the Data API. The lookup stores only the Auth user ID and username; the current email is retrieved from Supabase Auth during login.
+6. Verify that only `service_role` can execute the two public wrapper RPCs used by the Edge Function.
+7. Verify that `claim_student_username` is executable only by authenticated users and cannot claim a profile for another user.
+8. Apply `supabase/migrations/20261106150000_require_google_identity_for_student_profiles.sql` after the progress migration. Verify that onboarding rejects a verified email/password-only account and accepts a verified Google identity. The `SECURITY DEFINER` advisor warning is expected for this narrowly scoped RPC; retain the `auth.uid()` ownership check, verified-email and Google-provider checks, and fixed `search_path`.
+9. Test progress isolation with two separate test accounts: account A must not read or modify account B's row, including through direct PostgREST requests.
 
 ## 2. Google OAuth
 
