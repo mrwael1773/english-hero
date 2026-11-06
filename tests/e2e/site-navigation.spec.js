@@ -4,7 +4,7 @@ test('offers direct section navigation on long guide pages', async ({ page }) =>
   await page.goto('/english-tenses-guide.html');
   const quickNav = page.getByRole('navigation', { name: 'التنقل السريع داخل الصفحة' });
   await expect(quickNav).toBeVisible();
-  await expect(quickNav.getByRole('link')).toHaveCount(8);
+  await expect(quickNav.getByRole('link')).toHaveCount(7);
 
   const targetLink = quickNav.getByRole('link', { name: /الماضي البسيط/ });
   const targetId = await targetLink.getAttribute('href');
