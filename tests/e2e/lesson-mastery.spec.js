@@ -24,12 +24,14 @@ async function openFirstLesson(page) {
 }
 
 async function answerAll(page, translations, shouldPass, wrongIndices = []) {
+  let writingQuestionCount = 0;
   const wrongSet = new Set(Array.isArray(wrongIndices) ? wrongIndices : Number.isInteger(wrongIndices) && wrongIndices >= 0 ? [wrongIndices] : []);
   for (let i = 0; i < 18; i++) {
     const question = (await page.locator('#question').innerText()).trim();
     const passThis = shouldPass && !wrongSet.has(i);
     const input = page.locator('#answerArea input');
     if (await input.count()) {
+      writingQuestionCount++;
       const correct = translations.get(question);
       expect(correct, 'Arabic prompt should map to its English word').toBeTruthy();
       await input.fill(passThis ? correct : 'definitely-wrong');
@@ -58,6 +60,7 @@ async function answerAll(page, translations, shouldPass, wrongIndices = []) {
     await expect(page.locator('#quizNext')).toBeVisible();
     await page.locator('#quizNext').click();
   }
+  expect(writingQuestionCount, 'The mastery quiz must exercise at least one typed-answer question').toBeGreaterThan(0);
 }
 
 test('lesson does not become mastered or unlock the next lesson below 80%', async ({ page }) => {
