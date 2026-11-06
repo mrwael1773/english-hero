@@ -11,7 +11,8 @@ async function installAuthMock(page) {
         getUser:()=>user,
         getProfile:async()=>profile,
         signInWithUsername:async()=>{user={id:'mock-student'};profile={username:'mock_student',display_name:'طالب تجريبي'};return user;},
-        signInWithGoogle:async()=>{user={id:'google-student'};profile=null;window.dispatchEvent(new CustomEvent('englishhero:authstate'));},
+        signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;user={id:'google-student'};profile=null;window.dispatchEvent(new CustomEvent('englishhero:authstate'));},
+        isReady:()=>true,
         setPassword:async()=>{},
         claimProfile:async(username,displayName)=>{profile={username,display_name:displayName};return profile;}
       };
@@ -36,6 +37,15 @@ test('username sign-in opens the learning site after authentication', async ({ p
   await page.locator('#authLoginForm button[type="submit"]').click();
   await expect(page.locator('#authGateway')).toBeHidden();
   await expect(page.locator('#home')).toBeVisible();
+});
+
+test('Google sign-in preserves a validated learning destination after gateway cleanup', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/?next=%2Fenglish-hero%2Fenglish-basics.html');
+  await page.locator('#authLoginPane [data-auth-mode="register"]').click();
+  await page.locator('#authRegisterPane [data-google-auth]').click();
+  await expect.poll(() => page.evaluate(() => window.__googleNextPath)).toBe('/english-hero/english-basics.html');
+  expect(new URL(page.url()).searchParams.has('next')).toBe(false);
 });
 
 test('Google registration continues to profile and password setup', async ({ page }) => {
