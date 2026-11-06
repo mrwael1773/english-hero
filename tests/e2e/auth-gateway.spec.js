@@ -4,7 +4,7 @@ async function installAuthMock(page) {
   await page.route('**/cloud-sync.js', route => route.fulfill({
     contentType: 'application/javascript',
     body: `
-      let user=null, profile=null;
+      let user=null, profile=null, ready=true;
       window.EnglishHeroCloudReady=Promise.resolve(true);
       window.EnglishHeroCloud={
         isConfigured:()=>true,
@@ -12,10 +12,11 @@ async function installAuthMock(page) {
         getProfile:async()=>profile,
         signInWithUsername:async()=>{user={id:'mock-student'};profile={username:'mock_student',display_name:'طالب تجريبي'};return user;},
         signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;user={id:'google-student'};profile=null;window.dispatchEvent(new CustomEvent('englishhero:authstate'));},
-        isReady:()=>true,
+        isReady:()=>ready,
         setPassword:async()=>{},
         claimProfile:async(username,displayName)=>{profile={username,display_name:displayName};return profile;}
       };
+      window.__setCloudReady=value=>{ready=value;};
     `
   }));
 }
@@ -37,6 +38,21 @@ test('username sign-in opens the learning site after authentication', async ({ p
   await page.locator('#authLoginForm button[type="submit"]').click();
   await expect(page.locator('#authGateway')).toBeHidden();
   await expect(page.locator('#home')).toBeVisible();
+});
+
+test('gateway stays closed until the signed-in account progress is ready', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.evaluate(() => window.__setCloudReady(false));
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await page.evaluate(() => {
+    window.__setCloudReady(true);
+    window.dispatchEvent(new CustomEvent('englishhero:authready'));
+  });
+  await expect(page.locator('#authGateway')).toBeHidden();
 });
 
 test('Google sign-in preserves a validated learning destination after gateway cleanup', async ({ page }) => {
