@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 async function installGuardAuthMock(page) {
   await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
     contentType: 'application/javascript',
-    body: `
+    body: \`
       window.__guardAuthStateCallback = null;
       window.supabase = {
         createClient: () => ({
@@ -22,11 +22,11 @@ async function installGuardAuthMock(page) {
           })
         })
       };
-    `
+    \`
   }));
   await page.route('**/config.js', route => route.fulfill({
     contentType: 'application/javascript',
-    body: `window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-for-guard-test'};`
+    body: \`window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-for-guard-test'};\`
   }));
 }
 
@@ -45,7 +45,7 @@ test('a protected lesson redirects to the gateway after sign-out in another tab'
     window.__guardAuthStateCallback?.('SIGNED_OUT', null);
   });
 
-  await expect(page).toHaveURL(/\\/index\\.html\\?next=/);
+  await expect(page).toHaveURL(/\/index\.html\?next=/);
   await expect(page.locator('#authGateway')).toBeVisible();
   await expect(page.locator('body')).toContainText('بوابة الدخول');
 });
