@@ -40,7 +40,14 @@ test('anonymous device progress is backed up and never merged into a new student
       createClient: () => ({
         auth: {
           getSession: async () => ({ data: { session: { user: { id: 'new-student-account' } } }, error: null }),
-          onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } })
+          onAuthStateChange: callback => {
+            window.__authStateCallback=callback;
+            return { data: { subscription: { unsubscribe() {} } } };
+          },
+          signOut: async () => {
+            window.__authStateCallback?.('SIGNED_OUT',null);
+            return {error:null};
+          }
         },
         from: () => ({
           select() { return this; },
@@ -76,4 +83,22 @@ test('anonymous device progress is backed up and never merged into a new student
   expect(result.backupXp).toBe(90);
   expect(result.confirmCalled).toBe(false);
   expect(result.uploadedXp).toBe(0);
+
+  // Exercise the real cloud-sync sign-out button and its auth-state cleanup.
+  await page.evaluate(() => {
+    window.state.xp=55;
+    localStorage.setItem('english-hero-cloud-owner','new-student-account');
+  });
+  await page.locator('#cloudSignOut').click();
+  await expect.poll(() => page.evaluate(() => window.state.xp)).toBe(0);
+  const logout = await page.evaluate(() => ({
+    backup: JSON.parse(localStorage.getItem('english-hero-account-backup-new-student-account')||'null'),
+    owner: localStorage.getItem('english-hero-cloud-owner'),
+    signOutDisabled: document.getElementById('cloudSignOut').disabled,
+    completed: window.state.completed
+  }));
+  expect(logout.backup.xp).toBe(55);
+  expect(logout.owner).toBeNull();
+  expect(logout.signOutDisabled).toBe(true);
+  expect(logout.completed).toEqual([]);
 });
