@@ -142,7 +142,7 @@ returns uuid
 language sql
 security definer
 set search_path = pg_catalog
-as $
+as $$
   select user_id
   from private.student_login_lookup
   where username = lower(trim(coalesce(p_username, '')))
@@ -160,14 +160,14 @@ returns boolean
 language sql
 security definer
 set search_path = pg_catalog
-as $ select private.consume_student_login_attempt(p_attempt_key); $;
+as $$ select private.consume_student_login_attempt(p_attempt_key); $$;
 
 create or replace function public.resolve_student_login_user_id(p_username text)
 returns uuid
 language sql
 security definer
 set search_path = pg_catalog
-as $ select private.resolve_student_login_user_id(p_username); $;
+as $$ select private.resolve_student_login_user_id(p_username); $$;
 
 revoke all on function public.consume_student_login_attempt(text) from public, anon, authenticated;
 revoke all on function public.resolve_student_login_user_id(text) from public, anon, authenticated;
