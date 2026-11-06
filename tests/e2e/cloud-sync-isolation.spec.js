@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test('anonymous device progress is backed up and never merged into a new student account', async ({ page }) => {
-  await page.setContent('<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><div id="cloudUser"></div>');
+  // Use a real same-origin document: about:blank/setContent has an opaque origin
+  // in Chromium and intentionally blocks localStorage access.
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><div id="cloudUser"></div>';
+  });
 
   await page.evaluate(() => {
     const original = {
