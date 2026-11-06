@@ -455,9 +455,12 @@
     },
     async signInWithGoogle() {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
+      const callbackUrl=new URL(location.pathname,location.origin);
+      const requestedLearningPage=new URLSearchParams(location.search).get('next');
+      if(requestedLearningPage) callbackUrl.searchParams.set('next',requestedLearningPage);
       const {error}=await client.auth.signInWithOAuth({
         provider:'google',
-        options:{redirectTo:location.origin+location.pathname}
+        options:{redirectTo:callbackUrl.toString()}
       });
       if(error) throw error;
     },
