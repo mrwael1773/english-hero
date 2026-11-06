@@ -50,7 +50,7 @@ create or replace function public.claim_student_username(
 ) returns jsonb
 language plpgsql
 security definer
-set search_path = pg_catalog, public, private, auth
+set search_path = pg_catalog
 as $$
 declare
   v_user_id uuid := auth.uid();
@@ -108,7 +108,7 @@ create or replace function private.consume_student_login_attempt(p_attempt_key t
 returns boolean
 language plpgsql
 security definer
-set search_path = pg_catalog, private
+set search_path = pg_catalog
 as $$
 declare
   v_attempts integer;
@@ -141,7 +141,7 @@ create or replace function private.resolve_student_login_user_id(p_username text
 returns uuid
 language sql
 security definer
-set search_path = pg_catalog, private
+set search_path = pg_catalog
 as $
   select user_id
   from private.student_login_lookup
@@ -159,14 +159,14 @@ create or replace function public.consume_student_login_attempt(p_attempt_key te
 returns boolean
 language sql
 security definer
-set search_path = pg_catalog, private
+set search_path = pg_catalog
 as $ select private.consume_student_login_attempt(p_attempt_key); $;
 
 create or replace function public.resolve_student_login_user_id(p_username text)
 returns uuid
 language sql
 security definer
-set search_path = pg_catalog, private
+set search_path = pg_catalog
 as $ select private.resolve_student_login_user_id(p_username); $;
 
 revoke all on function public.consume_student_login_attempt(text) from public, anon, authenticated;
