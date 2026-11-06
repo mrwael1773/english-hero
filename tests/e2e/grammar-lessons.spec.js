@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/authenticated-test.js';
 
 async function openLearningSection(page, section) {
   await page.goto('/');
