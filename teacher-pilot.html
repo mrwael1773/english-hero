@@ -54,6 +54,8 @@ const normalizeMastery=value=>{
 // Keep pilot results in memory only. Shared-device results must never survive a page reload.
 let data=normalizeMastery({});
 const save=()=>{};
+// A browser back/forward-cache restore must not revive another learner's session.
+window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let speechRequestId=0;
 const say=s=>{
