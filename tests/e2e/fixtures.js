@@ -1,7 +1,7 @@
 import { test as base, expect } from '@playwright/test';
 
 // Learning-flow tests run against an isolated authenticated student.
-// The gateway-specific suite imports @playwright/test directly and supplies its own auth states.
+// The auth mock mirrors the Supabase auth-state subscription used by auth-guard.js.
 export const test = base.extend({
   authenticatedStudent: [async ({ page }, use) => {
     await page.route('**/cloud-sync.js*', route => route.fulfill({
@@ -13,7 +13,13 @@ export const test = base.extend({
     await page.route('**/cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
       contentType: 'application/javascript',
       body: `window.supabase={createClient:()=>({
-        auth:{getSession:async()=>({data:{session:{user:{id:'e2e-student'}}},error:null})},
+        auth:{
+          onAuthStateChange(callback){
+            callback('INITIAL_SESSION',{user:{id:'e2e-student'}});
+            return {data:{subscription:{unsubscribe(){}}}};
+          },
+          getSession:async()=>({data:{session:{user:{id:'e2e-student'}}},error:null})
+        },
         from:()=>({select(){return this;},eq(){return this;},
           maybeSingle:async()=>({data:{user_id:'e2e-student'},error:null})})
       })};`
