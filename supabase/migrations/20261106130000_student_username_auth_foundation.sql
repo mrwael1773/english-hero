@@ -126,18 +126,21 @@ begin
     return false;
   end if;
 
-  insert into private.student_login_attempts(attempt_key, window_started_at, attempts)
+  insert into private.student_login_attempts as current_attempt(attempt_key, window_started_at, attempts)
   values (p_attempt_key, now(), 1)
   on conflict (attempt_key) do update
     set attempts = case
-      when private.student_login_attempts.window_started_at < now() - interval '15 minutes' then 1
-      else private.student_login_attempts.attempts + 1
+      when current_attempt.window_started_at < now() - interval '15 minutes' then 1
+      else current_attempt.attempts + 1
     end,
     window_started_at = case
-      when private.student_login_attempts.window_started_at < now() - interval '15 minutes' then now()
-      else private.student_login_attempts.window_started_at
+      when current_attempt.window_started_at < now() - interval '15 minutes' then now()
+      else current_attempt.window_started_at
     end
   returning attempts into v_attempts;
+
+  delete from private.student_login_attempts
+  where window_started_at < now() - interval '1 day';
 
   return v_attempts <= 5;
 end;
