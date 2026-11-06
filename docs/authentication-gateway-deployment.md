@@ -14,7 +14,8 @@ This change is intentionally prepared for review only. Do not deploy it to the s
 8. Verify that `claim_student_username` is executable only by authenticated users and cannot claim a profile for another user.
 9. Apply `supabase/migrations/20261106143515_require_google_identity_for_student_profiles.sql` after the progress migration. Verify that onboarding rejects a verified email/password-only account and accepts a verified Google identity. The `SECURITY DEFINER` advisor warning is expected for this narrowly scoped RPC; retain the `auth.uid()` ownership check, verified-email and Google-provider checks, and fixed `search_path`.
 10. Apply `supabase/migrations/20261106145142_optimize_student_rls_auth_uid.sql` after the owner-scoped policies. It should preserve the same ownership checks while evaluating `auth.uid()` once per statement.
-11. Test progress isolation with two separate test accounts: account A must not read or modify account B's row, including through direct PostgREST requests.
+11. Apply `supabase/migrations/20261106150755_revoke_public_default_api_grants.sql` to prevent objects created by the `postgres` role in `public` from automatically granting table, function, or sequence access to `anon`, `authenticated`, or `service_role`. This changes defaults for future objects only; existing explicit grants remain unchanged. Keep app-owned schema changes under `postgres` and grant each required role explicitly. Do not alter Supabase-managed `supabase_admin` defaults.
+12. Test progress isolation with two separate test accounts: account A must not read or modify account B's row, including through direct PostgREST requests.
 
 ## 2. Google OAuth
 
