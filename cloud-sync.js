@@ -260,9 +260,10 @@
         }
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
-      resolveCloudInitialization(true);
       if(user) await syncNow();
       else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
+      // Release the gateway only after the returning user's cloud progress has been restored.
+      resolveCloudInitialization(true);
     } catch(e) {
       status('تعذر تهيئة تسجيل الدخول. تحقق من إعدادات Supabase والاتصال بالإنترنت.');
       console.error('English Hero cloud init:',e.message);
