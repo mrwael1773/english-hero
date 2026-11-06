@@ -14,8 +14,8 @@ async function installGuardAuthMock(page) {
 test('a protected lesson redirects to the gateway after sign-out in another tab', async ({ page }) => {
   await installGuardAuthMock(page);
   await page.route('**/index.html*', route => route.fulfill({
-    contentType: 'text/html',
-    body: '<!doctype html><html lang="ar"><head><title>بوابة الدخول</title></head><body><main id="authGateway">بوابة الدخول</main></body></html>'
+    contentType: 'text/html; charset=utf-8',
+    body: '<!doctype html><html lang="ar"><head><meta charset="utf-8"><title>بوابة الدخول</title></head><body><main id="authGateway">بوابة الدخول</main></body></html>'
   }));
 
   await page.goto('/grammar-lesson.html#g-subject-pronouns');
@@ -25,7 +25,7 @@ test('a protected lesson redirects to the gateway after sign-out in another tab'
     window.__guardAuthStateCallback?.('SIGNED_OUT', null);
   });
 
-  await expect(page).toHaveURL(/\/index\.html\?next=/);
+  await expect(page).toHaveURL(/\\/index\\.html\\?next=/);
   await expect(page.locator('#authGateway')).toBeVisible();
   await expect(page.locator('body')).toContainText('بوابة الدخول');
 });
