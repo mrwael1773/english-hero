@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Bound the complete suite and each test so a stuck browser cannot leave CI pending indefinitely.
+  globalTimeout: 15 * 60 * 1000,
+  timeout: 45 * 1000,
+  expect: { timeout: 10 * 1000 },
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
