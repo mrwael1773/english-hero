@@ -2,6 +2,14 @@
 (function(){
   'use strict';
   const $cloud = id => document.getElementById(id);
+  let resolveCloudReady;
+  window.EnglishHeroCloudReady = new Promise(resolve => { resolveCloudReady = resolve; });
+  let cloudReadyResolved = false;
+  const resolveCloudInitialization = value => {
+    if(cloudReadyResolved) return;
+    cloudReadyResolved = true;
+    resolveCloudReady(value);
+  };
   let client = null;
   let user = null;
   let ready = false;
@@ -221,7 +229,9 @@
   async function init(){
     if(!validConfig()){
       status('تسجيل الدخول السحابي جاهز للتهيئة، لكنه غير مفعّل بعد. يلزم إعداد مشروع Supabase ومفتاحه العام في config.js.');
-      setSignedInUI();return;
+      setSignedInUI();
+      resolveCloudInitialization(false);
+      return;
     }
     try {
       if(!window.supabase?.createClient) throw new Error('لم تُحمّل مكتبة Supabase');
@@ -232,6 +242,7 @@
       if(error) throw error;
       user=data.session?.user||null;
       setSignedInUI();
+      resolveCloudInitialization(true);
       if(user) await syncNow();
       else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
       client.auth.onAuthStateChange((event,session)=>{
@@ -254,6 +265,7 @@
     } catch(e) {
       status('تعذر تهيئة تسجيل الدخول. تحقق من إعدادات Supabase والاتصال بالإنترنت.');
       console.error('English Hero cloud init:',e.message);
+      resolveCloudInitialization(false);
     }
   }
   const friendlyAuthError = (error, mode) => {
@@ -395,6 +407,62 @@
     if(document.visibilityState==='hidden' && user && ready && revision>0){
       clearTimeout(timer);
       uploadProgress();
+    }
+  });
+
+  // Narrow public API used by the first-entry authentication gateway.
+  // The Supabase client remains configured with the public anon key only.
+  window.EnglishHeroCloud = Object.freeze({
+    getUser: () => user,
+    isConfigured: () => !!client,
+    async getProfile() {
+      if(!client || !user) return null;
+      const {data,error}=await client.from('student_profiles')
+        .select('username,display_name').eq('user_id',user.id).maybeSingle();
+      if(error) throw error;
+      return data || null;
+    },
+    async signInWithUsername(username,password) {
+      if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
+      const {data,error}=await client.functions.invoke('student-username-login',{
+        body:{username,password}
+      });
+      if(error) throw error;
+      if(!data?.access_token || !data?.refresh_token) throw new Error('تعذّر إكمال تسجيل الدخول.');
+      const {data:sessionData,error:sessionError}=await client.auth.setSession({
+        access_token:data.access_token,refresh_token:data.refresh_token
+      });
+      if(sessionError) throw sessionError;
+      user=sessionData.user||sessionData.session?.user||user;
+      setSignedInUI();
+      await syncNow();
+      return user;
+    },
+    async claimProfile(username,displayName) {
+      if(!client || !user) throw new Error('سجّل الدخول أولًا.');
+      const {data,error}=await client.rpc('claim_student_username',{
+        p_username:username,p_display_name:displayName
+      });
+      if(error) throw error;
+      return data;
+    },
+    async setPassword(password) {
+      if(!client || !user) throw new Error('سجّل الدخول أولًا.');
+      const {error}=await client.auth.updateUser({password});
+      if(error) throw error;
+    },
+    async signInWithGoogle() {
+      if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
+      const {error}=await client.auth.signInWithOAuth({
+        provider:'google',
+        options:{redirectTo:location.origin+location.pathname}
+      });
+      if(error) throw error;
+    },
+    async signOut() {
+      if(!client) return;
+      const {error}=await client.auth.signOut();
+      if(error) throw error;
     }
   });
   init();
