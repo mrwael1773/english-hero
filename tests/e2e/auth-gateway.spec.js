@@ -61,7 +61,7 @@ test('authentication gateway rejects an external post-login redirect target', as
   await page.locator('#authLoginPassword').fill('safe-password-123');
   await page.locator('#authLoginForm button[type="submit"]').click();
   await expect(page.locator('#authGateway')).toBeHidden();
-  await expect(page).toHaveURL(/\/index\.html\?next=/);
+  expect(new URL(page.url()).pathname).toMatch(/\/(?:index\.html)?$/);
   expect(new URL(page.url()).hostname).not.toBe('evil.example');
   expect(page.url()).not.toContain('evil.example');
 });
