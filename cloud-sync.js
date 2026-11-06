@@ -261,6 +261,7 @@
           user=null;
           setSignedInUI();
         }
+        window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
     } catch(e) {
       status('تعذر تهيئة تسجيل الدخول. تحقق من إعدادات Supabase والاتصال بالإنترنت.');
