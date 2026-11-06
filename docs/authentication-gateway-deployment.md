@@ -10,6 +10,7 @@ This change is intentionally prepared for review only. Do not deploy it to the s
 4. Verify that `private.student_login_lookup` and `private.student_login_attempts` are not exposed through the Data API. The lookup stores only the Auth user ID and username; the current email is retrieved from Supabase Auth during login.
 5. Verify that only `service_role` can execute the two public wrapper RPCs used by the Edge Function.
 6. Verify that `claim_student_username` is executable only by authenticated users and cannot claim a profile for another user.
+7. Apply `supabase/migrations/20261106150000_require_google_identity_for_student_profiles.sql` after the progress migration. Verify that onboarding rejects a verified email/password-only account and accepts a verified Google identity. The `SECURITY DEFINER` advisor warning is expected for this narrowly scoped RPC; retain the `auth.uid()` ownership check, verified-email and Google-provider checks, and fixed `search_path`.
 7. Test progress isolation with two separate test accounts: account A must not read or modify account B's row, including through direct PostgREST requests.
 
 ## 2. Google OAuth
