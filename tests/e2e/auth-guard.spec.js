@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 async function installGuardAuthMock(page) {
   await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
     contentType: 'application/javascript',
-    body: "window.__guardAuthStateCallback = null;\nwindow.supabase = {\n  createClient: () => ({\n    auth: {\n      onAuthStateChange(callback) {\n        window.__guardAuthStateCallback = callback;\n        callback('INITIAL_SESSION', { user: { id: 'student-one' } });\n        return { data: { subscription: { unsubscribe() {} } } };\n      },\n      getSession: async () => ({ data: { session: { user: { id: 'student-one' } } }, error: null })\n    },\n    from: () => ({\n      select() { return this; },\n      eq() { return this; },\n      maybeSingle: async () => ({ data: { user_id: 'student-one' }, error: null })\n    })\n  })\n};"
+    body: "window.__guardAuthStateCallback = null;\nwindow.supabase = { createClient: () => ({ auth: { onAuthStateChange(callback) { window.__guardAuthStateCallback = callback; callback('INITIAL_SESSION', { user: { id: 'student-one' } }); return { data: { subscription: { unsubscribe() {} } } }; }, getSession: async () => ({ data: { session: { user: { id: 'student-one' } } }, error: null }) }, from: () => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ data: { user_id: 'student-one' }, error: null }) }) }) };"
   }));
   await page.route('**/config.js', route => route.fulfill({
     contentType: 'application/javascript',
@@ -25,7 +25,7 @@ test('a protected lesson redirects to the gateway after sign-out in another tab'
     window.__guardAuthStateCallback?.('SIGNED_OUT', null);
   });
 
-  await expect(page).toHaveURL(/\\/index\\.html\\?next=/);
+  await expect(page).toHaveURL(/\/index\.html\?next=/);
   await expect(page.locator('#authGateway')).toBeVisible();
   await expect(page.locator('body')).toContainText('بوابة الدخول');
 });
