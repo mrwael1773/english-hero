@@ -45,6 +45,22 @@ test('username sign-in opens the learning site after authentication', async ({ p
   await expect(page.locator('#authGateway')).toBeHidden();
   await expect(page.locator('#home')).toBeVisible();
 });
+ 
+test('signing out relocks the learning gateway and hides learning screens', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeHidden();
+  await expect(page.locator('#home')).toBeVisible();
+
+  await page.evaluate(() => window.__setMockUser(null));
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authLoginPane')).toBeVisible();
+  await expect(page.locator('#home')).not.toBeVisible();
+});
+
 
 test('gateway stays closed until the signed-in account progress is ready', async ({ page }) => {
   await installAuthMock(page);
