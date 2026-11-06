@@ -27,6 +27,8 @@ const progressMigrationPath = 'supabase/migrations/20261106143509_learning_progr
 const progressMigration = read(progressMigrationPath);
 const googleIdentityMigrationPath = 'supabase/migrations/20261106143515_require_google_identity_for_student_profiles.sql';
 const googleIdentityMigration = read(googleIdentityMigrationPath);
+const optimizedRlsMigrationPath = 'supabase/migrations/20261106145142_optimize_student_rls_auth_uid.sql';
+const optimizedRlsMigration = read(optimizedRlsMigrationPath);
 const deploymentChecklist = read('docs/authentication-gateway-deployment.md');
 const usernameLoginFunction = read('supabase/functions/student-username-login/index.ts');
 const supabaseConfig = read('supabase/config.toml');
@@ -249,6 +251,8 @@ check(html.includes('navigator.serviceWorker.register'), 'Main page registers th
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
 check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') && migration.includes('(SELECT auth.uid())'), 'Tracked migration contains the security and RLS policy changes');
 check(existsSync(join(root, migrationPath)), 'Applied Supabase migration is tracked in the repository');
+check(optimizedRlsMigration.includes('drop policy if exists "Students can manage own learning progress"') && optimizedRlsMigration.includes('drop policy if exists "Students can read own profile"') && optimizedRlsMigration.includes('(select auth.uid())'), 'Student RLS optimization preserves both owner-only policies');
+check(existsSync(join(root, optimizedRlsMigrationPath)), 'Student RLS optimization migration is tracked in the repository');
 
 let vocabulary;
 try {
