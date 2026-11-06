@@ -17,6 +17,21 @@ test('teacher pilot progress is isolated to the current tab and survives reload'
   await expect(page.locator('#lessonState')).toContainText('بدأ الدرس');
 });
 
+test('legacy shared-device pilot data is removed and never restored', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+      trained: [0, 1, 2, 3, 4, 5], mastered: true,
+      lastAttempt: { date: new Date().toISOString(), score: 100, correct: 18, total: 18 }
+    }));
+  });
+
+  await page.goto('/teacher-pilot.html');
+  await expect(page.locator('#trainingCount')).toContainText('0 من 6');
+  const legacy = await page.evaluate(() => localStorage.getItem('ehTeacherPilotMasteryV1'));
+  expect(legacy).toBeNull();
+});
+
 test('teacher pilot progress does not appear in a separate tab', async ({ page, context }) => {
   await page.goto('/teacher-pilot.html');
   await page.locator('[data-trained="0"]').click();
