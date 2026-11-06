@@ -68,6 +68,7 @@
 }
 main h2[id^="quick-section-"],
 main h3[id^="quick-section-"] { scroll-margin-top: 88px; }
+.quick-nav-active .toc { display: none; }
 
 @media (min-width: 1200px) {
   .quick-nav {
@@ -96,6 +97,10 @@ main h3[id^="quick-section-"] { scroll-margin-top: 88px; }
     min-height: 38px;
     padding: 8px 10px;
     text-align: right;
+  }
+  body.quick-nav-active > .nav {
+    left: calc(50% - 115px);
+    width: min(960px, calc(100vw - 270px));
   }
   body.quick-nav-active > .app {
     width: min(1000px, calc(100vw - 270px));
