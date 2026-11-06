@@ -52,6 +52,9 @@ async function answerAll(page, translations, shouldPass, wrongIndices = []) {
       }
       await target.click();
     }
+    // Verify visible correctness feedback for both writing and multiple-choice answers.
+    await expect(page.locator('#quizFeedback')).toBeVisible();
+    await expect(page.locator('#quizFeedback')).toContainText(passThis ? 'ممتاز' : 'الإجابة الصحيحة');
     await expect(page.locator('#quizNext')).toBeVisible();
     await page.locator('#quizNext').click();
   }
