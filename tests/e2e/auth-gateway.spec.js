@@ -15,7 +15,11 @@ async function installAuthMock(page) {
       window.EnglishHeroCloud={
         isConfigured:()=>true,
         getUser:()=>user,
-        getProfile:async()=>{if(window.__profileReadFails)throw new Error('temporary profile read failure');return profile;},
+        getProfile:async()=>{
+          if(window.__profileReadFails)throw new Error('temporary profile read failure');
+          if(window.__delayProfileRead)await new Promise(resolve=>{window.__releaseProfileRead=resolve;});
+          return profile;
+        },
         signInWithUsername:async()=>{setMockUser('mock-student',true);return user;},
         signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',false);},
         isReady:()=>ready,
@@ -113,6 +117,32 @@ test('authentication gateway rejects an external post-login redirect target', as
   expect(new URL(page.url()).hostname).not.toBe('evil.example');
   expect(page.url()).not.toContain('evil.example');
 });
+test('a stale profile response cannot reopen learning after sign-out', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeHidden();
+
+  await page.evaluate(() => {
+    window.__delayProfileRead = true;
+    window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+      detail: { event: 'TOKEN_REFRESHED', user: { id: 'mock-student' } }
+    }));
+  });
+  await expect.poll(() => page.evaluate(() => typeof window.__releaseProfileRead)).toBe('function');
+
+  await page.evaluate(() => window.__setMockUser(null));
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#home')).not.toBeVisible();
+
+  await page.evaluate(() => window.__releaseProfileRead());
+  await page.waitForTimeout(50);
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#home')).not.toBeVisible();
+});
+ 
 test('profile lookup errors fail closed instead of opening onboarding', async ({ page }) => {
   await installAuthMock(page);
   await page.goto('/');
