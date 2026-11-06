@@ -15,6 +15,12 @@
       const client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{
         auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
       });
+      // Keep protected learning pages locked if this session is revoked in another tab.
+      client.auth.onAuthStateChange((event,session)=>{
+        if(event==='SIGNED_OUT'||event==='USER_DELETED'||(event==='TOKEN_REFRESHED'&&!session?.user?.id)){
+          redirectToGateway();
+        }
+      });
       const {data,error}=await client.auth.getSession();
       const session=data?.session;
       if(error||!session?.user?.id){redirectToGateway();return;}
