@@ -246,7 +246,10 @@
         const previousUser=user;
         user=session?.user||null;
         setSignedInUI();
-        if(event==='SIGNED_IN' && user) setTimeout(()=>syncNow(),0);
+        if(event==='SIGNED_IN' && user) setTimeout(async()=>{
+          await syncNow();
+          window.dispatchEvent(new CustomEvent('englishhero:authready'));
+        },0);
         if(event==='SIGNED_OUT'){
           ready=false;
           clearTimeout(timer);
@@ -417,6 +420,7 @@
   window.EnglishHeroCloud = Object.freeze({
     getUser: () => user,
     isConfigured: () => !!client,
+    isReady: () => !!ready,
     async getProfile() {
       if(!client || !user) return null;
       const {data,error}=await client.from('student_profiles')
@@ -453,11 +457,17 @@
       const {error}=await client.auth.updateUser({password});
       if(error) throw error;
     },
-    async signInWithGoogle() {
+    async signInWithGoogle(nextPath=null) {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
       const callbackUrl=new URL(location.pathname,location.origin);
-      const requestedLearningPage=new URLSearchParams(location.search).get('next');
-      if(requestedLearningPage) callbackUrl.searchParams.set('next',requestedLearningPage);
+      if(nextPath){
+        const target=new URL(nextPath,location.origin);
+        const basePath=new URL('./',location.href).pathname;
+        const allowed=['english-basics.html','english-tenses-guide.html','grammar-lesson.html','grammar-library.html','grammar-category.html'];
+        if(target.origin===location.origin && allowed.some(file=>target.pathname===basePath+file)){
+          callbackUrl.searchParams.set('next',target.pathname+target.search+target.hash);
+        }
+      }
       const {error}=await client.auth.signInWithOAuth({
         provider:'google',
         options:{redirectTo:callbackUrl.toString()}
