@@ -56,8 +56,10 @@ Deno.serve(async (request: Request) => {
 
   // Use the last proxy-added address rather than trusting a client-supplied first value.
   const forwarded = request.headers.get("x-forwarded-for")?.split(",").map((part) => part.trim()).filter(Boolean);
-  const ip = request.headers.get("cf-connecting-ip") ?? forwarded?.at(-1) ?? "unknown";
+  const ip = request.headers.get("cf-connecting-ip") ?? forwarded?.at(-1) ?? "";
+  if (!ip || ip.length > 64) return json({ error: "Authentication service unavailable" }, 503);
   const attemptKey = await sha256(`${username}\n${ip}`);
+  const ipAttemptKey = await sha256(`ip\n${ip}`);
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -71,6 +73,12 @@ Deno.serve(async (request: Request) => {
   });
   if (rateError) return json({ error: "Authentication service unavailable" }, 503);
   if (allowed !== true) return json({ error: "محاولات كثيرة. انتظر 15 دقيقة ثم حاول مجددًا." }, 429);
+
+  const { data: ipAllowed, error: ipRateError } = await admin.rpc("consume_student_login_ip_attempt", {
+    p_attempt_key: ipAttemptKey,
+  });
+  if (ipRateError) return json({ error: "Authentication service unavailable" }, 503);
+  if (ipAllowed !== true) return json({ error: "محاولات كثيرة من هذا الاتصال. انتظر 15 دقيقة ثم حاول مجددًا." }, 429);
 
   const { data: userId, error: lookupError } = await admin.rpc("resolve_student_login_user_id", {
     p_username: username,
