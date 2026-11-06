@@ -32,21 +32,20 @@ async function installGuardAuthMock(page) {
 
 test('a protected lesson redirects to the gateway after sign-out in another tab', async ({ page }) => {
   await installGuardAuthMock(page);
-  // Keep this test focused on the guard redirect contract, without booting the
-  // full gateway or its separate cloud-sync initialization.
+  // Isolate the redirect contract from the gateway's separate initialization.
   await page.route('**/index.html*', route => route.fulfill({
     contentType: 'text/html',
     body: '<!doctype html><html lang="ar"><head><title>بوابة الدخول</title></head><body><main id="authGateway">بوابة الدخول</main></body></html>'
   }));
 
-  await page.goto('/english-basics.html');
+  await page.goto('/grammar-lesson.html#g-subject-pronouns');
   await expect.poll(() => page.locator('html').evaluate(el => el.classList.contains('eh-auth-pending'))).toBe(false);
 
   await page.evaluate(() => {
     window.__guardAuthStateCallback?.('SIGNED_OUT', null);
   });
 
-  await expect(page).toHaveURL(/\/index\.html\?next=/);
+  await expect(page).toHaveURL(/\\/index\\.html\\?next=/);
   await expect(page.locator('#authGateway')).toBeVisible();
   await expect(page.locator('body')).toContainText('بوابة الدخول');
 });
