@@ -25,7 +25,7 @@ test('a protected lesson redirects to the gateway after sign-out in another tab'
     window.__guardAuthStateCallback?.('SIGNED_OUT', null);
   });
 
-  await expect(page).toHaveURL(/\\/index\\.html\\?next=/);
+  await expect(page).toHaveURL(/\/index\.html\?next=/);
   await expect(page.locator('#authGateway')).toBeVisible();
   await expect(page.locator('body')).toContainText('بوابة الدخول');
 });
