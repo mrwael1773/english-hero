@@ -101,14 +101,14 @@ check(usernameAuthMigration.includes('revoke insert, update on public.student_pr
 check(cloud.indexOf('if(user) await syncNow()') >= 0 && cloud.indexOf('if(user) await syncNow()') < cloud.indexOf('resolveCloudInitialization(true)'), 'Returning account progress is restored before the authentication gateway is released');
 check(cloud.includes('options:{redirectTo:location.href}'), 'Google OAuth preserves the protected learning-page destination through its callback');
 check(supabaseConfig.includes('[functions.student-username-login]') && supabaseConfig.includes('verify_jwt = false'), 'Username login endpoint is configured for its explicit unauthenticated login flow');
-check(/src="\.\/grammar-lessons\.js\?v=3"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
+check(/src="\.\/grammar-lessons\.js\?v=4"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
 check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
 check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.includes("makeSection('challenge'") && grammarLessonPage.includes("setAttribute('aria-live','polite')"), 'Dedicated lesson page provides a challenge area with accessible feedback');
 check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
 check(grammarLessonPage.includes("const start=safeText('button','btn primary','ابدأ التعلّم ↓')") && grammarLessonPage.includes('formulaArabic') && grammarLessonPage.includes("safeText('p','formula-ar'"), 'Lesson start action preserves the lesson slug and each formula has an Arabic explanation');
 check(grammarLibraryPage.includes('LEARNING MAP') && grammarCategoryPage.includes('window.EnglishHeroLessons.all') && sw.includes("'./grammar-library.html'") && sw.includes("'./grammar-category.html'"), 'Grammar and tense category pages are linked and cached offline');
 check(grammarLessonPage.includes("const stepNames=['افهم الفكرة','تفصيل القاعدة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك']") && grammarLessonPage.includes('data-step-index') && grammarLessonPage.includes('lessonStepStatus') && grammarLessonPage.includes('activeLesson.guide') && grammarLessonPage.includes('guide-card'), 'Dedicated lesson page guides students through seven detailed learning steps');
-check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=3'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
+check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=4'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
 try {
   new Function(grammarLessonsRaw);
   check(true, 'Grammar lesson catalogue JavaScript syntax is valid');
