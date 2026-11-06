@@ -51,6 +51,7 @@ jobs:
           done
           node --check config.js
           node --check cloud-sync.js
+          node --check auth-gateway.js
           node --check sw.js
           node --check pro-dashboard.js
           node --check learning-expansion.js
@@ -85,6 +86,9 @@ jobs:
           test -s sw.js
           test -s config.js
           test -s cloud-sync.js
+          test -s auth-gateway.js
+          test -s auth-gateway.css
+          test -s supabase/functions/student-username-login/index.ts
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg
