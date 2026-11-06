@@ -1,12 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 async function openCourses(page) {
-  await page.route('**/cloud-sync.js', route => route.fulfill({
-    contentType: 'application/javascript',
-    body: `window.EnglishHeroCloudReady=Promise.resolve(true);
-      window.EnglishHeroCloud={getUser:()=>({id:'e2e-student'}),isConfigured:()=>true,
-      getProfile:async()=>({username:'e2e_student',display_name:'E2E Student'})};`
-  }));
   await page.goto('/');
   await page.locator('.launch-card[data-page="courses"]').click();
   await expect(page.locator('#courses')).toHaveClass(/active/);
