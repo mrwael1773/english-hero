@@ -9,7 +9,7 @@ async function installAuthMock(page) {
       window.EnglishHeroCloud={
         isConfigured:()=>true,
         getUser:()=>user,
-        getProfile:async()=>profile,
+        getProfile:async()=>{if(window.__profileReadFails)throw new Error('temporary profile read failure');return profile;},
         signInWithUsername:async()=>{user={id:'mock-student'};profile={username:'mock_student',display_name:'طالب تجريبي'};return user;},
         signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;user={id:'google-student'};profile=null;window.dispatchEvent(new CustomEvent('englishhero:authstate'));},
         isReady:()=>ready,
@@ -90,4 +90,16 @@ test('authentication gateway rejects an external post-login redirect target', as
   expect(new URL(page.url()).pathname).toMatch(/\/(?:index\.html)?$/);
   expect(new URL(page.url()).hostname).not.toBe('evil.example');
   expect(page.url()).not.toContain('evil.example');
+});
+test('profile lookup errors fail closed instead of opening onboarding', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.evaluate(() => { window.__profileReadFails = true; });
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authLoginPane')).toBeVisible();
+  await expect(page.locator('#authOnboardingPane')).toBeHidden();
+  await expect(page.locator('#authGatewayMessage')).toContainText('تعذر التحقق من ملف الحساب');
 });
