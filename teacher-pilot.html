@@ -13,7 +13,7 @@
 </head>
 <body><main class="wrap">
 <header class="top"><div><div class="eyebrow">ENGLISH HERO • الإصدار التجريبي</div><h1 style="margin:4px 0">مسار تدريبي: التعارف</h1></div><div class="row"><button class="btn" id="clearSession" type="button">إنهاء الجلسة ومسح النتائج</button><a href="./index.html">العودة إلى بطل الإنجليزي ←</a></div></header>
-<section class="panel hero"><div class="notice small">خصوصية الجهاز المشترك: نتائج هذا التدريب تبقى في ذاكرة الصفحة فقط، ولا تُحفظ في المتصفح أو السحابة. ستُمسح عند إعادة تحميل الصفحة أو إغلاقها. استخدم «إنهاء الجلسة ومسح النتائج» قبل تسليم الجهاز لطالب آخر.</div><div class="eyebrow">تدريب قصير من ٦ كلمات</div><h2>لا نحتسب الدرس متقنًا بمجرد فتحه أو إنهائه</h2><p>يتدرّب الطالب، ثم يختبر الاستماع وفهم المعنى وكتابة الكلمة. هذا اختبار إتقان تدريبي داخل الدرس، ولا يحل محل تقييم المعلم الحضوري.</p><div class="row"><span class="status">بدأ الدرس</span><span class="status">أكمل التدريب</span><span class="status">أتقن الدرس بعد الاختبار</span></div></section>
+<section class="panel hero"><div class="notice small">خصوصية الجهاز المشترك: تحفظ نتائج هذا التدريب مؤقتًا في مساحة الجلسة الخاصة بعلامة التبويب الحالية فقط، ولا تُرفع إلى السحابة ولا تُشارك مع علامات تبويب أخرى. تبقى بعد إعادة تحميل الصفحة، وتُمسح عند إغلاق علامة التبويب أو الضغط على «إنهاء الجلسة ومسح النتائج». لا تسلّم علامة التبويب لطالب آخر قبل إنهاء الجلسة.</div><div class="eyebrow">تدريب قصير من ٦ كلمات</div><h2>لا نحتسب الدرس متقنًا بمجرد فتحه أو إنهائه</h2><p>يتدرّب الطالب، ثم يختبر الاستماع وفهم المعنى وكتابة الكلمة. هذا اختبار إتقان تدريبي داخل الدرس، ولا يحل محل تقييم المعلم الحضوري.</p><div class="row"><span class="status">بدأ الدرس</span><span class="status">أكمل التدريب</span><span class="status">أتقن الدرس بعد الاختبار</span></div></section>
 <nav class="tabs"><button class="btn tab active" data-tab="path">المسار التجريبي</button><button class="btn tab" data-tab="review">مراجعة الأخطاء</button></nav>
 <section id="path" class="panel">
 <div class="row" style="justify-content:space-between"><div><h2 style="margin:0">الدرس الأول: أعرّف بنفسي</h2><p class="muted small">الهدف: أعرّف بنفسي بخمس جمل قصيرة باستخدام الكلمات الست.</p></div><span id="lessonState" class="status">لم يبدأ الدرس</span></div>
@@ -51,9 +51,13 @@ const normalizeMastery=value=>{
  const due=typeof raw.reviewDue==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(raw.reviewDue)&&Number.isFinite(Date.parse(raw.reviewDue+'T00:00:00Z'))?raw.reviewDue:null;
  return {started:!!raw.started||trained.length>0,trained,attempts:Number.isInteger(Number(raw.attempts))?Math.max(0,Math.min(10000,Number(raw.attempts))):0,mastered:!!(validAttempt&&score>=80),lastAttempt:validAttempt?{date:new Date(date).toISOString(),score,correct,total}:null,lastRetention:validRetention?{date:new Date(retentionDate).toISOString(),score:retentionScore,correct:retentionCorrect,total:retentionTotal,passed:retentionRaw.passed}:null,reviewDue:due,wrong};
 };
-// Keep pilot results in memory only. Shared-device results must never survive a page reload.
-let data=normalizeMastery({});
-const save=()=>{};
+// Store progress only in this tab's session storage: it survives reloads but is not shared across tabs or uploaded.
+const SESSION_KEY='ehTeacherPilotMasterySessionV1';
+const readSession=()=>{try{return normalizeMastery(JSON.parse(sessionStorage.getItem(SESSION_KEY)||'{}'));}catch{return normalizeMastery({});}};
+let data=readSession();
+const save=()=>{try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(data));}catch{alert('تعذر حفظ تقدم الجلسة في هذا المتصفح.');}};
+// Persist sanitized state so malformed or forged stored values cannot remain trusted.
+save();
 // A browser back/forward-cache restore must not revive another learner's session.
 window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -127,6 +131,7 @@ $('finishTraining').onclick=()=>{if(data.trained.length!==6){alert('أكمل ت�
 $('startTest').onclick=()=>startTest(false);
 $('clearSession').onclick=()=>{
  if(!confirm('هل تريد إنهاء الجلسة ومسح نتائج هذا التدريب من الصفحة؟'))return;
+ try{sessionStorage.removeItem(SESSION_KEY);}catch{}
  data=normalizeMastery({});
  location.reload();
 };
