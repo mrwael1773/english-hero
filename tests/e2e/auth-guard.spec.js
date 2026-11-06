@@ -3,30 +3,11 @@ import { test, expect } from '@playwright/test';
 async function installGuardAuthMock(page) {
   await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
     contentType: 'application/javascript',
-    body: \`
-      window.__guardAuthStateCallback = null;
-      window.supabase = {
-        createClient: () => ({
-          auth: {
-            onAuthStateChange(callback) {
-              window.__guardAuthStateCallback = callback;
-              callback('INITIAL_SESSION', { user: { id: 'student-one' } });
-              return { data: { subscription: { unsubscribe() {} } } };
-            },
-            getSession: async () => ({ data: { session: { user: { id: 'student-one' } } }, error: null })
-          },
-          from: () => ({
-            select() { return this; },
-            eq() { return this; },
-            maybeSingle: async () => ({ data: { user_id: 'student-one' }, error: null })
-          })
-        })
-      };
-    \`
+    body: "window.__guardAuthStateCallback=null;\nwindow.supabase={createClient:()=>({auth:{onAuthStateChange(callback){window.__guardAuthStateCallback=callback;callback('INITIAL_SESSION',{user:{id:'student-one'}});return {data:{subscription:{unsubscribe(){}}}};},getSession:async()=>({data:{session:{user:{id:'student-one'}}},error:null}},},from:()=>({select(){return this;},eq(){return this;},maybeSingle:async()=>({data:{user_id:'student-one'},error:null})})})};"
   }));
   await page.route('**/config.js', route => route.fulfill({
     contentType: 'application/javascript',
-    body: \`window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-for-guard-test'};\`
+    body: "window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-for-guard-test'};"
   }));
 }
 
