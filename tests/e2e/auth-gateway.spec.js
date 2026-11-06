@@ -5,13 +5,19 @@ async function installAuthMock(page) {
     contentType: 'application/javascript',
     body: `
       let user=null, profile=null, ready=true;
+      const setMockUser=(id,hasProfile=true)=>{
+        user=id?{id}:null;
+        profile=user&&hasProfile?{username:'mock_student',display_name:'طالب تجريبي'}:null;
+        window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event:user?'SIGNED_IN':'SIGNED_OUT',user}}));
+      };
+      window.__setMockUser=id=>setMockUser(id,true);
       window.EnglishHeroCloudReady=Promise.resolve(true);
       window.EnglishHeroCloud={
         isConfigured:()=>true,
         getUser:()=>user,
         getProfile:async()=>{if(window.__profileReadFails)throw new Error('temporary profile read failure');return profile;},
-        signInWithUsername:async()=>{user={id:'mock-student'};profile={username:'mock_student',display_name:'طالب تجريبي'};return user;},
-        signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;user={id:'google-student'};profile=null;window.dispatchEvent(new CustomEvent('englishhero:authstate'));},
+        signInWithUsername:async()=>{setMockUser('mock-student',true);return user;},
+        signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',false);},
         isReady:()=>ready,
         setPassword:async()=>{},
         claimProfile:async(username,displayName)=>{profile={username,display_name:displayName};return profile;}
@@ -102,4 +108,50 @@ test('profile lookup errors fail closed instead of opening onboarding', async ({
   await expect(page.locator('#authLoginPane')).toBeVisible();
   await expect(page.locator('#authOnboardingPane')).toBeHidden();
   await expect(page.locator('#authGatewayMessage')).toContainText('تعذر التحقق من ملف الحساب');
+});
+
+test('local-only student data is isolated by account on shared devices', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('englishHeroStudentTasksV1', JSON.stringify([
+      { id: 'legacy-task', subject: 'قديم', text: 'مهمة قديمة غير مرتبطة بحساب', done: false }
+    ]));
+    localStorage.setItem('eh-scenarios-done', JSON.stringify({ 0: 5 }));
+    localStorage.setItem('ehPlusV1', JSON.stringify({
+      known: ['improve'], missed: [], quizKnown: [], done: {}, streak: 9,
+      last: '2026-11-06', points: 999, theme: 'default', avatar: '🐼', title: 'الخبير'
+    }));
+    localStorage.setItem('englishHeroStudentTasksV1:student-a', JSON.stringify([
+      { id: 'a-task', subject: 'علوم', text: 'مهمة الطالب A', done: false }
+    ]));
+    localStorage.setItem('eh-scenarios-done:student-a', JSON.stringify({ 0: 5 }));
+    localStorage.setItem('ehPlusV2:student-a', JSON.stringify({
+      known: ['improve'], missed: [], quizKnown: [], done: {}, streak: 3,
+      last: '2026-11-06', points: 999, theme: 'default', avatar: '👑', title: 'الخبير'
+    }));
+    localStorage.setItem('englishHeroStudentTasksV1:mock-student', JSON.stringify([
+      { id: 'b-task', subject: 'رياضيات', text: 'مهمة الطالب B', done: false }
+    ]));
+    localStorage.setItem('eh-scenarios-done:mock-student', JSON.stringify({}));
+    localStorage.setItem('ehPlusV2:mock-student', JSON.stringify({
+      known: [], missed: [], quizKnown: [], done: {}, streak: 0,
+      last: '', points: 10, theme: 'default', avatar: '🦊', title: 'متعلّم'
+    }));
+  });
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+
+  await expect(page.locator('#studentTaskList')).toContainText('مهمة الطالب B');
+  await expect(page.locator('#studentTaskList')).not.toContainText('مهمة الطالب A');
+  await expect(page.locator('#studentTaskList')).not.toContainText('مهمة قديمة');
+  await expect(page.locator('#scenarioList')).not.toContainText('أفضل نتيجة');
+  await expect(page.locator('#ehpAvatar')).toHaveText('🦊');
+
+  await page.evaluate(() => window.__setMockUser('student-a'));
+  await expect(page.locator('#studentTaskList')).toContainText('مهمة الطالب A');
+  await expect(page.locator('#studentTaskList')).not.toContainText('مهمة الطالب B');
+  await expect(page.locator('#scenarioList')).toContainText('أفضل نتيجة: 5/5');
+  await expect(page.locator('#ehpAvatar')).toHaveText('👑');
 });
