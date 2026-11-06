@@ -24,7 +24,10 @@ create unique index if not exists student_profiles_username_unique
 alter table public.student_profiles enable row level security;
 alter table public.student_profiles force row level security;
 revoke all on public.student_profiles from public, anon, authenticated;
-grant select, insert, update on public.student_profiles to authenticated;
+grant select on public.student_profiles to authenticated;
+-- Username and display-name writes must go through the transactional RPC so
+-- the private login lookup can never drift from the student-visible profile.
+revoke insert, update on public.student_profiles from authenticated;
 
 drop policy if exists "Students can read own profile" on public.student_profiles;
 create policy "Students can read own profile"
