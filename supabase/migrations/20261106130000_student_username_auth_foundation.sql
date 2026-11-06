@@ -45,8 +45,8 @@ create policy "Students can update own profile"
 -- Private mapping used only by the username-login Edge Function.
 create table if not exists private.student_login_lookup (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  username text not null unique,
- );
+  username text not null unique
+);
 revoke all on private.student_login_lookup from public, anon, authenticated, service_role;
 grant select, insert, update, delete on private.student_login_lookup to service_role;
 
