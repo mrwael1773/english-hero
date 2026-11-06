@@ -41,6 +41,12 @@
   async function inspectSession(){
     const user=cloud.getUser();
     if(!user){lock();showPane('login');return;}
+    // Do not expose learning screens until this account's cloud progress has loaded.
+    if(!cloud.isReady?.()){
+      lock();showPane('login');
+      say('تم التحقق من الحساب، لكن لم تكتمل استعادة تقدمك بعد. أعد تحميل الصفحة عند استقرار الاتصال؛ أبقينا التعلم مغلقًا لحماية بياناتك.','error');
+      return;
+    }
     try{
       const profile=await cloud.getProfile();
       if(profile){unlock();return;}
@@ -68,7 +74,7 @@
   gateway.querySelectorAll('[data-google-auth]').forEach(button=>button.addEventListener('click',async()=>{
     if(busy)return;
     setBusy(true);say('جارٍ تحويلك إلى Google لإتمام التحقق...');
-    try{await cloud.signInWithGoogle();setBusy(false);}
+    try{await cloud.signInWithGoogle(requestedNextPath);setBusy(false);}
     catch(error){say('تعذر بدء تسجيل الدخول عبر Google. تحقق من إعدادات Google OAuth ثم حاول مجددًا.','error');setBusy(false);}
   }));
   byId('authLoginForm').addEventListener('submit',async event=>{
@@ -102,5 +108,6 @@
     }finally{setBusy(false);}
   });
   window.addEventListener('englishhero:authstate',()=>{if(cloud)inspectSession();});
+  window.addEventListener('englishhero:authready',()=>{if(cloud)inspectSession();});
   start();
 })();
