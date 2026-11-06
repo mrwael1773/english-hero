@@ -83,6 +83,7 @@ const usernameSqlDollarCount = usernameAuthMigration.split('$$').length - 1;
 check(usernameSqlDollarCount >= 10 && usernameSqlDollarCount % 2 === 0 && !usernameAuthMigration.split('\n').some(line => line.trim() === 'as $' || line.includes('as $ select')), 'Username auth SQL function bodies use balanced PostgreSQL dollar quoting');
 check(usernameAuthMigration.includes('revoke insert, update on public.student_profiles from authenticated'), 'Student browsers cannot directly edit profile usernames outside the transactional claim RPC');
 check(cloud.indexOf('if(user) await syncNow()') >= 0 && cloud.indexOf('if(user) await syncNow()') < cloud.indexOf('resolveCloudInitialization(true)'), 'Returning account progress is restored before the authentication gateway is released');
+check(cloud.includes('options:{redirectTo:location.href}'), 'Google OAuth preserves the protected learning-page destination through its callback');
 check(supabaseConfig.includes('[functions.student-username-login]') && supabaseConfig.includes('verify_jwt = false'), 'Username login endpoint is configured for its explicit unauthenticated login flow');
 check(/src="\.\/grammar-lessons\.js\?v=3"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
 check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
