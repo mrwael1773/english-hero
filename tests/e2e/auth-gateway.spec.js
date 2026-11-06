@@ -57,10 +57,10 @@ test('gateway stays closed until the signed-in account progress is ready', async
 
 test('Google sign-in preserves a validated learning destination after gateway cleanup', async ({ page }) => {
   await installAuthMock(page);
-  await page.goto('/?next=%2Fenglish-hero%2Fenglish-basics.html');
+  await page.goto('/?next=%2Fenglish-basics.html');
   await page.locator('#authLoginPane [data-auth-mode="register"]').click();
   await page.locator('#authRegisterPane [data-google-auth]').click();
-  await expect.poll(() => page.evaluate(() => window.__googleNextPath)).toBe('/english-hero/english-basics.html');
+  await expect.poll(() => page.evaluate(() => window.__googleNextPath)).toBe('/english-basics.html');
   expect(new URL(page.url()).searchParams.has('next')).toBe(false);
 });
 
