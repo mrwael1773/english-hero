@@ -15,7 +15,22 @@
     tabs.forEach(tab=>{tab.setAttribute('aria-selected',String(tab.dataset.authMode===name));});
     say('');
   }
-  function unlock(){gateway.hidden=true;document.body.classList.remove('auth-gateway-pending');}
+  function safeNextPath(){
+    const raw=new URLSearchParams(location.search).get('next');
+    if(!raw)return null;
+    try{
+      const target=new URL(raw,location.origin);
+      const basePath=new URL('./',location.href).pathname;
+      const allowed=['english-basics.html','english-tenses-guide.html','grammar-lesson.html','grammar-library.html','grammar-category.html'];
+      if(target.origin!==location.origin||!allowed.some(file=>target.pathname===basePath+file))return null;
+      return target.pathname+target.search+target.hash;
+    }catch{return null;}
+  }
+  function unlock(){
+    gateway.hidden=true;document.body.classList.remove('auth-gateway-pending');
+    const next=safeNextPath();
+    if(next)location.replace(next);
+  }
   function lock(){gateway.hidden=false;document.body.classList.add('auth-gateway-pending');}
   async function inspectSession(){
     const user=cloud.getUser();
