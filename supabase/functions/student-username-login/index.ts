@@ -72,10 +72,11 @@ Deno.serve(async (request: Request) => {
   if (lookupError) return json({ error: "Authentication service unavailable" }, 503);
 
   // Resolve the current email from Auth at sign-in time; no email copy is kept in the profile lookup table.
-  const userResult = typeof userId === "string"
-    ? await admin.auth.admin.getUserById(userId)
-    : { data: { user: null }, error: null };
-  if (userResult.error) return json({ error: "Authentication service unavailable" }, 503);
+  const lookupId = typeof userId === "string" ? userId : "00000000-0000-0000-0000-000000000000";
+  const userResult = await admin.auth.admin.getUserById(lookupId);
+  if (typeof userId === "string" && userResult.error) {
+    return json({ error: "Authentication service unavailable" }, 503);
+  }
 
   // Keep the response generic so callers cannot distinguish unknown usernames from bad passwords.
   const loginEmail = userResult.data.user?.email ?? `unregistered-${attemptKey.slice(0, 16)}@invalid.example`;
