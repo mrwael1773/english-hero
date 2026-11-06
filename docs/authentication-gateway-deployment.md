@@ -32,7 +32,7 @@ This change is intentionally prepared for review only. Do not deploy it to the s
 ## 4. Browser and student-data checks
 
 - Test login, Google OAuth callback, onboarding, password confirmation, duplicate username, sign-out, and return-to-gateway behavior.
-- Test account switching on a shared device and confirm no student's local or cloud progress is shown to another account.
+- Test account switching on a shared device and confirm no student's local or cloud progress is shown to another account. Unclaimed progress with no account-owner marker must be backed up separately and never merged into a newly signed-in student's account.
 - Test at 320px mobile width and a desktop viewport.
 - Confirm privacy/contact/school-pilot pages remain accessible without a student account.
 - Confirm the service worker refreshes the new gateway assets and does not serve stale authentication code.
