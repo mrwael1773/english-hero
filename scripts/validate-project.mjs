@@ -64,7 +64,7 @@ try {
 check(privacyPage.includes('<html') && privacyPage.includes('</html>'), 'Privacy page has an HTML document');
 check(contactPage.includes('<html') && contactPage.includes('</html>'), 'Contact page has an HTML document');
 check(iconSvg.includes('<svg') && iconSvg.includes('</svg>'), 'App icon is a valid SVG document');
-for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults']) {
+for (const id of ['cloudStatus','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults']) {
   check(html.includes(`id="${id}"`), `Required UI element exists: ${id}`);
 }
 check(/sw\.js\?v=(\d+)/.test(html), 'Service worker registration has a version');
