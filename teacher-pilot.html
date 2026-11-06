@@ -53,11 +53,13 @@ const normalizeMastery=value=>{
 };
 // Store progress only in this tab's session storage: it survives reloads but is not shared across tabs or uploaded.
 const SESSION_KEY='ehTeacherPilotMasterySessionV1';
+const hasStoredSession=()=>{try{return sessionStorage.getItem(SESSION_KEY)!==null;}catch{return false;}};
 const readSession=()=>{try{return normalizeMastery(JSON.parse(sessionStorage.getItem(SESSION_KEY)||'{}'));}catch{return normalizeMastery({});}};
+const hadStoredSession=hasStoredSession();
 let data=readSession();
 const save=()=>{try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(data));}catch{alert('تعذر حفظ تقدم الجلسة في هذا المتصفح.');}};
-// Persist sanitized state so malformed or forged stored values cannot remain trusted.
-save();
+// Persist sanitized state only when a stored record existed; a fresh/cleared tab stays empty.
+if(hadStoredSession)save();
 // A browser back/forward-cache restore must not revive another learner's session.
 window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
