@@ -334,7 +334,7 @@
     if(!client){status('تعذر تهيئة تسجيل الدخول.');return;}
     status('جارٍ تحويلك إلى Google لتسجيل الدخول...');
     try {
-      const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+      const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href}});
       if(error) status('تعذر تسجيل الدخول عبر Google. تحقق من تفعيل Google في Supabase Auth: '+error.message);
     }catch(error){status('تعذر بدء تسجيل الدخول عبر Google: '+(error?.message||error));}
   });
