@@ -53,3 +53,15 @@ test('Google registration continues to profile and password setup', async ({ pag
   await expect(page.locator('#authGateway')).toBeHidden();
   await expect(page.locator('#home')).toBeVisible();
 });
+
+test('authentication gateway rejects an external post-login redirect target', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/?next=https%3A%2F%2Fevil.example%2Fcollect');
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeHidden();
+  await expect(page).toHaveURL(/\/index\.html\?next=/);
+  expect(new URL(page.url()).origin).toBe(new URL(page.url()).origin);
+  expect(page.url()).not.toContain('evil.example');
+});
