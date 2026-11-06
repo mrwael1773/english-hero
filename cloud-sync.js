@@ -17,6 +17,8 @@
   let revision = 0;
   let syncPromise = null;
   let syncPromiseUserId = null;
+  // Serialize progress writes so an older snapshot can never finish after a newer one.
+  let uploadQueue = Promise.resolve(false);
   const status = (message) => { const el=$cloud('cloudStatus'); if(el) el.textContent=message; };
   async function cloudRequest(query, timeoutMs=15000){
     const controller=new AbortController();
@@ -75,22 +77,35 @@
     if(!client||!user||!ready) return false;
     const syncUserId=user.id;
     const current=revision;
+    let snapshot;
     try {
-      const {error}=await cloudRequest(client.from('learning_progress').upsert({
-        user_id:syncUserId, progress:state, updated_at:new Date().toISOString()
-      },{onConflict:'user_id'}));
-      if(error) throw error;
-      // Never associate this device's local copy with a different account.
-      if(user?.id===syncUserId){
-        try { localStorage.setItem('english-hero-cloud-owner',syncUserId); } catch {}
-        if(current===revision) status('✅ تمت مزامنة تقدمك مع حسابك السحابي.');
-      }
-      return true;
+      snapshot=JSON.parse(JSON.stringify(state));
     } catch(error) {
-      status(String(error?.message||'').includes('انتهت مهلة المزامنة') ? error.message : 'تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
-      console.error('English Hero cloud save:',error?.message||error);
+      status('تعذر تجهيز نسخة التقدم للمزامنة. بقي تقدمك الحالي على الجهاز.');
+      console.error('English Hero cloud snapshot:',error?.message||error);
       return false;
     }
+    // Queue writes in invocation order. Each write owns an immutable snapshot.
+    const write=async()=>{
+      try {
+        const {error}=await cloudRequest(client.from('learning_progress').upsert({
+          user_id:syncUserId, progress:snapshot, updated_at:new Date().toISOString()
+        },{onConflict:'user_id'}));
+        if(error) throw error;
+        // Never associate this device's local copy with a different account.
+        if(user?.id===syncUserId){
+          try { localStorage.setItem('english-hero-cloud-owner',syncUserId); } catch {}
+          if(current===revision) status('✅ تمت مزامنة تقدمك مع حسابك السحابي.');
+        }
+        return true;
+      } catch(error) {
+        status(String(error?.message||'').includes('انتهت مهلة المزامنة') ? error.message : 'تعذر رفع التقدم. سيبقى محفوظًا محليًا؛ تحقق من الاتصال وإعداد جدول learning_progress وسياسات RLS.');
+        console.error('English Hero cloud save:',error?.message||error);
+        return false;
+      }
+    };
+    uploadQueue=uploadQueue.catch(()=>false).then(write);
+    return uploadQueue;
   }
   window.saveCloudDisplayName=async function(name){
     if(!client||!user)return;
