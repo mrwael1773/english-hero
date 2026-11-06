@@ -72,7 +72,6 @@
         });
         list.querySelectorAll('[aria-current="location"]').forEach(active => active.removeAttribute('aria-current'));
         link.setAttribute('aria-current', 'location');
-        if (history.replaceState) history.replaceState(null, '', '#' + encodeURIComponent(item.id));
       });
       list.append(link);
     });
