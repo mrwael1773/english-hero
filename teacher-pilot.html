@@ -53,6 +53,8 @@ const normalizeMastery=value=>{
 };
 // Store progress only in this tab's session storage: it survives reloads but is not shared across tabs or uploaded.
 const SESSION_KEY='ehTeacherPilotMasterySessionV1';
+// Remove legacy shared localStorage data from earlier pilot builds; it was not identity-scoped.
+try{localStorage.removeItem('ehTeacherPilotMasteryV1');}catch{}
 const hasStoredSession=()=>{try{return sessionStorage.getItem(SESSION_KEY)!==null;}catch{return false;}};
 const readSession=()=>{try{return normalizeMastery(JSON.parse(sessionStorage.getItem(SESSION_KEY)||'{}'));}catch{return normalizeMastery({});}};
 const hadStoredSession=hasStoredSession();
