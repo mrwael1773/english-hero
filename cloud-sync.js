@@ -507,6 +507,17 @@
       const {error}=await client.auth.updateUser({password});
       if(error) throw error;
     },
+    async sendPasswordRecovery(email) {
+      if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
+      const redirectTo=new URL(location.pathname,location.origin).toString();
+      const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});
+      if(error) throw error;
+    },
+    async updateRecoveredPassword(password) {
+      if(!client || !user) throw new Error('افتح رابط الاستعادة أولًا.');
+      const {error}=await client.auth.updateUser({password});
+      if(error) throw error;
+    },
     async signInWithGoogle(nextPath=null) {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
       const callbackUrl=new URL(location.pathname,location.origin);
