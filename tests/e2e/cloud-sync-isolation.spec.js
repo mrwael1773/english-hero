@@ -235,3 +235,106 @@ test('account switch followed by sign-out backs up progress only for its actual 
   const uploadsAsB = afterLateResponse.uploads.filter(call => call.userId === 'account-B');
   expect(uploadsAsB.every(call => call.progress.xp !== 41 && !call.progress.saved?.includes('account-a-cloud-word'))).toBe(true);
 });
+
+test('clears only the active account's local data without deleting cloud progress or other accounts', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><button id="cloudClearLocalData"></button><div id="cloudUser"></div>';
+    const active = { xp: 55, best: 50, quizzes: 2, completed: [1], masteredLessons: [1], saved: ['account-a-word'], chatHistory: [{who:'me',text:'private practice message'}] };
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(active));
+    localStorage.setItem('english-hero-cloud-owner', 'account-A');
+    localStorage.setItem('english-hero-account-backup-account-A', JSON.stringify(active));
+    localStorage.setItem('english-hero-account-backup-account-B', JSON.stringify({xp:90}));
+    localStorage.setItem('ehPlusV2:account-A', JSON.stringify({points:45,avatar:'🦊'}));
+    localStorage.setItem('ehPlusV2:account-B', JSON.stringify({points:90,avatar:'🐼'}));
+    localStorage.setItem('englishHeroStudentTasksV1:account-A', JSON.stringify([{id:'a',text:'A task'}]));
+    localStorage.setItem('englishHeroStudentTasksV1:account-B', JSON.stringify([{id:'b',text:'B task'}]));
+    localStorage.setItem('eh-scenarios-done:account-A', JSON.stringify({0:5}));
+    localStorage.setItem('eh-scenarios-done:account-B', JSON.stringify({0:2}));
+    localStorage.setItem('english-hero-unclaimed-local-backup', JSON.stringify({xp:12}));
+    localStorage.setItem('english-hero-unclaimed-local-backup-123', JSON.stringify({xp:13}));
+    localStorage.setItem('sb-example-auth-token', 'sdk-managed-session');
+    sessionStorage.setItem('ehTeacherPilotMasterySessionV1', JSON.stringify({started:true}));
+    window.state = active;
+    window.defaults = () => ({xp:0,best:0,quizzes:0,completed:[],masteredLessons:[],saved:[],chatHistory:[]});
+    window.replaceProgress = value => { window.state = {...window.defaults(),...value}; };
+    window.mergeProgress = value => { window.state = {...window.state,...value}; };
+    window.lessons = [];
+    window.normalizeMasteredLessons = values => values;
+    window.mergeReviewProgress = () => ({});
+    window.reconcileReviewMisses = () => ({});
+    for (const name of ['renderStats','renderCourses','renderHome','renderProfile','renderReview']) window[name] = () => {};
+    window.ENGLISH_HERO_CLOUD_CONFIG = {
+      supabaseUrl: 'https://example-project.supabase.co',
+      supabaseAnonKey: 'public-anon-key-that-is-long-enough-for-test'
+    };
+    window.__signOutScope = null;
+    window.__cloudDeleteCalls = 0;
+    window.__upsertCalls = [];
+    window.confirm = () => true;
+    window.supabase = {
+      createClient: () => ({
+        auth: {
+          getSession: async () => ({data:{session:{user:{id:'account-A'}}},error:null}),
+          onAuthStateChange: callback => {
+            window.__authStateCallback = callback;
+            return {data:{subscription:{unsubscribe(){}}}};
+          },
+          signOut: async options => {
+            window.__signOutScope = options?.scope || 'default';
+            window.__authStateCallback?.('SIGNED_OUT', null);
+            localStorage.removeItem('sb-example-auth-token');
+            return {error:null};
+          }
+        },
+        from: () => ({
+          select(){return this;},
+          eq(){return this;},
+          maybeSingle(){return this;},
+          upsert(payload){window.__upsertCalls.push(payload);return this;},
+          delete(){window.__cloudDeleteCalls++;return this;},
+          abortSignal(){return Promise.resolve({data:null,error:null});}
+        })
+      })
+    };
+  });
+
+  await page.addScriptTag({path:'cloud-sync.js'});
+  await page.evaluate(() => window.EnglishHeroCloudReady);
+  await expect(page.locator('#cloudClearLocalData')).toBeEnabled();
+  await page.locator('#cloudClearLocalData').click();
+  await expect(page.locator('#cloudStatus')).toContainText('تم حذف البيانات المحلية');
+
+  const result = await page.evaluate(() => ({
+    keys: Object.keys(localStorage).sort(),
+    state: window.state,
+    signOutScope: window.__signOutScope,
+    cloudDeleteCalls: window.__cloudDeleteCalls,
+    sdkSession: localStorage.getItem('sb-example-auth-token'),
+    teacherSession: sessionStorage.getItem('ehTeacherPilotMasterySessionV1'),
+    owner: localStorage.getItem('english-hero-cloud-owner'),
+    upsertCount: window.__upsertCalls.length
+  }));
+  expect(result.signOutScope).toBe('local');
+  expect(result.cloudDeleteCalls).toBe(0);
+  expect(result.sdkSession).toBeNull();
+  expect(result.teacherSession).not.toBeNull();
+  expect(result.owner).toBeNull();
+  expect(result.state.xp).toBe(0);
+  expect(result.upsertCount).toBe(1); // Initial sync only; cleanup must not upload a blank progress record.
+  for (const key of [
+    'english-hero-academy-3',
+    'english-hero-account-backup-account-A',
+    'ehPlusV2:account-A',
+    'englishHeroStudentTasksV1:account-A',
+    'eh-scenarios-done:account-A'
+  ]) expect(result.keys).not.toContain(key);
+  for (const key of [
+    'english-hero-account-backup-account-B',
+    'ehPlusV2:account-B',
+    'englishHeroStudentTasksV1:account-B',
+    'eh-scenarios-done:account-B',
+    'english-hero-unclaimed-local-backup',
+    'english-hero-unclaimed-local-backup-123'
+  ]) expect(result.keys).toContain(key);
+});
