@@ -3,7 +3,7 @@ name: English Hero isolated preview package
 on:
   push:
     branches:
-      - preview/auth-pr64
+      - preview/auth-pr64-artifact
 
 permissions:
   contents: read
