@@ -18,8 +18,9 @@ async function installAuthMock(page) {
         getUser:()=>user,
         getProfile:async()=>{
           if(window.__profileReadFails)throw new Error('temporary profile read failure');
+          const requestedProfile=profile;
           if(window.__delayProfileRead)await new Promise(resolve=>{window.__releaseProfileRead=resolve;});
-          return profile;
+          return requestedProfile;
         },
         signInWithUsername:async()=>{setMockUser('mock-student',true);return user;},
         signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',false);},
