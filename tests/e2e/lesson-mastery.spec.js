@@ -394,3 +394,36 @@ test('review wording distinguishes adding words from mastering or saving them', 
   expect(saved.foundationSaved || []).toContain(word);
   expect(saved.masteredLessons || []).toHaveLength(0);
 });
+
+
+test('XP alone cannot unlock the mastery rank without 15 mastered lessons', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({ xp: 800, masteredLessons: [], saved: [] }));
+  });
+  await page.reload();
+  let masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
+  await expect(masteryStage).toContainText('يتطلب 800 XP وإتقان 15 درسًا');
+  await expect(masteryStage).toContainText('مقفل');
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    state.masteredLessons = Array.from({ length: 15 }, (_, index) => index);
+    state.xp = 799;
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(state));
+  });
+  await page.reload();
+  masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
+  await expect(masteryStage).toContainText('يتطلب 800 XP وإتقان 15 درسًا');
+  await expect(masteryStage).toContainText('مقفل');
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    state.xp = 800;
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(state));
+  });
+  await page.reload();
+  masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
+  await expect(masteryStage).toContainText('متاح لك الآن');
+  await expect(masteryStage).toContainText('مفتوح');
+});
