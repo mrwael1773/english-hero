@@ -439,3 +439,59 @@ test('refuses cleanup when the stored owner belongs to another account', async (
   expect(result.active.xp).toBe(55);
   expect(result.signOutCalls).toBe(0);
 });
+
+test('reports partial cleanup when browser storage refuses deletion', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><button id="cloudClearLocalData"></button><div id="cloudUser"></div>';
+    const active={xp:55,completed:[1],saved:['local-word']};
+    localStorage.setItem('english-hero-academy-3',JSON.stringify(active));
+    localStorage.setItem('english-hero-cloud-owner','account-A');
+    localStorage.setItem('english-hero-account-backup-account-A',JSON.stringify(active));
+    localStorage.setItem('ehPlusV2:account-A',JSON.stringify({points:45}));
+    localStorage.setItem('englishHeroStudentTasksV1:account-A',JSON.stringify([{id:'a',text:'A task'}]));
+    localStorage.setItem('eh-scenarios-done:account-A',JSON.stringify({0:5}));
+    const nativeRemove=Storage.prototype.removeItem;
+    Storage.prototype.removeItem=function(key){
+      if(key==='ehPlusV2:account-A')throw new Error('simulated storage removal failure');
+      return nativeRemove.call(this,key);
+    };
+    window.state=active;
+    window.defaults=()=>({xp:0,completed:[],saved:[]});
+    window.replaceProgress=value=>{window.state={...window.defaults(),...value};};
+    window.mergeProgress=value=>{window.state={...window.state,...value};};
+    window.lessons=[];
+    window.normalizeMasteredLessons=values=>values;
+    window.mergeReviewProgress=()=>({});
+    window.reconcileReviewMisses=()=>({});
+    for(const name of ['renderStats','renderCourses','renderHome','renderProfile','renderReview'])window[name]=()=>{};
+    window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-that-is-long-enough-for-test'};
+    window.confirm=()=>true;
+    window.supabase={createClient:()=>({
+      auth:{
+        getSession:async()=>({data:{session:{user:{id:'account-A'}}},error:null}),
+        onAuthStateChange:callback=>{window.__authStateCallback=callback;return{data:{subscription:{unsubscribe(){}}}};},
+        signOut:async()=>{window.__authStateCallback?.('SIGNED_OUT',null);return{error:null};}
+      },
+      from:()=>({select(){return this;},eq(){return this;},maybeSingle(){return this;},upsert(){return this;},abortSignal(){return Promise.resolve({data:null,error:null});}})
+    })};
+  });
+  await page.addScriptTag({path:'cloud-sync.js'});
+  await page.evaluate(()=>window.EnglishHeroCloudReady);
+  await page.locator('#cloudClearLocalData').click();
+  await expect(page.locator('#cloudStatus')).toContainText('تعذر حذف بعض البيانات المحلية');
+  const result=await page.evaluate(()=>({
+    user:window.EnglishHeroCloud.getUser()?.id||null,
+    active:localStorage.getItem('english-hero-academy-3'),
+    backup:localStorage.getItem('english-hero-account-backup-account-A'),
+    plus:localStorage.getItem('ehPlusV2:account-A'),
+    tasks:localStorage.getItem('englishHeroStudentTasksV1:account-A'),
+    scenarios:localStorage.getItem('eh-scenarios-done:account-A')
+  }));
+  expect(result.user).toBeNull();
+  expect(result.active).toBeNull();
+  expect(result.backup).toBeNull();
+  expect(result.plus).not.toBeNull();
+  expect(result.tasks).toBeNull();
+  expect(result.scenarios).toBeNull();
+});
