@@ -131,3 +131,106 @@ test('anonymous device progress is backed up and never merged into a new student
   expect(logout.signOutDisabled).toBe(true);
   expect(logout.completed).toEqual([]);
 });
+
+test('account switch followed by sign-out backs up progress only for its actual owner', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><div id="cloudUser"></div>';
+    const local = {
+      xp: 30, best: 25, quizzes: 1, completed: [2], masteredLessons: [2],
+      lessonStarted: [2], lessonTrained: [2], saved: ['account-a-word'],
+      foundationSaved: [], review: {}, misses: {}, daily: {}, lessonPositions: {},
+      chatHistory: [], displayName: 'Account A'
+    };
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(local));
+    localStorage.setItem('english-hero-cloud-owner', 'account-A');
+    window.state = local;
+    window.lessons = [];
+    window.defaults = () => ({
+      xp: 0, best: 0, quizzes: 0, streak: 0, completed: [],
+      masteredLessons: [], lessonStarted: [], lessonTrained: [], saved: [],
+      foundationSaved: [], review: {}, misses: {}, daily: {}, lessonPositions: {},
+      chatHistory: [], displayName: ''
+    });
+    window.normalizeMasteredLessons = values => values;
+    window.mergeReviewProgress = () => ({});
+    window.reconcileReviewMisses = () => ({});
+    for (const name of ['renderStats','renderCourses','renderHome','renderProfile','renderReview']) window[name] = () => {};
+    window.ENGLISH_HERO_CLOUD_CONFIG = {
+      supabaseUrl: 'https://example-project.supabase.co',
+      supabaseAnonKey: 'public-anon-key-that-is-long-enough-for-test'
+    };
+    window.__uploads = [];
+    window.__releaseBRead = null;
+    window.supabase = {
+      createClient: () => ({
+        auth: {
+          getSession: async () => ({ data: { session: { user: { id: 'account-A' } } }, error: null }),
+          onAuthStateChange: callback => {
+            window.__authStateCallback = callback;
+            return { data: { subscription: { unsubscribe() {} } } };
+          },
+          signOut: async () => ({ error: null })
+        },
+        from: () => {
+          let requestedUserId = null;
+          return {
+            select() { return this; },
+            eq(_column, value) { requestedUserId = value; return this; },
+            maybeSingle() {
+              return {
+                abortSignal() {
+                  if (requestedUserId === 'account-B') {
+                    return new Promise(resolve => {
+                      window.__releaseBRead = () => resolve({ data: { progress: { xp: 900, completed: [8], saved: ['account-b-word'] } }, error: null });
+                    });
+                  }
+                  return Promise.resolve({ data: { progress: { xp: 41, completed: [2], saved: ['account-a-cloud-word'] } }, error: null });
+                }
+              };
+            },
+            upsert(payload) {
+              window.__uploads.push({ userId: requestedUserId, progress: payload.progress });
+              return { abortSignal: () => Promise.resolve({ data: null, error: null }) };
+            }
+          };
+        }
+      })
+    };
+  });
+
+  await page.addScriptTag({ path: 'cloud-sync.js' });
+  await page.evaluate(() => window.EnglishHeroCloudReady);
+  await expect.poll(() => page.evaluate(() => window.state.xp)).toBe(41);
+
+  await page.evaluate(() => window.__authStateCallback('SIGNED_IN', { user: { id: 'account-B' } }));
+  await expect.poll(() => page.evaluate(() => typeof window.__releaseBRead)).toBe('function');
+
+  // B is now the authenticated identity, but the in-memory state still belongs to A.
+  await page.evaluate(() => window.__authStateCallback('SIGNED_OUT', null));
+  const duringLogout = await page.evaluate(() => ({
+    backupA: JSON.parse(localStorage.getItem('english-hero-account-backup-account-A') || 'null'),
+    backupB: localStorage.getItem('english-hero-account-backup-account-B'),
+    owner: localStorage.getItem('english-hero-cloud-owner'),
+    activeXp: window.state.xp
+  }));
+  expect(duringLogout.backupA.xp).toBe(41);
+  expect(duringLogout.backupA.saved).toContain('account-a-cloud-word');
+  expect(duringLogout.backupB).toBeNull();
+  expect(duringLogout.owner).toBeNull();
+  expect(duringLogout.activeXp).toBe(0);
+
+  // A late response for B must not replace A's backup or upload A's state as B.
+  await page.evaluate(() => window.__releaseBRead());
+  await page.waitForTimeout(50);
+  const afterLateResponse = await page.evaluate(() => ({
+    backupA: JSON.parse(localStorage.getItem('english-hero-account-backup-account-A') || 'null'),
+    backupB: localStorage.getItem('english-hero-account-backup-account-B'),
+    activeXp: window.state.xp,
+    uploads: window.__uploads
+  }));
+  expect(afterLateResponse.backupA.xp).toBe(41);
+  expect(afterLateResponse.backupB).toBeNull();
+  expect(afterLateResponse.activeXp).toBe(0);
+  expect(afterLateResponse.uploads.every(call => call.userId !== 'account-B')).toBe(true);
+});
