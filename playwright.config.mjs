@@ -19,6 +19,11 @@ export default defineConfig({
   projects: [
     { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile-chromium', use: { ...devices['iPhone 13'], browserName: 'chromium' } },
+    {
+      name: 'mobile-webkit-smoke',
+      use: { ...devices['iPhone 13'], browserName: 'webkit' },
+      testMatch: ['**/auth-gateway.spec.js', '**/core-learning-flows.spec.js', '**/site-smoke.spec.js'],
+    },
   ],
   webServer: {
     command: 'python3 -m http.server 4173 --bind 127.0.0.1',
