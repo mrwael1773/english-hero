@@ -59,14 +59,14 @@
       ['🧩','تطبيق القواعد','ابدأ الاختبارات القصيرة',200,5,'training'],
       ['🎯','التدريب المكثف','أنجز 5 دروس وواصل الاختبارات',350,5,'training'],
       ['🧠','مراجعة الأخطاء','راجع الكلمات والأسئلة التي أخطأت فيها',500,8,'review'],
-      ['🏆','الإتقان','أكمل 15 درسًا وارفع نتيجتك',800,15,'training']
+      ['🏆','الإتقان','اجتز اختبارات 15 درسًا لإثبات الإتقان',800,15,'training']
     ];
     path.replaceChildren(...stages.map(([emoji,label,desc,requiredXP,requiredLessons,target])=>{
       const open=xp>=requiredXP&&state.masteredLessons.length>=requiredLessons;
       const card=document.createElement('button');card.type='button';card.className='tile';card.style.textAlign='right';card.disabled=!open;
       const h=document.createElement('h3');h.textContent=emoji+' '+label;
       const p=document.createElement('p');p.textContent=desc;
-      const status=document.createElement('span');status.className='tag '+(open?'':'gold');status.textContent=open?'✓ متاح':'يتطلب '+requiredXP+' XP و'+requiredLessons+' دروس';
+      const status=document.createElement('span');status.className='tag '+(open?'':'gold');status.textContent=open?'✓ متاح':'يتطلب '+requiredXP+' XP وإتقان '+requiredLessons+' درسًا';
       card.append(h,p,status);if(open)card.addEventListener('click',()=>window.page&&page(target));return card;
     }));
   });

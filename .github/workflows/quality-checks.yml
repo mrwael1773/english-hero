@@ -51,11 +51,21 @@ jobs:
           done
           node --check config.js
           node --check cloud-sync.js
+          node --check auth-gateway.js
+          node --check auth-guard.js
           node --check sw.js
           node --check pro-dashboard.js
           node --check learning-expansion.js
           node --check english-hero-plus.js
           node --check grammar-lessons.js
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check username login Edge Function
+        run: deno check --no-lock supabase/functions/student-username-login/index.ts
 
       - name: Validate JSON data and vocabulary count
         run: |
@@ -85,6 +95,10 @@ jobs:
           test -s sw.js
           test -s config.js
           test -s cloud-sync.js
+          test -s auth-gateway.js
+          test -s auth-gateway.css
+          test -s auth-guard.js
+          test -s supabase/functions/student-username-login/index.ts
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg

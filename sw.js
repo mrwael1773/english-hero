@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE_NAME = 'english-hero-shell-v108';
-const APP_SHELL = ['./', './index.html', './english-basics.html', './english-tenses-guide.html', './privacy.html', './contact.html', './teacher-pilot.html', './grammar-lesson.html', './grammar-library.html', './grammar-category.html', './grammar-lessons.js?v=3', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js', './pro-dashboard.js?v=3', './learning-expansion.js?v=62', './english-hero-plus.js?v=67', './vocabulary-20000.json', './site-quick-nav.css?v=1', './site-quick-nav.js?v=1'];
+const CACHE_NAME = 'english-hero-shell-v120';
+const APP_SHELL = ['./', './index.html', './english-basics.html', './english-tenses-guide.html', './privacy.html', './contact.html', './teacher-pilot.html', './grammar-lesson.html', './grammar-library.html', './grammar-category.html', './grammar-lessons.js?v=4', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js?v=6', './pro-dashboard.js?v=4', './learning-expansion.js?v=62', './english-hero-plus.js?v=68', './vocabulary-20000.json', './site-quick-nav.css?v=1', './site-quick-nav.js?v=1', './auth-gateway.css?v=1', './auth-gateway.js?v=3', './auth-guard.js?v=1'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -26,7 +26,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   // Always try the network first for page navigations so published fixes appear promptly.
-  if (request.mode === 'navigate' || /\/(?:config|cloud-sync|pro-dashboard|ai-chat)\.js$/.test(url.pathname)) {
+  if (request.mode === 'navigate' || /\/(?:config|cloud-sync|auth-guard|pro-dashboard|ai-chat)\.js$/.test(url.pathname)) {
     event.respondWith(
       fetch(request)
         .then(response => {

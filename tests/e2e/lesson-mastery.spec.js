@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 async function openFirstLesson(page) {
   await page.goto('/');
@@ -24,12 +24,14 @@ async function openFirstLesson(page) {
 }
 
 async function answerAll(page, translations, shouldPass, wrongIndices = []) {
+  let writingQuestionCount = 0;
   const wrongSet = new Set(Array.isArray(wrongIndices) ? wrongIndices : Number.isInteger(wrongIndices) && wrongIndices >= 0 ? [wrongIndices] : []);
   for (let i = 0; i < 18; i++) {
     const question = (await page.locator('#question').innerText()).trim();
     const passThis = shouldPass && !wrongSet.has(i);
     const input = page.locator('#answerArea input');
     if (await input.count()) {
+      writingQuestionCount++;
       const correct = translations.get(question);
       expect(correct, 'Arabic prompt should map to its English word').toBeTruthy();
       await input.fill(passThis ? correct : 'definitely-wrong');
@@ -52,9 +54,13 @@ async function answerAll(page, translations, shouldPass, wrongIndices = []) {
       }
       await target.click();
     }
+    // Verify visible correctness feedback for both writing and multiple-choice answers.
+    await expect(page.locator('#quizFeedback')).toBeVisible();
+    await expect(page.locator('#quizFeedback')).toContainText(passThis ? 'ممتاز' : 'الصحيح:');
     await expect(page.locator('#quizNext')).toBeVisible();
     await page.locator('#quizNext').click();
   }
+  expect(writingQuestionCount, 'The mastery quiz must exercise at least one typed-answer question').toBeGreaterThan(0);
 }
 
 test('lesson does not become mastered or unlock the next lesson below 80%', async ({ page }) => {
@@ -387,4 +393,37 @@ test('review wording distinguishes adding words from mastering or saving them', 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
   expect(saved.foundationSaved || []).toContain(word);
   expect(saved.masteredLessons || []).toHaveLength(0);
+});
+
+
+test('XP alone cannot unlock the mastery rank without 15 mastered lessons', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.setItem('english-hero-academy-3', JSON.stringify({ xp: 800, masteredLessons: [], saved: [] }));
+  });
+  await page.reload();
+  let masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
+  await expect(masteryStage).toContainText('يتطلب 800 XP وإتقان 15 درسًا');
+  await expect(masteryStage).toBeDisabled();
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    state.masteredLessons = Array.from({ length: 15 }, (_, index) => index);
+    state.xp = 799;
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(state));
+  });
+  await page.reload();
+  masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
+  await expect(masteryStage).toContainText('يتطلب 800 XP وإتقان 15 درسًا');
+  await expect(masteryStage).toBeDisabled();
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    state.xp = 800;
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(state));
+  });
+  await page.reload();
+  masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
+  await expect(masteryStage).toContainText('✓ متاح');
+  await expect(masteryStage).toBeEnabled();
 });
