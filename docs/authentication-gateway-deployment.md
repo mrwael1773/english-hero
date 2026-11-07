@@ -68,6 +68,22 @@ The separate test project `knjcyuvhaoievxkzcdog` was checked without changing pr
 - Confirm the service worker refreshes the new gateway assets and does not serve stale authentication code.
 - Review Supabase Auth rate limits and leaked-password protection settings. Do not change production settings without approval.
 
+## Login rate-limit proxy trust — required before production deployment
+
+The username-login Edge Function currently derives its rate-limit address from `cf-connecting-ip`, falling back to the last value in `x-forwarded-for`. Hashing the address before storing the rate-limit key does not establish that the address itself is trustworthy.
+
+Before deploying this function to production, verify the exact Supabase Edge ingress contract for the deployed runtime:
+
+- Confirm which proxy adds or overwrites `cf-connecting-ip` and `x-forwarded-for`, and whether client-supplied copies are stripped or normalized before the function receives the request.
+- Confirm the function cannot be reached through an alternate route that bypasses the trusted proxy.
+- Test requests with forged `cf-connecting-ip`, forged `x-forwarded-for`, multiple forwarded values, missing headers, malformed values, and IPv4/IPv6 addresses.
+- Verify the effective rate-limit identity remains the trusted client address under those cases, and that a caller cannot evade the per-IP bucket by supplying a different header.
+- Record the verified ingress behavior and test evidence in the deployment review. If the trust contract cannot be established, do not count the IP bucket as a security control; use a provider-supported trusted client-IP mechanism or another server-enforced abuse control.
+
+The current configured thresholds (username, username+IP, and IP) are defense-in-depth only after the request identity is trustworthy. CORS origin checks are not authentication and do not prevent non-browser callers from invoking an endpoint.
+
+**Release gate:** no production rollout of username login until proxy-header provenance and spoof-resistance are verified against the actual deployed Supabase Edge Function ingress. Do not infer this from local mocks or source inspection alone.
+
 ## Teacher authorization design — required before school pilot
 
 The current application has no trusted teacher role. Do not infer teacher status from a username, email domain, display name, a browser-side flag, or a field editable through the student client. The existing `teacher-pilot.html` remains a synthetic-data demonstration only.
