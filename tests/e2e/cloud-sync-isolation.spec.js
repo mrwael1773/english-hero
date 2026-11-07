@@ -271,7 +271,8 @@ test("clears only the active account's local data without deleting cloud progres
     window.__signOutScope = null;
     window.__cloudDeleteCalls = 0;
     window.__upsertCalls = [];
-    window.confirm = () => true;
+    window.__cleanupConfirmText = '';
+    window.confirm = message => { window.__cleanupConfirmText = message; return true; };
     window.supabase = {
       createClient: () => ({
         auth: {
@@ -313,7 +314,8 @@ test("clears only the active account's local data without deleting cloud progres
     sdkSession: localStorage.getItem('sb-example-auth-token'),
     teacherSession: sessionStorage.getItem('ehTeacherPilotMasterySessionV1'),
     owner: localStorage.getItem('english-hero-cloud-owner'),
-    upsertCount: window.__upsertCalls.length
+    upsertCount: window.__upsertCalls.length,
+    confirmText: window.__cleanupConfirmText
   }));
   expect(result.signOutScope).toBe('local');
   expect(result.cloudDeleteCalls).toBe(0);
@@ -322,6 +324,7 @@ test("clears only the active account's local data without deleting cloud progres
   expect(result.owner).toBeNull();
   expect(result.state.xp).toBe(0);
   expect(result.upsertCount).toBe(1); // Initial sync only; cleanup must not upload a blank progress record.
+  expect(result.confirmText).toContain('تغييرات لم تكتمل مزامنتها بعد ستُحذف');
   for (const key of [
     'english-hero-academy-3',
     'english-hero-account-backup-account-A',
