@@ -43,6 +43,14 @@ The separate test project `knjcyuvhaoievxkzcdog` has the eight username-auth mig
 4. Add the deployed site origin and callback path to Supabase Auth redirect allow-list.
 5. Test both a new Google account and an existing Google account that already owns a `learning_progress` row. Confirm the existing account keeps the same Auth user ID and progress.
 
+### Test-project OAuth preflight (read-only, 7 November 2026)
+
+The separate test project `knjcyuvhaoievxkzcdog` was checked without changing provider settings or creating an Auth user:
+- The public Auth settings endpoint reports `external.providers.google = true`.
+- A direct authorization-start request using `provider=google` and `redirect_to=https://mrwael1773.github.io/english-hero/` successfully redirected to `accounts.google.com`. Supabase accepted the requested redirect and began the Google authorization flow; no `provider disabled`, missing OAuth client, or redirect-not-allowed error was returned.
+- This is only an OAuth-start/configuration smoke test. No Google account was authenticated, no callback/session was completed, no profile was claimed, and no learning-progress row was read or written. The currently deployed GitHub Pages site still uses the production Supabase configuration; this test did not switch it to the test project.
+- A full end-to-end Google sign-in still requires a dedicated test Google identity and a browser session signed into that identity. Do not use a student's or an unrelated personal Google account for this test.
+
 ## 3. Username login Edge Function
 
 1. Deploy `student-username-login` from `supabase/functions/student-username-login/index.ts`.
