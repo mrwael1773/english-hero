@@ -11,6 +11,7 @@ async function installAuthMock(page) {
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event:user?'SIGNED_IN':'SIGNED_OUT',user}}));
       };
       window.__setMockUser=id=>setMockUser(id,true);
+      window.__setMockUserWithoutProfile=id=>setMockUser(id,false);
       window.EnglishHeroCloudReady=Promise.resolve(true);
       window.EnglishHeroCloud={
         isConfigured:()=>true,
@@ -201,4 +202,35 @@ test('local-only student data is isolated by account on shared devices', async (
   await expect(page.locator('#studentTaskList')).not.toContainText('مهمة الطالب B');
   await expect(page.locator('#scenarioList')).toContainText('أفضل نتيجة: 5/5');
   await expect(page.locator('#ehpAvatar')).toHaveText('👑');
+});
+
+test('a stale profile response from the previous account cannot unlock the next account', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeHidden();
+
+  // Leave an account-A profile request in flight, then switch to account B.
+  await page.evaluate(() => {
+    window.__delayProfileRead = true;
+    window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+      detail: { event: 'TOKEN_REFRESHED', user: { id: 'mock-student' } }
+    }));
+  });
+  await expect.poll(() => page.evaluate(() => typeof window.__releaseProfileRead)).toBe('function');
+
+  await page.evaluate(() => {
+    window.__delayProfileRead = false;
+    window.__setMockUserWithoutProfile('second-student');
+  });
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authOnboardingPane')).toBeVisible();
+
+  // The old account-A response must not replace account B's onboarding state.
+  await page.evaluate(() => window.__releaseProfileRead());
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authOnboardingPane')).toBeVisible();
+  await expect(page.locator('#authLoginPane')).toBeHidden();
 });
