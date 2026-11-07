@@ -405,8 +405,8 @@
     if(button)button.disabled=true;
     status('جارٍ إنهاء الجلسة وحذف النسخ المحلية لهذا الحساب...');
     try{
-      await window.EnglishHeroCloud.clearLocalAccountData();
-      status('تم حذف البيانات المحلية لهذا الحساب وتسجيل الخروج. بيانات السحابة لم تتغير.');
+      const result=await window.EnglishHeroCloud.clearLocalAccountData();
+      status(result?.partial?'تم تسجيل الخروج، لكن تعذر حذف بعض البيانات المحلية. لا تسلّم الجهاز لمستخدم آخر قبل مسح بيانات الموقع من إعدادات المتصفح.':'تم حذف البيانات المحلية لهذا الحساب وتسجيل الخروج. بيانات السحابة لم تتغير.');
     }catch(error){
       status('تعذر إكمال المسح. لم نحذف بيانات الحساب المحلية؛ تحقق من الاتصال ثم حاول مجددًا.');
       console.error('English Hero local account cleanup:',error?.message||error);
