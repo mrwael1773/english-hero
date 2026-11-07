@@ -231,6 +231,32 @@
           } catch {}
           replaceProgress(typeof defaults==='function'?defaults():{});
           status('بدأ الحساب بتقدم مستقل. لم ندمج أي تقدم مجهول من هذا الجهاز؛ احتُفظ بنسخة محلية منفصلة.');
+        } else if(localOwner===syncUserId && !remoteProgress){
+          // The cloud row may have been intentionally removed. Never silently recreate it
+          // from this device's old snapshot: preserve it and require an explicit choice.
+          const localState=state||{};
+          const hasLocalProgress=(Number(localState.xp)||0)>0 ||
+            (Number(localState.quizzes)||0)>0 ||
+            (Array.isArray(localState.completed)&&localState.completed.length>0) ||
+            (Array.isArray(localState.masteredLessons)&&localState.masteredLessons.length>0) ||
+            (Array.isArray(localState.saved)&&localState.saved.length>0) ||
+            (Array.isArray(localState.foundationSaved)&&localState.foundationSaved.length>0) ||
+            Object.keys(localState.review||{}).length>0 || Object.keys(localState.misses||{}).length>0 ||
+            Object.keys(localState.daily||{}).length>0;
+          if(hasLocalProgress){
+            const backupKey='english-hero-account-backup-'+syncUserId;
+            try {
+              const previous=localStorage.getItem(backupKey);
+              if(previous) localStorage.setItem(backupKey+'-previous-'+Date.now(),previous);
+              localStorage.setItem(backupKey,JSON.stringify(localState));
+            } catch {}
+            const localXp=Math.max(0,Number(localState.xp)||0);
+            const restoreLocal=window.confirm('لم نعثر على سجل تقدم سحابي لهذا الحساب، لكن وجدنا نسخة محلية تحتوي على '+localXp+' XP. هل تريد استعادتها إلى الحساب؟ اختر «إلغاء» لبدء تقدم سحابي فارغ مع الاحتفاظ بالنسخة المحلية.');
+            if(restoreLocal) mergeProgress({});
+            else replaceProgress(typeof defaults==='function'?defaults():{});
+          } else {
+            replaceProgress(typeof defaults==='function'?defaults():{});
+          }
         } else if(remoteProgress){
           mergeProgress(remoteProgress);
         }
