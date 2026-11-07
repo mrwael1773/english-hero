@@ -22,6 +22,10 @@
   let syncPromiseUserId = null;
   // Serialize progress writes so an older snapshot can never finish after a newer one.
   let uploadQueue = Promise.resolve(false);
+  const markPasswordRecovery = () => {
+    window.EnglishHeroPasswordRecovery = true;
+    try { sessionStorage.setItem('englishHeroPasswordRecovery','1'); } catch {}
+  };
   const status = (message) => { const el=$cloud('cloudStatus'); if(el) el.textContent=message; };
   async function cloudRequest(query, timeoutMs=15000){
     const controller=new AbortController();
@@ -264,6 +268,10 @@
       client=window.supabase.createClient(window.ENGLISH_HERO_CLOUD_CONFIG.supabaseUrl,window.ENGLISH_HERO_CLOUD_CONFIG.supabaseAnonKey,{
         auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
       });
+      // Register before getSession(): URL callback processing can emit PASSWORD_RECOVERY during initialization.
+      client.auth.onAuthStateChange(event=>{
+        if(event==='PASSWORD_RECOVERY') markPasswordRecovery();
+      });
       const {data,error}=await client.auth.getSession();
       if(error) throw error;
       try { progressOwnerUserId=localStorage.getItem('english-hero-cloud-owner')||null; } catch { progressOwnerUserId=null; }
@@ -297,10 +305,7 @@
           user=null;
           setSignedInUI();
         }
-        if(event==='PASSWORD_RECOVERY') {
-          window.EnglishHeroPasswordRecovery=true;
-          try { sessionStorage.setItem('englishHeroPasswordRecovery','1'); } catch {}
-        }
+        if(event==='PASSWORD_RECOVERY') markPasswordRecovery();
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
       if(user) await syncNow();
