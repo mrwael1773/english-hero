@@ -495,3 +495,81 @@ test('reports partial cleanup when browser storage refuses deletion', async ({ p
   expect(result.tasks).toBeNull();
   expect(result.scenarios).toBeNull();
 });
+
+
+test('a missing cloud row never silently restores an owned local snapshot', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><div id="cloudUser"></div>';
+    const local = {xp:200,best:100,quizzes:2,completed:[0,1],masteredLessons:[0,1],saved:['word-a','word-b'],foundationSaved:[],review:{},misses:{},daily:{},lessonPositions:{}};
+    localStorage.setItem('english-hero-academy-3',JSON.stringify(local));
+    localStorage.setItem('english-hero-cloud-owner','same-student');
+    window.state=local;
+    window.lessons=[];
+    window.defaults=()=>({xp:0,best:0,quizzes:0,streak:0,completed:[],masteredLessons:[],lessonStarted:[],lessonTrained:[],saved:[],foundationSaved:[],review:{},misses:{},daily:{},lessonPositions:{},chatHistory:[],displayName:''});
+    window.normalizeMasteredLessons=values=>values;
+    window.mergeReviewProgress=()=>({});
+    window.reconcileReviewMisses=()=>({});
+    for(const name of ['renderStats','renderCourses','renderHome','renderProfile','renderReview'])window[name]=()=>{};
+    window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-that-is-long-enough-for-test'};
+    window.__confirmMessage='';
+    window.confirm=message=>{window.__confirmMessage=message;return false;};
+    window.__uploadedProgress=null;
+    window.supabase={createClient:()=>({
+      auth:{
+        getSession:async()=>({data:{session:{user:{id:'same-student'}}},error:null}),
+        onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})
+      },
+      from:()=>({select(){return this;},eq(){return this;},maybeSingle(){return this;},upsert(payload){window.__uploadedProgress=payload.progress;return this;},abortSignal(){return Promise.resolve({data:null,error:null});}})
+    })};
+  });
+  await page.addScriptTag({path:'cloud-sync.js'});
+  await page.evaluate(()=>window.EnglishHeroCloudReady);
+  const result=await page.evaluate(()=>({
+    currentXp:window.state.xp,
+    backupXp:JSON.parse(localStorage.getItem('english-hero-account-backup-same-student')||'null')?.xp,
+    uploadedXp:window.__uploadedProgress?.xp,
+    prompt:window.__confirmMessage
+  }));
+  expect(result.currentXp).toBe(0);
+  expect(result.backupXp).toBe(200);
+  expect(result.uploadedXp).toBe(0);
+  expect(result.prompt).toContain('200 XP');
+});
+
+test('restoring local progress after a missing cloud row requires explicit confirmation', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><div id="cloudUser"></div>';
+    const local = {xp:3600,best:100,quizzes:12,completed:[0,1],masteredLessons:[0,1],saved:[],foundationSaved:[],review:{},misses:{},daily:{},lessonPositions:{}};
+    localStorage.setItem('english-hero-academy-3',JSON.stringify(local));
+    localStorage.setItem('english-hero-cloud-owner','same-student');
+    window.state=local;
+    window.lessons=[];
+    window.defaults=()=>({xp:0,best:0,quizzes:0,streak:0,completed:[],masteredLessons:[],lessonStarted:[],lessonTrained:[],saved:[],foundationSaved:[],review:{},misses:{},daily:{},lessonPositions:{},chatHistory:[],displayName:''});
+    window.normalizeMasteredLessons=values=>values;
+    window.mergeReviewProgress=()=>({});
+    window.reconcileReviewMisses=()=>({});
+    for(const name of ['renderStats','renderCourses','renderHome','renderProfile','renderReview'])window[name]=()=>{};
+    window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-that-is-long-enough-for-test'};
+    window.confirm=message=>message.includes('3600 XP');
+    window.__uploadedProgress=null;
+    window.supabase={createClient:()=>({
+      auth:{
+        getSession:async()=>({data:{session:{user:{id:'same-student'}}},error:null}),
+        onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})
+      },
+      from:()=>({select(){return this;},eq(){return this;},maybeSingle(){return this;},upsert(payload){window.__uploadedProgress=payload.progress;return this;},abortSignal(){return Promise.resolve({data:null,error:null});}})
+    })};
+  });
+  await page.addScriptTag({path:'cloud-sync.js'});
+  await page.evaluate(()=>window.EnglishHeroCloudReady);
+  const result=await page.evaluate(()=>({
+    currentXp:window.state.xp,
+    backupXp:JSON.parse(localStorage.getItem('english-hero-account-backup-same-student')||'null')?.xp,
+    uploadedXp:window.__uploadedProgress?.xp
+  }));
+  expect(result.currentXp).toBe(3600);
+  expect(result.backupXp).toBe(3600);
+  expect(result.uploadedXp).toBe(3600);
+});
