@@ -39,6 +39,20 @@ The separate test project `knjcyuvhaoievxkzcdog` has the eight username-auth mig
 
 After the initial read-only snapshot above, the production `teacher_pilot_results` table was secured with migration `20261107150000_disable_unverified_teacher_pilot_client_access`: FORCE RLS was enabled, the misleading owner-only client policies were removed, and direct table privileges were revoked from PUBLIC, anon, and authenticated. Existing rows were preserved. This is a deferred teacher feature and is not a student-release blocker; do not restore client access.
 
+### Production student-auth backend preparation (7 November 2026)
+
+The student-auth database foundation and username-login Edge Function have now been prepared on the production Supabase project without creating or modifying student Auth accounts:
+
+- Applied the student username/profile foundation, owner-scoped progress policy, verified-Google identity check, RLS policy optimization, default-privilege hardening, username/IP rate-limit functions, and FORCE RLS for private auth tables.
+- Deployed `student-username-login` as ACTIVE version 1 with `verify_jwt=false`; the deployed `index.ts` was re-read and matched the branch source byte-for-byte (5,549 characters). The function validates username/password itself, uses service-role-only RPCs, enforces username throttling, and treats the Cloudflare IP header as optional secondary throttling only. It does not trust client-supplied `X-Forwarded-For`.
+- Verified FORCE RLS on `student_profiles`, `learning_progress`, `private.student_login_lookup`, `private.student_login_attempts`, and the deferred `teacher_pilot_results` table. The private auth tables have no ordinary client grants; only the service role has the required table access.
+- Verified that `claim_student_username` is executable by authenticated users only, uses `SECURITY DEFINER` with fixed `search_path=pg_catalog`, and derives the account owner from `auth.uid()`; it also enforces verified Google identity.
+- Verified that `learning_progress` still contains its original 3 rows. No Auth users were created, no progress rows were deleted or rewritten, and the teacher results table remains closed to ordinary clients.
+
+**Migration-history reconciliation warning:** Supabase recorded these production migrations under tool-generated versions `20261107123333` through `20261107123407`, while the checked-in branch filenames use the original development timestamps. The earlier teacher-results permission migration is recorded in production as `20261107121712`, while the branch filename is `20261107150000`. The test project also has its own earlier recorded versions. Do not run `supabase db push` or replay migrations blindly. Reconcile the per-environment migration history with the checked-in SQL before a future CLI deployment; the production schema itself has been applied and independently inspected.
+
+Remaining live gates: production Google provider/client configuration and callback flow, recovery email delivery/redirect allow-list and a real recovery session, leaked-password protection, Data API exposed-schema confirmation, and real login attempts from the deployed public site. No real student account was used.
+
 ## 2. Google OAuth
 
 1. Enable Google as an Auth provider in Supabase.
