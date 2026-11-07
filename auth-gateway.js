@@ -3,7 +3,7 @@
   const byId=id=>document.getElementById(id);
   const gateway=byId('authGateway');
   if(!gateway)return;
-  const panes={login:byId('authLoginPane'),register:byId('authRegisterPane'),onboarding:byId('authOnboardingPane')};
+  const panes={login:byId('authLoginPane'),register:byId('authRegisterPane'),recoveryRequest:byId('authRecoveryRequestPane'),recoveryComplete:byId('authRecoveryCompletePane'),onboarding:byId('authOnboardingPane')};
   const message=byId('authGatewayMessage');
   const tabs=[...gateway.querySelectorAll('[data-auth-mode]')];
   let cloud=null;
@@ -39,6 +39,7 @@
     if(requestedNextPath)location.replace(requestedNextPath);
   }
   function lock(){gateway.hidden=false;document.body.classList.add('auth-gateway-pending');}
+  function showRecoveryComplete(){lock();showPane('recoveryComplete');say('أدخل كلمة مرور جديدة لحسابك.');}
   async function inspectSession(){
     const checkId=++sessionCheckId;
     const user=cloud.getUser();
@@ -79,6 +80,32 @@
   }
   tabs.forEach(tab=>tab.addEventListener('click',()=>showPane(tab.dataset.authMode)));
   gateway.querySelectorAll('[data-auth-back]').forEach(button=>button.addEventListener('click',()=>showPane('login')));
+  byId('authForgotPassword').addEventListener('click',()=>showPane('recoveryRequest'));
+  byId('authRecoveryRequestForm').addEventListener('submit',async event=>{
+    event.preventDefault();if(busy)return;
+    const email=byId('authRecoveryEmail').value.trim();
+    if(!email||email.length>254){say('اكتب بريدًا إلكترونيًا صحيحًا.','error');return;}
+    setBusy(true);say('جارٍ إرسال طلب الاستعادة...');
+    try{
+      await cloud.sendPasswordRecovery(email);
+      say('إذا كان البريد مرتبطًا بحساب، فستصلك رسالة تحتوي رابط الاستعادة. تحقق من صندوق الوارد والرسائل غير المرغوب فيها.','success');
+    }catch(error){say('تعذر إرسال طلب الاستعادة حاليًا. تحقق من الاتصال وحاول مجددًا.','error');}
+    finally{setBusy(false);}
+  });
+  byId('authRecoveryCompleteForm').addEventListener('submit',async event=>{
+    event.preventDefault();if(busy)return;
+    const password=byId('authRecoveryNewPassword').value;
+    const confirmation=byId('authRecoveryConfirmPassword').value;
+    if(password.length<8||password.length>128){say('كلمة المرور يجب أن تكون بين 8 و128 حرفًا.','error');return;}
+    if(password!==confirmation){say('تأكيد كلمة المرور غير مطابق.','error');return;}
+    setBusy(true);say('جارٍ تحديث كلمة المرور...');
+    try{
+      await cloud.updateRecoveredPassword(password);
+      say('تم تحديث كلمة المرور. جارٍ استعادة تقدمك وفتح حسابك...','success');
+      await inspectSession();
+    }catch(error){say('تعذر تحديث كلمة المرور. قد يكون رابط الاستعادة منتهي الصلاحية أو مستخدمًا؛ اطلب رابطًا جديدًا.','error');}
+    finally{setBusy(false);}
+  });
   gateway.querySelectorAll('[data-google-auth]').forEach(button=>button.addEventListener('click',async()=>{
     if(busy)return;
     setBusy(true);say('جارٍ تحويلك إلى Google لإتمام التحقق...');
@@ -115,7 +142,12 @@
       say(text.includes('student_profiles_username_unique')||text.includes('duplicate key')?'اسم المستخدم مستخدم بالفعل. اختر اسمًا آخر.':(text.includes('verified email')?'تعذر التحقق من البريد المرتبط بحساب Google.':'تعذر حفظ بيانات الحساب. تحقق من اسم المستخدم والاتصال ثم حاول مجددًا.'),'error');
     }finally{setBusy(false);}
   });
-  window.addEventListener('englishhero:authstate',()=>{if(cloud)inspectSession();});
+  window.addEventListener('englishhero:authstate',event=>{
+    if(!cloud)return;
+    if(event.detail?.event==='PASSWORD_RECOVERY'){showRecoveryComplete();return;}
+    if(cloud.getUser()?.id && panes.recoveryComplete && !panes.recoveryComplete.hidden)return;
+    inspectSession();
+  });
   window.addEventListener('englishhero:authready',()=>{if(cloud)inspectSession();});
   start();
 })();
