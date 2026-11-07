@@ -68,6 +68,34 @@ The separate test project `knjcyuvhaoievxkzcdog` was checked without changing pr
 - Confirm the service worker refreshes the new gateway assets and does not serve stale authentication code.
 - Review Supabase Auth rate limits and leaked-password protection settings. Do not change production settings without approval.
 
+## Teacher authorization design — required before school pilot
+
+The current application has no trusted teacher role. Do not infer teacher status from a username, email domain, display name, a browser-side flag, or a field editable through the student client. The existing `teacher-pilot.html` remains a synthetic-data demonstration only.
+
+### Minimum server-enforced model
+
+1. Provision teacher identities through a school-controlled administrative process after staff identity is verified. Record who approved the teacher, when approval occurred, and when it is revoked. Do not allow students or teachers to self-assign roles.
+2. Store role grants in a server-controlled table or trusted Auth application metadata written only by a privileged administrative process. Never trust `user_metadata` or client-supplied role claims for authorization.
+3. Model teacher-to-class/student access explicitly with an assignment table. A teacher may read only records for students/classes currently assigned to that teacher. Class transfers and revoked assignments must take effect without relying on a stale browser session.
+4. Enforce access in PostgreSQL RLS and, where necessary, narrowly scoped server-side RPCs/Edge Functions. A hidden UI element, route guard, CORS rule, or JavaScript check is not authorization.
+5. Remove direct student INSERT/UPDATE/DELETE privileges on official teacher assessment records. Permit writes only through a server-verified teacher operation that checks the teacher role and current assignment in the same transaction.
+6. Keep student learning progress owner-scoped. Teacher access must be read-only by default; any assessment write capability must be a separate, explicit permission with an audit trail.
+7. Log access and changes to official assessments with actor Auth user ID, target student ID, class/assignment context, operation, timestamp, and request ID. Do not log passwords, tokens, or unnecessary student information.
+8. Prevent cross-class and cross-school access by default. If school tenancy is introduced, include an immutable school boundary in every relevant relationship and policy; never rely on a client-supplied school ID alone.
+
+### Required tests
+
+- Student cannot list teachers' assigned students or read another student's progress.
+- Teacher A cannot read or modify a student assigned only to Teacher B.
+- Teacher access is denied immediately after assignment revocation or staff-role revocation, including through direct PostgREST/RPC requests.
+- A teacher cannot grant themselves a role, change their assignments, or submit an assessment for an unassigned student.
+- A student cannot write or alter an official assessment record, including by bypassing the UI.
+- Two schools/classes remain isolated if multi-school support is enabled.
+- Audit entries identify the authenticated actor and target, and cannot be edited by the actor through the public client.
+- Test with at least two synthetic students, two synthetic teachers, and separate class assignments; never use real student records in CI.
+
+**Release gate:** do not label the product as having teacher accounts, teacher dashboards, or official teacher reporting until the server-side role model, RLS policies, provisioning/revocation workflow, audit trail, and negative isolation tests are implemented and independently reviewed. Do not deploy speculative role migrations to production.
+
 ## Account recovery design — required before school pilot
 
 The current gateway must remain without a self-service recovery button until a recovery method is approved and implemented. A reset based only on a username, display name, class, date of birth, or answers to personal questions is not acceptable: those details may be known by classmates and would permit account takeover.
