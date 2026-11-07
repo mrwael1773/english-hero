@@ -297,7 +297,10 @@
           user=null;
           setSignedInUI();
         }
-        if(event==='PASSWORD_RECOVERY') window.EnglishHeroPasswordRecovery=true;
+        if(event==='PASSWORD_RECOVERY') {
+          window.EnglishHeroPasswordRecovery=true;
+          try { sessionStorage.setItem('englishHeroPasswordRecovery','1'); } catch {}
+        }
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
       if(user) await syncNow();
