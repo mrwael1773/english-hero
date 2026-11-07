@@ -56,6 +56,6 @@ jobs:
           }
           JS
       - name: Install Playwright browser
-        run: npx playwright install chromium
+        run: npx playwright install --with-deps chromium webkit
       - name: Run browser tests
         run: npm run test:e2e
