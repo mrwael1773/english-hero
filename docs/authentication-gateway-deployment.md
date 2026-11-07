@@ -20,6 +20,21 @@ This change is intentionally prepared for review only. Do not deploy it to the s
 14. Test progress isolation with two separate test accounts: account A must not read or modify account B's row, including through direct PostgREST requests.
 15. Apply `supabase/migrations/20261107120000_force_rls_on_private_auth_tables.sql` and verify FORCE RLS is enabled on both private login tables. Confirm `anon` and `authenticated` still have no table privileges or schema usage, while the Edge Function's service role retains the required access.
 
+## 1A. Live production audit snapshot (read-only, 7 November 2026)
+
+The connected production project `cajevfsdhtbhtzcphbsz` was inspected without changing its schema or data. Its migration history contains the four school-pilot migrations through `20261102203921`, but does **not** contain the eight student-username authentication migrations listed above. The production database currently has `public.learning_progress` and `public.teacher_pilot_results`, but does not have `public.student_profiles`, `private.student_login_lookup`, or `private.student_login_attempts`. The active production Edge Function list contains `english-coach` only; `student-username-login` is active only in the separate test project.
+
+**Release consequence:** the PR branch's browser configuration still targets the production Supabase project. If the gateway code is published before the reviewed authentication migrations and Edge Function are deployed, profile lookup/onboarding and username login cannot work against production. The gateway currently fails closed on profile lookup errors, which protects learning screens but leaves students unable to proceed. Do not merge/publish this authentication gateway until the production schema, function, OAuth settings, and redirect allow-list are deliberately prepared and verified.
+
+The production audit also found:
+- `public.learning_progress` has owner-scoped authenticated SELECT/INSERT/UPDATE policies.
+- `public.teacher_pilot_results` has authenticated owner-only CRUD policies. These policies do **not** grant teachers access to students' results; there is no teacher-role policy.
+- Legacy `public.student_progress` and `public.analytics_events` have RLS enabled but no policies. The inspected grants show no anon/authenticated table privileges; the service role retains access where applicable. Treat these as locked legacy/administrative tables, not as usable student or teacher APIs. Do not add broad policies just to silence the advisor.
+- The production security advisor reports leaked-password protection disabled. Review and enable it in Supabase Auth settings before school use, after confirming its impact on the chosen student password policy.
+- The production performance advisor returned no findings.
+
+The separate test project `knjcyuvhaoievxkzcdog` has the eight username-auth migrations, owner-scoped progress/profile policies, and active `student-username-login` Edge Function version 1. It is a test environment only; its successful schema checks do not prepare production automatically.
+
 ## 2. Google OAuth
 
 1. Enable Google as an Auth provider in Supabase.
