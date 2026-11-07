@@ -20,6 +20,7 @@ async function installGuardAuthMock(page) {
         },
         from: () => ({ select() { return this; }, eq(_column, id) { this.userId = id; return this; },
           maybeSingle: async function() {
+            if (window.__guardProfileError) return { data: null, error: { message: 'temporary profile read failure' } };
             return this.userId === 'student-one'
               ? { data: { user_id: this.userId }, error: null }
               : { data: null, error: null };
@@ -63,4 +64,16 @@ test('a protected lesson revalidates the profile when a different account signs 
 
   await expect(page).toHaveURL(/\/index\.html\?next=/);
   await expect(page.locator('#authGateway')).toBeVisible();
+});
+
+
+test('a transient profile read failure fails closed and redirects to the gateway', async ({ page }) => {
+  await page.addInitScript(() => { window.__guardProfileError = true; });
+  await installGuardAuthMock(page);
+  await installGatewayRoute(page);
+  await page.goto('/grammar-lesson.html#g-subject-pronouns');
+
+  await expect(page).toHaveURL(/\\/index\\.html\\?next=/);
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('body')).toContainText('بوابة الدخول');
 });
