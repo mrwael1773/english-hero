@@ -45,6 +45,15 @@ jobs:
             --exclude='school-pilot.html' \
             --exclude='preview-site/'
 
+          # Remove the footer link to the intentionally excluded teacher-only page.
+          python3 - <<'PY'
+          from pathlib import Path
+          page = Path("preview-site/index.html")
+          html = page.read_text(encoding="utf-8")
+          html = html.replace('    |\\n    <a href="teacher-pilot.html">مسار تدريبي تجريبي</a>\\n', '')
+          page.write_text(html, encoding="utf-8")
+          PY
+
           # The artifact must never point at the production student database.
           cat > preview-site/config.js <<'CONFIG'
           /* Isolated preview only: this is the public publishable key for the test project. */
