@@ -68,6 +68,29 @@ The separate test project `knjcyuvhaoievxkzcdog` was checked without changing pr
 - Confirm the service worker refreshes the new gateway assets and does not serve stale authentication code.
 - Review Supabase Auth rate limits and leaked-password protection settings. Do not change production settings without approval.
 
+## Mastery-state consistency — required before school pilot
+
+A source audit found a concrete inconsistency in the current lesson retake flow:
+
+- In `index.html`, `finishQuiz()` adds a lesson to both `completed` and `masteredLessons` when the lesson quiz reaches 80%.
+- When a later retake is below 80%, the failure branch removes the lesson from `completed` but does **not** remove it from `masteredLessons`.
+- The course map derives the completed/mastered state and next-lesson lock from `masteredLessons`, so a previously mastered lesson can remain marked as mastered and keep later content unlocked after a failed retake.
+- Cloud progress reconciliation also unions the remote and local `masteredLessons` arrays. Consequently, simply removing an ID locally would not reliably revoke an older remote mastery record; the union could restore it on the next sync.
+
+This is not safe to patch by deleting an ID in one branch. Before changing the behavior, define and approve the learning semantics: whether mastery is permanent once achieved, whether a failed retake can revoke it, and whether retention checks are separate from initial mastery. The UI, progression gates, profile statistics, badges, XP, and cloud reconciliation must all use the same approved definition.
+
+### Required acceptance tests
+
+1. A student who has never mastered a lesson cannot unlock the next lesson by completing training without passing the mastery assessment.
+2. A first attempt below 80% does not create mastery, mastery XP, or unlock progression.
+3. A passing attempt creates exactly one mastery record and unlocks the next lesson.
+4. A later failed retake follows the explicitly approved policy consistently across the lesson tile, course lock, profile count, badges, XP, and cloud state.
+5. Syncing local and remote progress in either order cannot resurrect a mastery state that the approved policy says should be revoked.
+6. Two devices signed into the same synthetic account converge to the same mastery state after offline edits and sync; two different accounts never share mastery.
+7. Lesson completion, training completion, review status, XP, and mastery remain distinct concepts and cannot be substituted for one another in reports.
+
+**Release gate:** do not claim the mentor's mastery/progression requirements are fully satisfied until this inconsistency is resolved under an approved policy and covered by local/cloud regression tests. No production code or student progress data was changed during this audit.
+
 ## Login rate-limit proxy trust — required before production deployment
 
 The username-login Edge Function currently derives its rate-limit address from `cf-connecting-ip`, falling back to the last value in `x-forwarded-for`. Hashing the address before storing the rate-limit key does not establish that the address itself is trustworthy.
