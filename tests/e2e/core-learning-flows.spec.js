@@ -74,3 +74,18 @@ test('vocabulary search can find and open a word from the library', async ({ pag
 
   await expect(page.locator('#vocabResults .vocab-focus-word')).toHaveText('school');
 });
+
+test('lesson audio explains when speech synthesis is unavailable', async ({ page }) => {
+  await page.addInitScript(() => {
+    try { delete window.speechSynthesis; } catch {}
+    try { delete window.SpeechSynthesisUtterance; } catch {}
+  });
+
+  await openCourses(page);
+  await page.locator('#courseGrid button').first().click();
+  await page.locator('#sayWord').click();
+
+  await expect(page.locator('body')).toContainText(
+    'النطق غير مدعوم في هذا المتصفح؛ جرّب Safari أو Chrome محدثًا'
+  );
+});
