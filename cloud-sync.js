@@ -556,6 +556,10 @@
         try{if(localStorage.getItem('english-hero-cloud-owner')===targetUserId)localStorage.removeItem('english-hero-cloud-owner');}catch{}
         renderStats();renderCourses();renderHome();renderProfile();renderReview();
         return true;
+      }catch(error){
+        // If sign-out failed without changing identity, restore the usable signed-in state.
+        if(user?.id===targetUserId&&progressOwnerUserId===targetUserId)ready=true;
+        throw error;
       }finally{
         clearingLocalAccountData=false;
         setSignedInUI();
