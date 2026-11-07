@@ -235,3 +235,30 @@ test('a stale profile response from the previous account cannot unlock the next 
   await expect(page.locator('#authOnboardingPane')).toBeVisible();
   await expect(page.locator('#authLoginPane')).toBeHidden();
 });
+
+test('password recovery request sends a reset email without revealing whether an account exists', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.locator('#authForgotPassword').click();
+  await expect(page.locator('#authRecoveryRequestPane')).toBeVisible();
+  await page.locator('#authRecoveryEmail').fill('student@example.com');
+  await page.locator('#authRecoveryRequestForm button[type="submit"]').click();
+  await expect(page.locator('#authGatewayMessage')).toContainText('إذا كان البريد مرتبطًا بحساب');
+});
+
+test('verified password recovery updates the password and restores the signed-in student', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__setMockUser('mock-student', true);
+    window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+      detail: { event: 'PASSWORD_RECOVERY', user: { id: 'mock-student' } }
+    }));
+  });
+  await expect(page.locator('#authRecoveryCompletePane')).toBeVisible();
+  await page.locator('#authRecoveryNewPassword').fill('new-safe-password-456');
+  await page.locator('#authRecoveryConfirmPassword').fill('new-safe-password-456');
+  await page.locator('#authRecoveryCompleteForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeHidden();
+  await expect(page.locator('#home')).toBeVisible();
+});
