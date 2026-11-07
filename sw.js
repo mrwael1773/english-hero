@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE_NAME = 'english-hero-shell-v117';
-const APP_SHELL = ['./', './index.html', './english-basics.html', './english-tenses-guide.html', './privacy.html', './contact.html', './teacher-pilot.html', './grammar-lesson.html', './grammar-library.html', './grammar-category.html', './grammar-lessons.js?v=4', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js?v=3', './pro-dashboard.js?v=4', './learning-expansion.js?v=62', './english-hero-plus.js?v=68', './vocabulary-20000.json', './site-quick-nav.css?v=1', './site-quick-nav.js?v=1', './auth-gateway.css?v=1', './auth-gateway.js?v=2', './auth-guard.js?v=1'];
+const CACHE_NAME = 'english-hero-shell-v118';
+const APP_SHELL = ['./', './index.html', './english-basics.html', './english-tenses-guide.html', './privacy.html', './contact.html', './teacher-pilot.html', './grammar-lesson.html', './grammar-library.html', './grammar-category.html', './grammar-lessons.js?v=4', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js?v=4', './pro-dashboard.js?v=4', './learning-expansion.js?v=62', './english-hero-plus.js?v=68', './vocabulary-20000.json', './site-quick-nav.css?v=1', './site-quick-nav.js?v=1', './auth-gateway.css?v=1', './auth-gateway.js?v=3', './auth-guard.js?v=1'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
