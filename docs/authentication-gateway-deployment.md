@@ -154,3 +154,15 @@ The UI and mocked browser tests are implemented, but no real production recovery
 ## Current limitation
 
 GitHub browser tests mock the cloud-auth boundary. They validate gateway navigation and local UI behavior, not real Google OAuth, production database policies, or the deployed Edge Function. A successful CI run is not sufficient evidence of school readiness.
+
+
+## Legacy verified email/password account compatibility
+
+The original Google-only onboarding rule blocked verified email/password accounts created before the student gateway existed. Migration `20261107170000_allow_legacy_verified_email_accounts.sql` adds a narrowly bounded compatibility path:
+
+- A legacy account may claim its own student username only when its Auth user was created before the fixed UTC cutover `2026-11-07 00:00:00+00`, its email is verified, and the request has an authenticated Supabase session.
+- The RPC still derives ownership exclusively from `auth.uid()`; it cannot create or edit another user's profile.
+- Accounts created on or after the cutover continue to require a verified Google identity.
+- The migration does not create, delete, or rewrite Auth users or learning-progress rows. Existing cloud progress remains keyed to the same Auth user ID.
+
+This migration is staged in the PR only. It has not been applied to production. Before production application, review the SQL, reconcile the environment-specific migration ledger, and test both a pre-cutover verified email-only identity and a post-cutover email-only identity in an isolated test project. Verify the legacy account's original progress row remains unchanged.
