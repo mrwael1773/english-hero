@@ -264,3 +264,13 @@ test('verified password recovery updates the password and restores the signed-in
   await expect(page.locator('#authGateway')).toBeHidden();
   await expect(page.locator('#home')).toBeVisible();
 });
+
+test('password recovery remains the active gateway state after a page reload', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.evaluate(() => sessionStorage.setItem('englishHeroPasswordRecovery', '1'));
+  await page.reload();
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authRecoveryCompletePane')).toBeVisible();
+  await expect(page.locator('#home')).not.toBeVisible();
+});
