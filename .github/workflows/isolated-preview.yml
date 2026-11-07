@@ -53,6 +53,15 @@ jobs:
           html = html.replace('    |' + chr(10) + '    <a href="teacher-pilot.html">مسار تدريبي تجريبي</a>' + chr(10), '')
           page.write_text(html, encoding="utf-8")
           assert 'teacher-pilot.html' not in html, 'Excluded teacher page link remains in preview index'
+
+          # Remove the excluded page from the offline app-shell cache as well.
+          worker = Path("preview-site/sw.js")
+          if worker.exists():
+              sw = worker.read_text(encoding="utf-8")
+              sw = sw.replace("'./teacher-pilot.html', ", "")
+              sw = sw.replace("'./teacher-pilot.html',", "")
+              worker.write_text(sw, encoding="utf-8")
+              assert 'teacher-pilot.html' not in sw, 'Excluded teacher page remains in service-worker app shell'
           PY
 
           # The artifact must never point at the production student database.
