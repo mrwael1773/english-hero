@@ -33,7 +33,7 @@ The production audit also found:
 - The production security advisor reports leaked-password protection disabled. Review and enable it in Supabase Auth settings before school use, after confirming its impact on the chosen student password policy.
 - The production performance advisor returned no findings.
 
-The separate test project `knjcyuvhaoievxkzcdog` has the eight username-auth migrations, owner-scoped progress/profile policies, and active `student-username-login` Edge Function version 1. It is a test environment only; its successful schema checks do not prepare production automatically.
+The separate test project `knjcyuvhaoievxkzcdog` has the eight username-auth migrations, owner-scoped progress/profile policies, and active `student-username-login` Edge Function version 1. It is a test environment only; its successful schema checks do not prepare production automatically. Its Security Advisor currently reports two informational `rls_enabled_no_policy` findings for the private login tables; these are intentional only while `anon`/`authenticated` have no private-schema usage or table grants and FORCE RLS remains enabled. Do not add client policies to silence this notice. The `claim_student_username` SECURITY DEFINER warning is also expected only while its ownership, verified-Google-identity, and fixed-search-path checks remain intact.
 
 ## 2. Google OAuth
 
