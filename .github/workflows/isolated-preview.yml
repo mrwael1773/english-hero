@@ -50,8 +50,9 @@ jobs:
           from pathlib import Path
           page = Path("preview-site/index.html")
           html = page.read_text(encoding="utf-8")
-          html = html.replace('    |\\n    <a href="teacher-pilot.html">مسار تدريبي تجريبي</a>\\n', '')
+          html = html.replace('    |' + chr(10) + '    <a href="teacher-pilot.html">مسار تدريبي تجريبي</a>' + chr(10), '')
           page.write_text(html, encoding="utf-8")
+          assert 'teacher-pilot.html' not in html, 'Excluded teacher page link remains in preview index'
           PY
 
           # The artifact must never point at the production student database.
