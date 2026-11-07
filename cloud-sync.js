@@ -547,16 +547,21 @@
           if(typeof defaults==='function')replaceProgress(defaults());
           window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event:'SIGNED_OUT',user:null}}));
         }
-        if(ownsActiveProgress)try{localStorage.removeItem('english-hero-academy-3');}catch{}
+        const failedKeys=[];
+        const removeAndVerify=key=>{
+          try{localStorage.removeItem(key);if(localStorage.getItem(key)!==null)failedKeys.push(key);}
+          catch{failedKeys.push(key);}
+        };
+        if(ownsActiveProgress)removeAndVerify('english-hero-academy-3');
         for(const key of [
           'english-hero-account-backup-'+targetUserId,
           'ehPlusV2:'+targetUserId,
           'englishHeroStudentTasksV1:'+targetUserId,
           'eh-scenarios-done:'+targetUserId
-        ]){try{localStorage.removeItem(key);}catch{}}
-        try{if(localStorage.getItem('english-hero-cloud-owner')===targetUserId)localStorage.removeItem('english-hero-cloud-owner');}catch{}
+        ])removeAndVerify(key);
+        try{if(localStorage.getItem('english-hero-cloud-owner')===targetUserId)removeAndVerify('english-hero-cloud-owner');}catch{failedKeys.push('english-hero-cloud-owner');}
         renderStats();renderCourses();renderHome();renderProfile();renderReview();
-        return true;
+        return {partial:failedKeys.length>0};
       }catch(error){
         // If sign-out failed without changing identity, restore the usable signed-in state.
         if(user?.id===targetUserId&&progressOwnerUserId===targetUserId)ready=true;
