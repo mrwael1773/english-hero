@@ -26,6 +26,8 @@ async function installAuthMock(page) {
         signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',false);},
         isReady:()=>ready,
         setPassword:async()=>{},
+        sendPasswordRecovery:async(email)=>{window.__recoveryEmail=email;},
+        updateRecoveredPassword:async(password)=>{window.__recoveredPassword=password;},
         claimProfile:async(username,displayName)=>{profile={username,display_name:displayName};return profile;}
       };
       window.__setCloudReady=value=>{ready=value;};
