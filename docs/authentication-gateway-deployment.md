@@ -28,7 +28,7 @@ The connected production project `cajevfsdhtbhtzcphbsz` was inspected without ch
 
 The production audit also found:
 - `public.learning_progress` has owner-scoped authenticated SELECT/INSERT/UPDATE policies.
-- `public.teacher_pilot_results` has authenticated owner-only CRUD policies. These policies do **not** grant teachers access to students' results; there is no teacher-role policy.
+- `public.teacher_pilot_results` has authenticated owner-only CRUD policies and authenticated INSERT/UPDATE/DELETE grants. Despite policy names containing “Teachers”, no teacher role is checked: **any authenticated account can create, edit, or delete its own result row**. These rows are therefore self-submitted and must not be treated as verified teacher assessments or official school results. Before using this table for school reporting, remove direct student write access and move result entry behind a server-enforced teacher role with auditable teacher-to-class/student authorization. No production permissions were changed during this audit.
 - Legacy `public.student_progress` and `public.analytics_events` have RLS enabled but no policies. The inspected grants show no anon/authenticated table privileges; the service role retains access where applicable. Treat these as locked legacy/administrative tables, not as usable student or teacher APIs. Do not add broad policies just to silence the advisor.
 - The production security advisor reports leaked-password protection disabled. Review and enable it in Supabase Auth settings before school use, after confirming its impact on the chosen student password policy.
 - The production performance advisor returned no findings.
