@@ -54,13 +54,13 @@ Deno.serve(async (request: Request) => {
     return json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة." }, 400);
   }
 
-  // Use the last proxy-added address rather than trusting a client-supplied first value.
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",").map((part) => part.trim()).filter(Boolean);
-  const ip = request.headers.get("cf-connecting-ip") ?? forwarded?.at(-1) ?? "";
-  if (!ip || ip.length > 64) return json({ error: "Authentication service unavailable" }, 503);
-  const attemptKey = await sha256(`${username}\n${ip}`);
+  // Username throttling is authoritative. Treat the edge-provided CF header as
+  // an optional secondary signal only; never trust a client-supplied X-Forwarded-For.
+  const candidateIp = request.headers.get("cf-connecting-ip")?.trim() ?? "";
+  const ip = candidateIp.length > 0 && candidateIp.length <= 64 ? candidateIp : null;
+  const attemptKey = await sha256(`${username}\n${ip ?? "no-ip"}`);
   const usernameAttemptKey = await sha256(`username\n${username}`);
-  const ipAttemptKey = await sha256(`ip\n${ip}`);
+  const ipAttemptKey = ip ? await sha256(`ip\n${ip}`) : null;
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -81,11 +81,13 @@ Deno.serve(async (request: Request) => {
   if (usernameRateError) return json({ error: "Authentication service unavailable" }, 503);
   if (usernameAllowed !== true) return json({ error: "محاولات كثيرة لهذا المستخدم. انتظر 15 دقيقة ثم حاول مجددًا." }, 429);
 
-  const { data: ipAllowed, error: ipRateError } = await admin.rpc("consume_student_login_ip_attempt", {
-    p_attempt_key: ipAttemptKey,
-  });
-  if (ipRateError) return json({ error: "Authentication service unavailable" }, 503);
-  if (ipAllowed !== true) return json({ error: "محاولات كثيرة من هذا الاتصال. انتظر 15 دقيقة ثم حاول مجددًا." }, 429);
+  if (ipAttemptKey) {
+    const { data: ipAllowed, error: ipRateError } = await admin.rpc("consume_student_login_ip_attempt", {
+      p_attempt_key: ipAttemptKey,
+    });
+    if (ipRateError) return json({ error: "Authentication service unavailable" }, 503);
+    if (ipAllowed !== true) return json({ error: "محاولات كثيرة من هذا الاتصال. انتظر 15 دقيقة ثم حاول مجددًا." }, 429);
+  }
 
   const { data: userId, error: lookupError } = await admin.rpc("resolve_student_login_user_id", {
     p_username: username,
