@@ -236,7 +236,7 @@ test('account switch followed by sign-out backs up progress only for its actual 
   expect(uploadsAsB.every(call => call.progress.xp !== 41 && !call.progress.saved?.includes('account-a-cloud-word'))).toBe(true);
 });
 
-test('clears only the active account's local data without deleting cloud progress or other accounts', async ({ page }) => {
+test("clears only the active account's local data without deleting cloud progress or other accounts", async ({ page }) => {
   await page.goto('/privacy.html');
   await page.evaluate(() => {
     document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><button id="cloudClearLocalData"></button><div id="cloudUser"></div>';
