@@ -338,3 +338,53 @@ test('clears only the active account's local data without deleting cloud progres
     'english-hero-unclaimed-local-backup-123'
   ]) expect(result.keys).toContain(key);
 });
+
+test('failed local cleanup sign-out preserves all account data and restores the signed-in state', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><button id="cloudClearLocalData"></button><div id="cloudUser"></div>';
+    const active = {xp:55,best:50,quizzes:2,completed:[1],masteredLessons:[1],saved:['account-a-word']};
+    localStorage.setItem('english-hero-academy-3',JSON.stringify(active));
+    localStorage.setItem('english-hero-cloud-owner','account-A');
+    localStorage.setItem('english-hero-account-backup-account-A',JSON.stringify(active));
+    localStorage.setItem('ehPlusV2:account-A',JSON.stringify({points:45}));
+    window.state=active;
+    window.defaults=()=>({xp:0,best:0,quizzes:0,completed:[],masteredLessons:[],saved:[]});
+    window.replaceProgress=value=>{window.state={...window.defaults(),...value};};
+    window.mergeProgress=value=>{window.state={...window.state,...value};};
+    window.lessons=[];
+    window.normalizeMasteredLessons=values=>values;
+    window.mergeReviewProgress=()=>({});
+    window.reconcileReviewMisses=()=>({});
+    for(const name of ['renderStats','renderCourses','renderHome','renderProfile','renderReview'])window[name]=()=>{};
+    window.ENGLISH_HERO_CLOUD_CONFIG={supabaseUrl:'https://example-project.supabase.co',supabaseAnonKey:'public-anon-key-that-is-long-enough-for-test'};
+    window.confirm=()=>true;
+    window.supabase={createClient:()=>({
+      auth:{
+        getSession:async()=>({data:{session:{user:{id:'account-A'}}},error:null}),
+        onAuthStateChange:callback=>{window.__authStateCallback=callback;return{data:{subscription:{unsubscribe(){}}}};},
+        signOut:async options=>({error:new Error('simulated sign-out failure')})
+      },
+      from:()=>({select(){return this;},eq(){return this;},maybeSingle(){return this;},upsert(){return this;},abortSignal(){return Promise.resolve({data:null,error:null});}})
+    })};
+  });
+  await page.addScriptTag({path:'cloud-sync.js'});
+  await page.evaluate(()=>window.EnglishHeroCloudReady);
+  await page.locator('#cloudClearLocalData').click();
+  await expect(page.locator('#cloudStatus')).toContainText('لم نحذف بيانات الحساب المحلية');
+  await expect(page.locator('#cloudClearLocalData')).toBeEnabled();
+  const preserved=await page.evaluate(()=>({
+    user:window.EnglishHeroCloud.getUser()?.id,
+    ready:window.EnglishHeroCloud.isReady(),
+    owner:localStorage.getItem('english-hero-cloud-owner'),
+    active:JSON.parse(localStorage.getItem('english-hero-academy-3')||'null'),
+    backup:JSON.parse(localStorage.getItem('english-hero-account-backup-account-A')||'null'),
+    plus:JSON.parse(localStorage.getItem('ehPlusV2:account-A')||'null')
+  }));
+  expect(preserved.user).toBe('account-A');
+  expect(preserved.ready).toBe(true);
+  expect(preserved.owner).toBe('account-A');
+  expect(preserved.active.xp).toBe(55);
+  expect(preserved.backup.xp).toBe(55);
+  expect(preserved.plus.points).toBe(45);
+});
