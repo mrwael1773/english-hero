@@ -415,7 +415,7 @@ test('XP alone cannot unlock the mastery rank without 15 mastered lessons', asyn
   await page.reload();
   masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
   await expect(masteryStage).toContainText('يتطلب 800 XP وإتقان 15 درسًا');
-  await expect(masteryStage).toContainText('مقفل');
+  await expect(masteryStage).toBeDisabled();
 
   await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
