@@ -68,6 +68,30 @@ The separate test project `knjcyuvhaoievxkzcdog` was checked without changing pr
 - Confirm the service worker refreshes the new gateway assets and does not serve stale authentication code.
 - Review Supabase Auth rate limits and leaked-password protection settings. Do not change production settings without approval.
 
+## Account recovery design — required before school pilot
+
+The current gateway must remain without a self-service recovery button until a recovery method is approved and implemented. A reset based only on a username, display name, class, date of birth, or answers to personal questions is not acceptable: those details may be known by classmates and would permit account takeover.
+
+### Permitted recovery routes
+
+1. **Google identity still accessible:** direct the student to Google's official account-recovery process. English Hero must not collect Google passwords or verification codes.
+2. **Google identity unavailable:** use a school-approved, out-of-band identity verification process administered by an explicitly authorized school staff member. The verification decision must not be made by a normal student account or by anyone who can only see the student's username.
+3. **After verification:** issue a short-lived, single-use recovery authorization through a channel controlled by the school and verified for that student. The server must bind it to exactly one existing Auth user ID, expire it quickly, rate-limit attempts, and record who authorized and completed the recovery. Never expose or accept a service-role key in the browser.
+4. **Credential change:** require the student to set a new password through Supabase Auth's supported recovery/session mechanism. Revoke existing sessions where supported and notify the student's previously verified contact channel when possible.
+5. **Preserve ownership:** retain the existing Supabase Auth user ID and its progress rows. Do not create a replacement account and copy progress by username; do not edit ownership columns manually.
+
+### Required implementation and acceptance tests
+
+- Document who at the school is authorized to verify identity and how that authorization is provisioned, reviewed, and revoked.
+- Define a fallback for students who have no accessible verified contact channel; do not silently weaken identity checks.
+- Test valid recovery, expired token, reused token, wrong-account token, excessive attempts, concurrent redemption, unauthorized staff, and revoked staff access.
+- Verify account A cannot recover account B using B's username or public profile details.
+- Verify the existing Auth user ID and learning progress remain unchanged after recovery.
+- Audit-log the staff actor, target Auth user ID, timestamp, outcome, and recovery request ID; do not log passwords, tokens, or unnecessary personal details.
+- Obtain school approval for the operational procedure and privacy notice before enabling the feature.
+
+**Release gate:** until this design is approved, implemented server-side, independently reviewed, and tested, account recovery remains an explicit school-pilot blocker. Do not deploy a partial or username-only reset flow.
+
 ## Additional school-release blockers
 
 - **Teacher pilot page:** `teacher-pilot.html` is a public, static training demonstration, not a teacher dashboard and not a teacher-authenticated route. Its temporary tab-scoped session state is not an account, identity check, or official student record. Keep it limited to synthetic/demo data; do not enter names, grades, class lists, or identifiable student information. The `noindex` metadata is not access control.
