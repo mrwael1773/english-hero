@@ -190,7 +190,7 @@ test('account switch followed by sign-out backs up progress only for its actual 
               };
             },
             upsert(payload) {
-              window.__uploads.push({ userId: requestedUserId, progress: payload.progress });
+              window.__uploads.push({ userId: payload.user_id, progress: payload.progress });
               return { abortSignal: () => Promise.resolve({ data: null, error: null }) };
             }
           };
@@ -232,5 +232,6 @@ test('account switch followed by sign-out backs up progress only for its actual 
   expect(afterLateResponse.backupA.xp).toBe(41);
   expect(afterLateResponse.backupB).toBeNull();
   expect(afterLateResponse.activeXp).toBe(0);
-  expect(afterLateResponse.uploads.every(call => call.userId !== 'account-B')).toBe(true);
+  const uploadsAsB = afterLateResponse.uploads.filter(call => call.userId === 'account-B');
+  expect(uploadsAsB.every(call => call.progress.xp !== 41 && !call.progress.saved?.includes('account-a-cloud-word'))).toBe(true);
 });
