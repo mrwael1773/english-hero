@@ -166,3 +166,5 @@ The original Google-only onboarding rule blocked verified email/password account
 - The migration does not create, delete, or rewrite Auth users or learning-progress rows. Existing cloud progress remains keyed to the same Auth user ID.
 
 This migration is staged in the PR only. It has not been applied to production. Before production application, review the SQL, reconcile the environment-specific migration ledger, and test both a pre-cutover verified email-only identity and a post-cutover email-only identity in an isolated test project. Verify the legacy account's original progress row remains unchanged.
+
+- The follow-up migration `20261107180000_restrict_legacy_claim_to_existing_learners.sql` tightens that exception further: a pre-cutover email-only account must already own a `learning_progress` row. This prevents unrelated legacy Auth accounts, including deferred staff accounts without learner progress, from claiming student profiles.
