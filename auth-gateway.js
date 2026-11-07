@@ -76,7 +76,9 @@
       gateway.querySelectorAll('button').forEach(button=>button.disabled=true);
       return;
     }
-    if(window.EnglishHeroPasswordRecovery){showRecoveryComplete();return;}
+    let recoveryPending=window.EnglishHeroPasswordRecovery===true;
+    try { recoveryPending=recoveryPending || sessionStorage.getItem('englishHeroPasswordRecovery')==='1'; } catch {}
+    if(recoveryPending){showRecoveryComplete();return;}
     await inspectSession();
   }
   tabs.forEach(tab=>tab.addEventListener('click',()=>showPane(tab.dataset.authMode)));
@@ -103,6 +105,7 @@
     try{
       await cloud.updateRecoveredPassword(password);
       window.EnglishHeroPasswordRecovery=false;
+      try { sessionStorage.removeItem('englishHeroPasswordRecovery'); } catch {}
       say('تم تحديث كلمة المرور. جارٍ استعادة تقدمك وفتح حسابك...','success');
       await inspectSession();
     }catch(error){say('تعذر تحديث كلمة المرور. قد يكون رابط الاستعادة منتهي الصلاحية أو مستخدمًا؛ اطلب رابطًا جديدًا.','error');}
