@@ -73,7 +73,7 @@ test('a transient profile read failure fails closed and redirects to the gateway
   await installGatewayRoute(page);
   await page.goto('/grammar-lesson.html#g-subject-pronouns');
 
-  await expect(page).toHaveURL(/\\/index\\.html\\?next=/);
+  await expect(page).toHaveURL(/\/index\.html\?next=/);
   await expect(page.locator('#authGateway')).toBeVisible();
   await expect(page.locator('body')).toContainText('بوابة الدخول');
 });
