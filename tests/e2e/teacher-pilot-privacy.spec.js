@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
 
+test('teacher pilot clearly identifies itself as a public demo, not a teacher dashboard', async ({ page }) => {
+  await page.goto('/teacher-pilot.html');
+  await expect(page.locator('.hero .notice')).toContainText('ليست لوحة معلم');
+  await expect(page.locator('.hero .notice')).toContainText('استخدم بيانات افتراضية فقط');
+});
+
 test('teacher pilot progress is isolated to the current tab and survives reload', async ({ page }) => {
   await page.goto('/teacher-pilot.html');
   await expect(page.locator('#trainingCount')).toContainText('0 من 6');
