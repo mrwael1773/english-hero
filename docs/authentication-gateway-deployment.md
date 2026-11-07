@@ -107,62 +107,37 @@ The current configured thresholds (username, username+IP, and IP) are defense-in
 
 **Release gate:** no production rollout of username login until proxy-header provenance and spoof-resistance are verified against the actual deployed Supabase Edge Function ingress. Do not infer this from local mocks or source inspection alone.
 
-## Teacher authorization design — required before school pilot
+## Teacher features — explicitly deferred
 
-The current application has no trusted teacher role. Do not infer teacher status from a username, email domain, display name, a browser-side flag, or a field editable through the student client. The existing `teacher-pilot.html` remains a synthetic-data demonstration only.
+Teacher accounts, teacher roles, teacher dashboards, and official teacher reporting are **out of scope for the current student-only release** at the project owner's direction. Do not build them or treat their absence as a blocker for a student-only pilot.
 
-### Minimum server-enforced model
+The public `teacher-pilot.html` remains a synthetic-data demonstration only. It must not collect real student names, grades, class lists, or identifiable student information. The `teacher_pilot_results` table and its historical rows are preserved for a future phase, but direct browser access has been revoked and RLS is forced. No student or ordinary authenticated client may write or read those records. Do not restore client CRUD. When teacher functionality is requested in a future phase, design and independently review server-enforced teacher provisioning, class/student assignments, RLS, audit trails, and cross-class isolation before reopening access.
 
-1. Provision teacher identities through a school-controlled administrative process after staff identity is verified. Record who approved the teacher, when approval occurred, and when it is revoked. Do not allow students or teachers to self-assign roles.
-2. Store role grants in a server-controlled table or trusted Auth application metadata written only by a privileged administrative process. Never trust `user_metadata` or client-supplied role claims for authorization.
-3. Model teacher-to-class/student access explicitly with an assignment table. A teacher may read only records for students/classes currently assigned to that teacher. Class transfers and revoked assignments must take effect without relying on a stale browser session.
-4. Enforce access in PostgreSQL RLS and, where necessary, narrowly scoped server-side RPCs/Edge Functions. A hidden UI element, route guard, CORS rule, or JavaScript check is not authorization.
-5. Remove direct student INSERT/UPDATE/DELETE privileges on official teacher assessment records. Permit writes only through a server-verified teacher operation that checks the teacher role and current assignment in the same transaction.
-6. Keep student learning progress owner-scoped. Teacher access must be read-only by default; any assessment write capability must be a separate, explicit permission with an audit trail.
-7. Log access and changes to official assessments with actor Auth user ID, target student ID, class/assignment context, operation, timestamp, and request ID. Do not log passwords, tokens, or unnecessary student information.
-8. Prevent cross-class and cross-school access by default. If school tenancy is introduced, include an immutable school boundary in every relevant relationship and policy; never rely on a client-supplied school ID alone.
+Student learning progress in `learning_progress` is separate and must remain intact and available only to its owning student.
 
-### Required tests
+## Student password recovery — implementation added, live verification pending
 
-- Student cannot list teachers' assigned students or read another student's progress.
-- Teacher A cannot read or modify a student assigned only to Teacher B.
-- Teacher access is denied immediately after assignment revocation or staff-role revocation, including through direct PostgREST/RPC requests.
-- A teacher cannot grant themselves a role, change their assignments, or submit an assessment for an unassigned student.
-- A student cannot write or alter an official assessment record, including by bypassing the UI.
-- Two schools/classes remain isolated if multi-school support is enabled.
-- Audit entries identify the authenticated actor and target, and cannot be edited by the actor through the public client.
-- Test with at least two synthetic students, two synthetic teachers, and separate class assignments; never use real student records in CI.
+The student gateway now includes:
+- A password-recovery request screen that accepts the email address associated with the student's verified Google identity.
+- A generic response that does not reveal whether an account exists.
+- A reset-completion screen that requires a valid Supabase recovery session before changing the password.
+- Password confirmation and length checks; the existing Auth user ID and its learning-progress ownership are preserved.
 
-**Release gate:** do not label the product as having teacher accounts, teacher dashboards, or official teacher reporting until the server-side role model, RLS policies, provisioning/revocation workflow, audit trail, and negative isolation tests are implemented and independently reviewed. Do not deploy speculative role migrations to production.
+The browser calls Supabase Auth `resetPasswordForEmail` and `updateUser`; it does not collect Google passwords or verification codes and does not use a browser-side service-role key.
 
-## Account recovery design — required before school pilot
+Before enabling this flow for students, verify in the production Supabase Auth settings:
+1. The email provider and email delivery configuration can send recovery messages reliably to the verified email addresses used at signup. Confirm any SMTP/provider requirements and rate limits.
+2. The exact deployed site URL is present in the Auth redirect allow-list. The current redirect target is the site's base path.
+3. The recovery link opens the deployed site, establishes a recovery session, and reaches the new-password screen on common personal mobile devices.
+4. A valid link succeeds; expired, reused, malformed, and wrong-account links fail safely.
+5. The existing Auth user ID and its `learning_progress` row remain unchanged after password recovery.
+6. Responses remain generic for unknown addresses, and no password, access token, or recovery token is written to logs or local storage.
 
-The current gateway must remain without a self-service recovery button until a recovery method is approved and implemented. A reset based only on a username, display name, class, date of birth, or answers to personal questions is not acceptable: those details may be known by classmates and would permit account takeover.
-
-### Permitted recovery routes
-
-1. **Google identity still accessible:** direct the student to Google's official account-recovery process. English Hero must not collect Google passwords or verification codes.
-2. **Google identity unavailable:** use a school-approved, out-of-band identity verification process administered by an explicitly authorized school staff member. The verification decision must not be made by a normal student account or by anyone who can only see the student's username.
-3. **After verification:** issue a short-lived, single-use recovery authorization through a channel controlled by the school and verified for that student. The server must bind it to exactly one existing Auth user ID, expire it quickly, rate-limit attempts, and record who authorized and completed the recovery. Never expose or accept a service-role key in the browser.
-4. **Credential change:** require the student to set a new password through Supabase Auth's supported recovery/session mechanism. Revoke existing sessions where supported and notify the student's previously verified contact channel when possible.
-5. **Preserve ownership:** retain the existing Supabase Auth user ID and its progress rows. Do not create a replacement account and copy progress by username; do not edit ownership columns manually.
-
-### Required implementation and acceptance tests
-
-- Document who at the school is authorized to verify identity and how that authorization is provisioned, reviewed, and revoked.
-- Define a fallback for students who have no accessible verified contact channel; do not silently weaken identity checks.
-- Test valid recovery, expired token, reused token, wrong-account token, excessive attempts, concurrent redemption, unauthorized staff, and revoked staff access.
-- Verify account A cannot recover account B using B's username or public profile details.
-- Verify the existing Auth user ID and learning progress remain unchanged after recovery.
-- Audit-log the staff actor, target Auth user ID, timestamp, outcome, and recovery request ID; do not log passwords, tokens, or unnecessary personal details.
-- Obtain school approval for the operational procedure and privacy notice before enabling the feature.
-
-**Release gate:** until this design is approved, implemented server-side, independently reviewed, and tested, account recovery remains an explicit school-pilot blocker. Do not deploy a partial or username-only reset flow.
+The UI and mocked browser tests are implemented, but no real production recovery email, SMTP configuration, redirect allow-list, or end-to-end recovery session has been verified through the available project API. **Do not describe account recovery as production-ready until these live checks pass.** If the production email delivery or redirect configuration is unavailable, leave the feature gated and use the verified Google account recovery route until an approved alternative is ready.
 
 ## Additional school-release blockers
 
-- **Teacher pilot page:** `teacher-pilot.html` is a public, static training demonstration, not a teacher dashboard and not a teacher-authenticated route. Its temporary tab-scoped session state is not an account, identity check, or official student record. Keep it limited to synthetic/demo data; do not enter names, grades, class lists, or identifiable student information. The `noindex` metadata is not access control.
-- **Teacher access:** this release has no trusted teacher role, teacher provisioning flow, or teacher-specific RLS policies. Do not give teachers student accounts or infer teacher permissions from a client-editable profile field. Design and independently review server-controlled role assignment, least-privilege teacher queries, audit logging, and cross-class/student isolation before enabling teacher access.
+- **Teacher features (deferred, not a student-release blocker):** teacher accounts and dashboards are out of scope. Keep `teacher-pilot.html` limited to synthetic/demo data; do not enter names, grades, class lists, or identifiable student information. The preserved `teacher_pilot_results` table is closed to browser clients until a future server-authorized teacher workflow is designed.
 - **Static lesson files:** the gateway and route guard are browser-side navigation controls. GitHub Pages still serves static HTML files directly, so they are not confidential resources and must not contain student records, answer keys intended to be private, or privileged teacher content. If lesson confidentiality is required, move protected content behind a server-enforced authorization boundary.
 - **Account recovery:** username/password login currently has no verified student recovery workflow. Keep the pilot blocked until recovery is designed around the verified Google identity or another school-approved process, with rate limits and tests that prevent account takeover and cross-account recovery.
 - **Shared-device data:** local account backups may contain the last 60 chat messages. Sign-out/account switching preserves a local backup; this is disclosed in the privacy policy. The account page now provides a confirmed, account-scoped “delete this account's data from this device” action. Its browser regressions cover active-account-only deletion, preservation of other accounts and unclaimed backups, no cloud deletion or blank-progress upload, sign-out failure, mismatched owner markers, and partial storage-removal failures. The confirmation warns that unsynchronized changes will be lost. If the browser reports a partial cleanup, do not hand off the device until site data is cleared through browser settings. These automated tests do not replace validation on the actual school browsers/devices or an approved device-handoff procedure.
