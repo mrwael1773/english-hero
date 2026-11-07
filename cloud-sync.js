@@ -529,6 +529,7 @@
       const targetUserId=user.id;
       let storedOwner='';
       try{storedOwner=localStorage.getItem('english-hero-cloud-owner')||'';}catch{}
+      if(storedOwner&&storedOwner!==targetUserId)throw new Error('تعذر التحقق من مالك التقدم المحلي؛ لم نغيّر أي بيانات.');
       const ownsActiveProgress=progressOwnerUserId===targetUserId&&(!storedOwner||storedOwner===targetUserId);
       clearingLocalAccountData=true;
       ready=false;
