@@ -39,7 +39,7 @@
     if(requestedNextPath)location.replace(requestedNextPath);
   }
   function lock(){gateway.hidden=false;document.body.classList.add('auth-gateway-pending');}
-  function showRecoveryComplete(){lock();showPane('recoveryComplete');say('أدخل كلمة مرور جديدة لحسابك.');}
+  function showRecoveryComplete(){sessionCheckId++;lock();showPane('recoveryComplete');say('أدخل كلمة مرور جديدة لحسابك.');}
   async function inspectSession(){
     const checkId=++sessionCheckId;
     const user=cloud.getUser();
