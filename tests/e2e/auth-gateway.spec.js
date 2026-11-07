@@ -265,6 +265,36 @@ test('verified password recovery updates the password and restores the signed-in
   await expect(page.locator('#home')).toBeVisible();
 });
 
+test('legacy verified email account can finish onboarding after password recovery', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__setMockUserWithoutProfile('legacy-email-student');
+    window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+      detail: { event: 'PASSWORD_RECOVERY', user: { id: 'legacy-email-student' } }
+    }));
+  });
+  await expect(page.locator('#authRecoveryCompletePane')).toBeVisible();
+
+  await page.locator('#authRecoveryNewPassword').fill('legacy-new-password-789');
+  await page.locator('#authRecoveryConfirmPassword').fill('legacy-new-password-789');
+  await page.locator('#authRecoveryCompleteForm button[type="submit"]').click();
+
+  // Existing accounts without a gateway profile must be sent to onboarding,
+  // not treated as a brand-new Auth identity or shown the learning screens.
+  await expect(page.locator('#authOnboardingPane')).toBeVisible();
+  await expect(page.locator('#home')).not.toBeVisible();
+
+  await page.locator('#authDisplayName').fill('طالب قديم');
+  await page.locator('#authNewUsername').fill('legacy_student');
+  await page.locator('#authNewPassword').fill('legacy-new-password-789');
+  await page.locator('#authConfirmPassword').fill('legacy-new-password-789');
+  await page.locator('#authOnboardingForm button[type="submit"]').click();
+
+  await expect(page.locator('#authGateway')).toBeHidden();
+  await expect(page.locator('#home')).toBeVisible();
+});
+
 test('password recovery remains the active gateway state after a page reload', async ({ page }) => {
   await installAuthMock(page);
   await page.goto('/');
