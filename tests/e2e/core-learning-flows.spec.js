@@ -77,8 +77,10 @@ test('vocabulary search can find and open a word from the library', async ({ pag
 
 test('lesson audio explains when speech synthesis is unavailable', async ({ page }) => {
   await page.addInitScript(() => {
-    try { delete window.speechSynthesis; } catch {}
-    try { delete window.SpeechSynthesisUtterance; } catch {}
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      configurable: true,
+      value: undefined
+    });
   });
 
   await openCourses(page);
