@@ -12,6 +12,8 @@
   };
   let client = null;
   let user = null;
+  // Track the owner of in-memory progress independently from the current auth session.
+  let progressOwnerUserId = null;
   let ready = false;
   let timer = null;
   let revision = 0;
@@ -74,7 +76,7 @@
     }
   };
   async function uploadProgress(){
-    if(!client||!user||!ready) return false;
+    if(!client||!user||!ready||progressOwnerUserId!==user.id) return false;
     const syncUserId=user.id;
     const current=revision;
     let snapshot;
@@ -96,6 +98,7 @@
         if(error) throw error;
         // Never associate this device's local copy with a different account.
         if(user?.id===syncUserId){
+          progressOwnerUserId=syncUserId;
           try { localStorage.setItem('english-hero-cloud-owner',syncUserId); } catch {}
           if(current===revision) status('✅ تمت مزامنة تقدمك مع حسابك السحابي.');
         }
@@ -119,7 +122,7 @@
     }catch(error){status('حُفظ الاسم محليًا، لكن تعذّر تحديثه سحابيًا.');console.error('English Hero display name:',error?.message||error);}
   };
   window.queueCloudSave=function(){
-    if(!user||!ready) return;
+    if(!user||!ready||progressOwnerUserId!==user.id) return;
     revision++;
     clearTimeout(timer);
     timer=setTimeout(uploadProgress,900);
@@ -199,8 +202,10 @@
         let localOwner='';
         try { localOwner=localStorage.getItem('english-hero-cloud-owner')||''; } catch {}
         if(localOwner && localOwner!==syncUserId){
-          // Preserve the previous account's local snapshot before switching the active state.
-          try { localStorage.setItem('english-hero-account-backup-'+localOwner,JSON.stringify(state)); } catch {}
+          // Preserve the outgoing snapshot only under the identity that actually owns it.
+          if(progressOwnerUserId===localOwner){
+            try { localStorage.setItem('english-hero-account-backup-'+localOwner,JSON.stringify(state)); } catch {}
+          }
           replaceProgress(remoteProgress||{});
           status(remoteProgress?'تم تحميل تقدم هذا الحساب فقط. حُفظت نسخة محلية من الحساب السابق.':'حساب جديد على هذا الجهاز؛ سيبدأ بتقدم مستقل، مع الاحتفاظ بنسخة الحساب السابق.');
         } else if(!localOwner && remoteProgress){
@@ -222,6 +227,9 @@
         } else if(remoteProgress){
           mergeProgress(remoteProgress);
         }
+        // The verified cloud read/merge now makes the active state belong to this account.
+        progressOwnerUserId=syncUserId;
+        try { localStorage.setItem('english-hero-cloud-owner',syncUserId); } catch {}
         ready=true;setSignedInUI();
         renderStats();renderCourses();renderHome();renderProfile();renderReview();
         revision++;
@@ -255,6 +263,7 @@
       });
       const {data,error}=await client.auth.getSession();
       if(error) throw error;
+      try { progressOwnerUserId=localStorage.getItem('english-hero-cloud-owner')||null; } catch { progressOwnerUserId=null; }
       user=data.session?.user||null;
       setSignedInUI();
       client.auth.onAuthStateChange((event,session)=>{
@@ -269,8 +278,14 @@
         if(event==='SIGNED_OUT'){
           ready=false;
           clearTimeout(timer);
-          try { if(previousUser) localStorage.setItem('english-hero-account-backup-'+previousUser.id,JSON.stringify(state)); } catch {}
+          // Save under the in-memory snapshot's owner, not the latest auth identity.
+          // Unclaimed device state remains unclaimed rather than being attributed to a student.
+          try {
+            if(progressOwnerUserId) localStorage.setItem('english-hero-account-backup-'+progressOwnerUserId,JSON.stringify(state));
+            else localStorage.setItem('english-hero-unclaimed-local-backup-'+Date.now(),JSON.stringify(state));
+          } catch {}
           try { localStorage.removeItem('english-hero-cloud-owner'); } catch {}
+          progressOwnerUserId=null;
           if(typeof defaults==='function') replaceProgress(defaults());
           renderStats();renderCourses();renderHome();renderProfile();renderReview();
           status('تم تسجيل الخروج. حُفظت نسخة محلية للحساب السابق، وأُعيدت الشاشة إلى تقدم مستقل.');
@@ -363,7 +378,7 @@
     if(button) button.disabled=true;
     status('جارٍ حفظ آخر تقدم قبل تسجيل الخروج...');
     try {
-      if(user && ready){
+      if(user && ready && progressOwnerUserId===user.id){
         clearTimeout(timer);
         await uploadProgress();
         try { localStorage.setItem('english-hero-account-backup-'+user.id,JSON.stringify(state)); } catch {}
