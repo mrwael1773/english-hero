@@ -1,0 +1,75 @@
+name: English Hero isolated preview package
+
+on:
+  push:
+    branches:
+      - preview/auth-pr64
+
+permissions:
+  contents: read
+
+concurrency:
+  group: english-hero-preview-package
+  cancel-in-progress: true
+
+jobs:
+  package-preview:
+    name: Build isolated preview artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out preview branch
+        uses: actions/checkout@v4
+
+      - name: Assemble public student-site files only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p preview-site
+          rsync -a ./ preview-site/ \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='tests/' \
+            --exclude='supabase/' \
+            --exclude='scripts/' \
+            --exclude='docs/' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='*.sql' \
+            --exclude='package.json' \
+            --exclude='package-lock.json' \
+            --exclude='playwright.config.mjs' \
+            --exclude='CLOUD_SETUP.md' \
+            --exclude='README.md' \
+            --exclude='teacher-pilot.html' \
+            --exclude='school-pilot.html' \
+            --exclude='preview-site/'
+
+          # The artifact must never point at the production student database.
+          cat > preview-site/config.js <<'CONFIG'
+          /* Isolated preview only: this is the public publishable key for the test project. */
+          window.ENGLISH_HERO_CLOUD_CONFIG = {
+            supabaseUrl: "https://knjcyuvhaoievxkzcdog.supabase.co",
+            supabaseAnonKey: "sb_publishable_YH1RhKd1BkVvskUmW6yjAQ_6q3IGSba"
+          };
+          CONFIG
+
+          test -s preview-site/index.html
+          test -s preview-site/config.js
+          if grep -R -n --exclude='config.js' 'cajevfsdhtbhtzcphbsz' preview-site; then
+            echo "Production Supabase project reference found in preview artifact."
+            exit 1
+          fi
+          if find preview-site -type f \( -name '*.sql' -o -name '.env' -o -name '.env.*' \) | grep -q .; then
+            echo "Sensitive setup file found in preview artifact."
+            exit 1
+          fi
+          echo "Isolated preview package assembled without production Supabase configuration."
+
+      - name: Upload isolated preview package
+        uses: actions/upload-artifact@v4
+        with:
+          name: english-hero-isolated-preview
+          path: preview-site/
+          if-no-files-found: error
+          retention-days: 3
