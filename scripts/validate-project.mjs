@@ -102,6 +102,7 @@ check(cloud.indexOf('if(user) await syncNow()') >= 0 && cloud.indexOf('if(user) 
 check(cloud.includes('options:{redirectTo:location.href}'), 'Google OAuth preserves the protected learning-page destination through its callback');
 check(supabaseConfig.includes('[functions.student-username-login]') && supabaseConfig.includes('verify_jwt = false'), 'Username login endpoint is configured for its explicit unauthenticated login flow');
 check(/src="\.\/grammar-lessons\.js\?v=4"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
+check(html.includes('delete backupData.chatHistory') && html.includes('state.chatHistory=[]'), 'Progress backup export and import exclude private chat history');
 check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
 check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.includes("makeSection('challenge'") && grammarLessonPage.includes("setAttribute('aria-live','polite')"), 'Dedicated lesson page provides a challenge area with accessible feedback');
 check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
