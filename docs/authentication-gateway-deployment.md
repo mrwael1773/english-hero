@@ -45,6 +45,13 @@ This change is intentionally prepared for review only. Do not deploy it to the s
 - Confirm the service worker refreshes the new gateway assets and does not serve stale authentication code.
 - Review Supabase Auth rate limits and leaked-password protection settings. Do not change production settings without approval.
 
+## Additional school-release blockers
+
+- **Teacher access:** this release has no trusted teacher role, teacher provisioning flow, or teacher-specific RLS policies. Do not give teachers student accounts or infer teacher permissions from a client-editable profile field. Design and independently review server-controlled role assignment, least-privilege teacher queries, audit logging, and cross-class/student isolation before enabling teacher access.
+- **Static lesson files:** the gateway and route guard are browser-side navigation controls. GitHub Pages still serves static HTML files directly, so they are not confidential resources and must not contain student records, answer keys intended to be private, or privileged teacher content. If lesson confidentiality is required, move protected content behind a server-enforced authorization boundary.
+- **Account recovery:** username/password login currently has no verified student recovery workflow. Keep the pilot blocked until recovery is designed around the verified Google identity or another school-approved process, with rate limits and tests that prevent account takeover and cross-account recovery.
+- **Shared-device data:** local account backups may contain the last 60 chat messages. Sign-out/account switching preserves a local backup; this is disclosed in the privacy policy. Define and test a school-device cleanup procedure before shared-device use.
+
 ## Current limitation
 
 GitHub browser tests mock the cloud-auth boundary. They validate gateway navigation and local UI behavior, not real Google OAuth, production database policies, or the deployed Edge Function. A successful CI run is not sufficient evidence of school readiness.
