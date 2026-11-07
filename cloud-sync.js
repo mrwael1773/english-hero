@@ -14,6 +14,7 @@
   let user = null;
   // Track the owner of in-memory progress independently from the current auth session.
   let progressOwnerUserId = null;
+  let clearingLocalAccountData = false;
   let ready = false;
   let timer = null;
   let revision = 0;
@@ -67,6 +68,8 @@
     if($cloud('cloudPassword')) $cloud('cloudPassword').disabled = signedIn;
     if($cloud('cloudSignOut')) $cloud('cloudSignOut').disabled = !signedIn;
     if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled = !signedIn;
+    const clearLocalButton=$cloud('cloudClearLocalData');
+    if(clearLocalButton){clearLocalButton.classList.toggle('hidden',!signedIn);clearLocalButton.disabled=!signedIn||!ready||progressOwnerUserId!==user?.id;}
     const restoreButton=$cloud('cloudRestoreBackup');
     if(restoreButton){
       let hasBackup=false;
@@ -280,10 +283,12 @@
           clearTimeout(timer);
           // Save under the in-memory snapshot's owner, not the latest auth identity.
           // Unclaimed device state remains unclaimed rather than being attributed to a student.
-          try {
-            if(progressOwnerUserId) localStorage.setItem('english-hero-account-backup-'+progressOwnerUserId,JSON.stringify(state));
-            else localStorage.setItem('english-hero-unclaimed-local-backup-'+Date.now(),JSON.stringify(state));
-          } catch {}
+          if(!clearingLocalAccountData){
+            try {
+              if(progressOwnerUserId) localStorage.setItem('english-hero-account-backup-'+progressOwnerUserId,JSON.stringify(state));
+              else localStorage.setItem('english-hero-unclaimed-local-backup-'+Date.now(),JSON.stringify(state));
+            } catch {}
+          }
           try { localStorage.removeItem('english-hero-cloud-owner'); } catch {}
           progressOwnerUserId=null;
           if(typeof defaults==='function') replaceProgress(defaults());
@@ -393,6 +398,20 @@
     }
   });
   $cloud('cloudSyncNow')?.addEventListener('click',syncNow);
+  $cloud('cloudClearLocalData')?.addEventListener('click',async()=>{
+    if(!client||!user||!ready||progressOwnerUserId!==user.id)return;
+    if(!window.confirm('سيتم تسجيل خروجك وحذف بيانات هذا الحساب المحفوظة محليًا على هذا المتصفح فقط، بما فيها تقدم التعلم والنسخ الاحتياطية وبيانات Plus والمهام والمواقف. لن تُحذف بيانات السحابة أو الملفات التي صدّرتها أو بيانات الحسابات الأخرى. ستبقى النسخ المجهولة التي لا يمكن نسبتها إلى حساب محفوظة. هل تريد المتابعة؟'))return;
+    const button=$cloud('cloudClearLocalData');
+    if(button)button.disabled=true;
+    status('جارٍ إنهاء الجلسة وحذف النسخ المحلية لهذا الحساب...');
+    try{
+      await window.EnglishHeroCloud.clearLocalAccountData();
+      status('تم حذف البيانات المحلية لهذا الحساب وتسجيل الخروج. بيانات السحابة لم تتغير.');
+    }catch(error){
+      status('تعذر إكمال المسح. لم نحذف بيانات الحساب المحلية؛ تحقق من الاتصال ثم حاول مجددًا.');
+      console.error('English Hero local account cleanup:',error?.message||error);
+    }finally{setSignedInUI();}
+  });
   $cloud('cloudRestoreBackup')?.addEventListener('click',async()=>{
     if(!client || !user || !ready) return;
     const syncUserId=user.id;
@@ -504,6 +523,43 @@
         options:{redirectTo:callbackUrl.toString()}
       });
       if(error) throw error;
+    },
+    async clearLocalAccountData() {
+      if(!client||!user||!ready||progressOwnerUserId!==user.id) throw new Error('لا يمكن حذف بيانات الحساب قبل اكتمال المزامنة والتحقق من مالك التقدم.');
+      const targetUserId=user.id;
+      let storedOwner='';
+      try{storedOwner=localStorage.getItem('english-hero-cloud-owner')||'';}catch{}
+      const ownsActiveProgress=progressOwnerUserId===targetUserId&&(!storedOwner||storedOwner===targetUserId);
+      clearingLocalAccountData=true;
+      ready=false;
+      clearTimeout(timer);
+      revision++;
+      setSignedInUI();
+      try{
+        const {error}=await client.auth.signOut({scope:'local'});
+        if(error)throw error;
+        // Supabase emits SIGNED_OUT; keep this fallback for clients/mocks that do not.
+        if(user?.id===targetUserId){
+          user=null;
+          try{localStorage.removeItem('english-hero-cloud-owner');}catch{}
+          progressOwnerUserId=null;
+          if(typeof defaults==='function')replaceProgress(defaults());
+          window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event:'SIGNED_OUT',user:null}}));
+        }
+        if(ownsActiveProgress)try{localStorage.removeItem('english-hero-academy-3');}catch{}
+        for(const key of [
+          'english-hero-account-backup-'+targetUserId,
+          'ehPlusV2:'+targetUserId,
+          'englishHeroStudentTasksV1:'+targetUserId,
+          'eh-scenarios-done:'+targetUserId
+        ]){try{localStorage.removeItem(key);}catch{}}
+        try{if(localStorage.getItem('english-hero-cloud-owner')===targetUserId)localStorage.removeItem('english-hero-cloud-owner');}catch{}
+        renderStats();renderCourses();renderHome();renderProfile();renderReview();
+        return true;
+      }finally{
+        clearingLocalAccountData=false;
+        setSignedInUI();
+      }
     },
     async signOut() {
       if(!client) return;
