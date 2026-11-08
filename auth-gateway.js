@@ -178,6 +178,8 @@
     try{
       await cloud.setPassword(password);
       await cloud.claimProfile(username,displayName);
+      // Registration is now complete; do not re-apply the pre-registration account-existence gate.
+      clearGoogleAuthIntent();
       say('تم إعداد حسابك بنجاح. جارٍ فتح مساحة التعلم...','success');
       await inspectSession();
     }catch(error){
