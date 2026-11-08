@@ -69,6 +69,9 @@ test('anonymous device progress is backed up and never merged into a new student
     };
   });
 
+  // cloud-sync.js reads the lesson catalog as a global lexical binding, as index.html does.
+  // The privacy-page fixture must expose that binding explicitly; window.lessons alone is not the same setup as index.html.
+  await page.addScriptTag({ content: 'const lessons = window.lessons;' });
   await page.addScriptTag({ path: 'cloud-sync.js' });
   await page.evaluate(() => window.EnglishHeroCloudReady);
 
