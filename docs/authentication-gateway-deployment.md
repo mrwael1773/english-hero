@@ -188,3 +188,18 @@ The earlier 7 November initial production snapshot above is historical and is su
 A comparison of the recorded migration SQL shows that seven of the eight shared student-auth migration statements are identical after removing comments and whitespace. The remaining foundation migration differs because production enabled RLS on the private login tables in that initial migration, while the test foundation left that to the later FORCE-RLS migration. The later FORCE-RLS migration statements match, and the current production and test tables both report RLS plus FORCE RLS enabled. This is a migration-history/content difference, not evidence that the final RLS state is currently weaker in either environment.
 
 The two environments still record different migration version identifiers for several shared baseline migrations. The two legacy-claim migrations have now been aligned to the exact versions already recorded in the isolated Test ledger (`20261107145203` and `20261107145349`); their SQL matches the Test ledger entries, and Production does not yet contain those versions. This resolves the version mismatch for the new compatibility change without editing either database's migration history. It does **not** reconcile every older baseline migration. Do not run a blanket `supabase db push`; use a reviewed, targeted deployment plan after validating the full migration chain against a clean disposable database. No production schema, data, Edge Function, or Auth setting was changed during this refresh.
+
+
+## Isolated legacy-claim authorization test — 8 November 2026
+
+The current restrictive RPC was exercised in the isolated Test project inside a single transaction using synthetic, non-real Auth users:
+
+- A verified pre-cutover email-only account with its own `learning_progress` row successfully claimed its own username.
+- A verified pre-cutover email-only account without a `learning_progress` row was denied by the RPC.
+- The transaction was rolled back. A follow-up read confirmed zero synthetic Auth users, progress rows, student profiles, or private username-lookup rows remained.
+
+The two migration files now use the exact Test ledger versions `20261107145203` and `20261107145349`; the SQL in each file matches the corresponding recorded Test migration after normalization. Production does not yet record either version, so they are pending there. This validates the legacy eligibility rule in the isolated database, but it is not a real browser OAuth/recovery test and does not authorize automatic progress merging between different Auth user IDs.
+
+## Deployment boundary
+
+Do not use a blanket migration push to resolve the older version drift between environments. The new compatibility change is isolated to these two function migrations. Production application remains a separate deployment action and must occur only after the full PR checks pass and the production change is explicitly approved. No Production migration was applied during this audit.
