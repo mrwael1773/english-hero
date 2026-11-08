@@ -22,7 +22,12 @@ export default defineConfig({
     {
       name: 'mobile-webkit-smoke',
       use: { ...devices['iPhone 13'], browserName: 'webkit' },
-      testMatch: ['**/auth-gateway.spec.js', '**/core-learning-flows.spec.js', '**/site-smoke.spec.js'],
+      testMatch: [
+        '**/auth-gateway.spec.js',
+        '**/core-learning-flows.spec.js',
+        '**/site-smoke.spec.js',
+        '**/reading-journey.spec.js',
+      ],
     },
   ],
   webServer: {
