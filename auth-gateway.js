@@ -43,7 +43,7 @@
   }
   function lock(){gateway.hidden=false;document.body.classList.add('auth-gateway-pending');}
   function showRecoveryComplete(){sessionCheckId++;lock();showPane('recoveryComplete');say('أدخل كلمة مرور جديدة لحسابك.');}
-  async function inspectSession(){
+  async function inspectSession({allowOnboarding=false}={}){
     const checkId=++sessionCheckId;
     const user=cloud.getUser();
     if(!user){lock();showPane('login');return;}
@@ -74,7 +74,11 @@
         }
         return;
       }
-      clearGoogleAuthIntent();
+      if(readGoogleAuthIntent()!=='register'&&!allowOnboarding){
+        lock();showPane('login');
+        say('هذا الحساب لا يملك ملف طالب مسجلًا. استخدم «إنشاء حساب» للتسجيل، أو استعادة كلمة المرور إذا كان حسابك قديمًا.','error');
+        return;
+      }
       lock();showPane('onboarding');
       say('أهلًا بك! أكمل بيانات حسابك لتجهيز ملفك وحفظ تقدمك على هذا الحساب.');
     }catch(error){
@@ -126,7 +130,7 @@
       window.EnglishHeroPasswordRecovery=false;
       try { sessionStorage.removeItem('englishHeroPasswordRecovery'); } catch {}
       say('تم تحديث كلمة المرور. جارٍ استعادة تقدمك وفتح حسابك...','success');
-      await inspectSession();
+      await inspectSession({allowOnboarding:true});
     }catch(error){say('تعذر تحديث كلمة المرور. قد يكون رابط الاستعادة منتهي الصلاحية أو مستخدمًا؛ اطلب رابطًا جديدًا.','error');}
     finally{setBusy(false);}
   });
