@@ -183,8 +183,17 @@
       say('تم إعداد حسابك بنجاح. جارٍ فتح مساحة التعلم...','success');
       await inspectSession();
     }catch(error){
-      const text=String(error?.message||'');
-      say(text.includes('student_profiles_username_unique')||text.includes('duplicate key')?'اسم المستخدم مستخدم بالفعل. اختر اسمًا آخر.':(text.includes('verified email')?'تعذر التحقق من البريد المرتبط بحساب Google.':'تعذر حفظ بيانات الحساب. تحقق من اسم المستخدم والاتصال ثم حاول مجددًا.'),'error');
+      const errorText=[error?.message,error?.details,error?.hint,error?.context?.message,error?.context?.body]
+        .filter(Boolean).map(value=>typeof value==='string'?value:JSON.stringify(value)).join(' ');
+      const duplicateUsername=error?.code==='23505'||/duplicate key|unique constraint|student_profiles_username_unique|student_login_lookup_username_key/i.test(errorText);
+      if(duplicateUsername){
+        say('اسم المستخدم موجود بالفعل. يرجى اختيار اسم مستخدم آخر ثم المحاولة مجددًا.','error');
+        byId('authNewUsername').setAttribute('aria-invalid','true');
+        byId('authNewUsername').focus();
+      }else{
+        byId('authNewUsername').removeAttribute('aria-invalid');
+        say(/verified email/i.test(errorText)?'تعذر التحقق من البريد المرتبط بحساب Google.':'تعذر حفظ بيانات الحساب. تحقق من الاتصال وحاول مجددًا.','error');
+      }
     }finally{setBusy(false);}
   });
   window.addEventListener('englishhero:authstate',event=>{
