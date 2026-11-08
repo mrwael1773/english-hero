@@ -94,6 +94,25 @@ test('Google sign-in preserves a validated learning destination after gateway cl
   expect(new URL(page.url()).searchParams.has('next')).toBe(false);
 });
 
+
+test('an account without a student profile cannot open onboarding without registration intent', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.evaluate(() => window.__setMockUserWithoutProfile('unregistered-session'));
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authLoginPane')).toBeVisible();
+  await expect(page.locator('#authOnboardingPane')).toBeHidden();
+  await expect(page.locator('#authGatewayMessage')).toContainText('لا يملك ملف طالب مسجلًا');
+});
+
+test('Google sign-in is available in login and registration keeps its onboarding flow', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await expect(page.locator('#authLoginPane [data-google-auth]')).toHaveCount(1);
+  await page.locator('#authLoginPane [data-auth-mode="register"]').click();
+  await expect(page.locator('#authRegisterPane [data-google-auth]')).toHaveCount(1);
+});
+
 test('Google registration continues to profile and password setup', async ({ page }) => {
   await installAuthMock(page);
   await page.goto('/');
@@ -226,6 +245,7 @@ test('a stale profile response from the previous account cannot unlock the next 
 
   await page.evaluate(() => {
     window.__delayProfileRead = false;
+    sessionStorage.setItem('englishHeroGoogleAuthIntent', 'register');
     window.__setMockUserWithoutProfile('second-student');
   });
   await expect(page.locator('#authGateway')).toBeVisible();

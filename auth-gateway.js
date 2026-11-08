@@ -9,6 +9,9 @@
   let cloud=null;
   let busy=false;
   let sessionCheckId=0;
+  const googleAuthIntentKey='englishHeroGoogleAuthIntent';
+  function readGoogleAuthIntent(){try{return sessionStorage.getItem(googleAuthIntentKey)||'';}catch{return '';}}
+  function clearGoogleAuthIntent(){try{sessionStorage.removeItem(googleAuthIntentKey);}catch{}}
   function say(text,kind='info'){message.textContent=text;message.dataset.kind=kind;}
   function setBusy(value){busy=value;gateway.querySelectorAll('button').forEach(button=>{button.disabled=value;});}
   function showPane(name){
@@ -40,7 +43,7 @@
   }
   function lock(){gateway.hidden=false;document.body.classList.add('auth-gateway-pending');}
   function showRecoveryComplete(){sessionCheckId++;lock();showPane('recoveryComplete');say('أدخل كلمة مرور جديدة لحسابك.');}
-  async function inspectSession(){
+  async function inspectSession({allowOnboarding=false}={}){
     const checkId=++sessionCheckId;
     const user=cloud.getUser();
     if(!user){lock();showPane('login');return;}
@@ -55,7 +58,27 @@
       // A newer auth event (especially SIGNED_OUT or account switching) invalidates
       // this request. Never unlock based on a profile response for a stale session.
       if(checkId!==sessionCheckId || cloud.getUser()?.id!==user.id)return;
-      if(profile){unlock();return;}
+      if(profile){clearGoogleAuthIntent();unlock();return;}
+      if(readGoogleAuthIntent()==='login'){
+        // OAuth may return a newly provisioned Auth identity. A login attempt must
+        // never turn that identity into a student profile or open onboarding.
+        sessionCheckId++;
+        try{
+          await cloud.signOut();
+          clearGoogleAuthIntent();
+          lock();showPane('login');
+          say('هذا الحساب غير مسجل في بطل الإنجليزي. انتقل إلى «إنشاء حساب» إذا كنت تريد التسجيل.','error');
+        }catch(error){
+          lock();showPane('login');
+          say('هذا الحساب غير مسجل، وتعذر إنهاء جلسة Google تلقائيًا. أعد المحاولة بعد التحقق من الاتصال.','error');
+        }
+        return;
+      }
+      if(readGoogleAuthIntent()!=='register'&&!allowOnboarding){
+        lock();showPane('login');
+        say('هذا الحساب لا يملك ملف طالب مسجلًا. استخدم «إنشاء حساب» للتسجيل، أو استعادة كلمة المرور إذا كان حسابك قديمًا.','error');
+        return;
+      }
       lock();showPane('onboarding');
       say('أهلًا بك! أكمل بيانات حسابك لتجهيز ملفك وحفظ تقدمك على هذا الحساب.');
     }catch(error){
@@ -107,15 +130,17 @@
       window.EnglishHeroPasswordRecovery=false;
       try { sessionStorage.removeItem('englishHeroPasswordRecovery'); } catch {}
       say('تم تحديث كلمة المرور. جارٍ استعادة تقدمك وفتح حسابك...','success');
-      await inspectSession();
+      await inspectSession({allowOnboarding:true});
     }catch(error){say('تعذر تحديث كلمة المرور. قد يكون رابط الاستعادة منتهي الصلاحية أو مستخدمًا؛ اطلب رابطًا جديدًا.','error');}
     finally{setBusy(false);}
   });
   gateway.querySelectorAll('[data-google-auth]').forEach(button=>button.addEventListener('click',async()=>{
     if(busy)return;
+    const intent=button.closest('#authRegisterPane')?'register':'login';
+    try{sessionStorage.setItem(googleAuthIntentKey,intent);}catch{}
     setBusy(true);say('جارٍ تحويلك إلى Google لإتمام التحقق...');
     try{await cloud.signInWithGoogle(requestedNextPath);setBusy(false);}
-    catch(error){say('تعذر بدء تسجيل الدخول عبر Google. تحقق من إعدادات Google OAuth ثم حاول مجددًا.','error');setBusy(false);}
+    catch(error){clearGoogleAuthIntent();say('تعذر بدء تسجيل الدخول عبر Google. تحقق من إعدادات Google OAuth ثم حاول مجددًا.','error');setBusy(false);}
   }));
   byId('authLoginForm').addEventListener('submit',async event=>{
     event.preventDefault();if(busy)return;
