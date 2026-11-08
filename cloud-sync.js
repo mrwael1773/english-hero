@@ -485,7 +485,7 @@
       }
       const {error}=await client.auth.signInWithOAuth({
         provider:'google',
-        options:{redirectTo:callbackUrl.toString()}
+        options:{redirectTo:callbackUrl.toString(),queryParams:{prompt:'select_account'}}
       });
       if(error) throw error;
     },
