@@ -168,3 +168,12 @@ The original Google-only onboarding rule blocked verified email/password account
 This migration is staged in the PR only. It has not been applied to production. Before production application, review the SQL, reconcile the environment-specific migration ledger, and test both a pre-cutover verified email-only identity and a post-cutover email-only identity in an isolated test project. Verify the legacy account's original progress row remains unchanged.
 
 - The follow-up migration `20261107180000_restrict_legacy_claim_to_existing_learners.sql` tightens that exception further: a pre-cutover email-only account must already own a `learning_progress` row. This prevents unrelated legacy Auth accounts, including deferred staff accounts without learner progress, from claiming student profiles.
+
+
+## Follow-up audit correction — 8 November 2026
+
+A read-only production Auth metadata check found that the existing account with primary provider `email` also has `google` in its linked provider list and a verified email. The current production `claim_student_username` function accepts a verified Google identity whether Google is the primary provider or a linked provider. Therefore, the primary provider label `email` alone does **not** mean this account is blocked by the production Google-identity condition. No account identifiers or email addresses are recorded here. No production data or settings were changed.
+
+The isolated test project's migration ledger records the legacy-claim behavior under versions `20261107145203` and `20261107145349`, while the current PR contains equivalent staged SQL files named `20261107170000` and `20261107180000`. The resulting test function definition matches the restrictive legacy-learner rule, but the migration version history is not identical to the repository filenames. Do not replay or manually rewrite migration history to make the timestamps match. Before release, reconcile this ledger deliberately and verify the exact staged SQL against a clean isolated database or a disposable local database.
+
+This correction narrows the account-specific compatibility concern; it does not establish a completed real OAuth callback, recovery email/session, or device-level Safari test.
