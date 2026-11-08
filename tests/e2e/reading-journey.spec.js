@@ -51,3 +51,37 @@ test('reading audio button requests the complete example word once', async ({ pa
   await page.locator('.example [data-speak]').first().click();
   await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual(['Apple']);
 });
+
+
+test('alphabet lesson speaks letter names rather than spelling labels', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__readingSpoken = [];
+    class MockUtterance {
+      constructor(text) { this.text = text; }
+    }
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      configurable: true,
+      value: MockUtterance
+    });
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        cancel() {},
+        speak(utterance) { window.__readingSpoken.push(utterance.text); }
+      }
+    });
+  });
+
+  await page.goto('/reading-letters.html');
+  await page.locator('.example [data-speak]').nth(0).click();
+  await page.locator('.example [data-speak]').nth(1).click();
+  await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual(['ay', 'bee']);
+});
+
+
+test('bottom navigation opens the reading journey', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'مسار القراءة' }).click();
+  await expect(page).toHaveURL(/\/reading\.html$/);
+  await expect(page.locator('#readingRoot')).toBeVisible();
+});
