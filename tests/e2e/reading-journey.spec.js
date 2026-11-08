@@ -77,3 +77,11 @@ test('alphabet lesson speaks letter names rather than spelling labels', async ({
   await page.locator('.example [data-speak]').nth(1).click();
   await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual(['ay', 'bee']);
 });
+
+
+test('bottom navigation opens the reading journey', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'مسار القراءة' }).click();
+  await expect(page).toHaveURL(/\/reading\.html$/);
+  await expect(page.locator('#readingRoot')).toBeVisible();
+});
