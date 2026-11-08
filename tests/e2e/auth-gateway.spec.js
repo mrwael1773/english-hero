@@ -105,10 +105,10 @@ test('an account without a student profile cannot open onboarding without regist
   await expect(page.locator('#authGatewayMessage')).toContainText('لا يملك ملف طالب مسجلًا');
 });
 
-test('Google registration is only offered from the registration tab', async ({ page }) => {
+test('Google sign-in is available in login and registration keeps its onboarding flow', async ({ page }) => {
   await installAuthMock(page);
   await page.goto('/');
-  await expect(page.locator('#authLoginPane [data-google-auth]')).toHaveCount(0);
+  await expect(page.locator('#authLoginPane [data-google-auth]')).toHaveCount(1);
   await page.locator('#authLoginPane [data-auth-mode="register"]').click();
   await expect(page.locator('#authRegisterPane [data-google-auth]')).toHaveCount(1);
 });
