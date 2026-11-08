@@ -48,15 +48,6 @@
   };
   const setSignedInUI = () => {
     const signedIn = !!user;
-    const authForm = $cloud('cloudAuthForm');
-    const googleButton = $cloud('cloudGoogle');
-    // Keep sign-in controls out of the way once a session is active.
-    if(authForm) authForm.classList.toggle('hidden', signedIn);
-    if(googleButton) {
-      googleButton.disabled = signedIn || !client;
-      const googleRow = googleButton.parentElement;
-      if(googleRow) googleRow.classList.toggle('hidden', signedIn);
-    }
     if($cloud('cloudUser')) {
       const metadata = user?.user_metadata || {};
       const emailName = typeof user?.email === 'string' ? user.email.split('@')[0] : '';
@@ -66,10 +57,6 @@
       $cloud('cloudUser').setAttribute('dir', 'auto');
       $cloud('cloudUser').style.textAlign = 'start';
     }
-    if($cloud('cloudSignIn')) $cloud('cloudSignIn').disabled = signedIn;
-    if($cloud('cloudSignUp')) $cloud('cloudSignUp').disabled = signedIn;
-    if($cloud('cloudEmail')) $cloud('cloudEmail').disabled = signedIn;
-    if($cloud('cloudPassword')) $cloud('cloudPassword').disabled = signedIn;
     if($cloud('cloudSignOut')) $cloud('cloudSignOut').disabled = !signedIn;
     if($cloud('cloudSyncNow')) $cloud('cloudSyncNow').disabled = !signedIn;
     const clearLocalButton=$cloud('cloudClearLocalData');
@@ -344,74 +331,6 @@
       resolveCloudInitialization(false);
     }
   }
-  const friendlyAuthError = (error, mode) => {
-    const message = String(error?.message || '');
-    const lower = message.toLowerCase();
-    if (lower.includes('invalid login credentials')) return 'بيانات الدخول غير صحيحة، أو أن الحساب لم يُؤكَّد بعد. تأكد من البريد وكلمة المرور وأكّد البريد إذا وصلتك رسالة.';
-    if (lower.includes('email not confirmed')) return 'الحساب موجود لكن البريد غير مؤكّد. افتح رسالة Supabase لتأكيد البريد ثم حاول تسجيل الدخول.';
-    if (lower.includes('user already registered')) return 'هذا البريد مسجّل من قبل. استخدم «تسجيل الدخول» بدل إنشاء حساب جديد.';
-    if (lower.includes('password should be at least')) return 'كلمة المرور أقصر من الحد الذي يطلبه مزوّد الخدمة.';
-    if (lower.includes('email address') && lower.includes('invalid')) return 'صيغة البريد الإلكتروني غير صحيحة.';
-    if (lower.includes('signup is disabled') || lower.includes('signups not allowed')) return 'إنشاء الحسابات معطّل في إعدادات Supabase Auth.';
-    if (lower.includes('rate limit') || lower.includes('too many requests')) return 'محاولات كثيرة خلال وقت قصير. انتظر قليلًا ثم أعد المحاولة.';
-    if (lower.includes('failed to fetch') || lower.includes('network')) return 'تعذّر الاتصال بـ Supabase. تحقق من الإنترنت ومن عنوان المشروع.';
-    console.error('English Hero auth error:', {mode, message, status:error?.status, code:error?.code});
-    return (mode==='signup'?'تعذّر إنشاء الحساب: ':'تعذّر تسجيل الدخول: ') + (message || 'خطأ غير معروف') + ' — راجع إعدادات Authentication في Supabase.';
-  };
-  $cloud('cloudAuthForm')?.addEventListener('submit',async e=>{
-    e.preventDefault();
-    if(!client){status('تسجيل الدخول غير مهيأ: تعذّر الاتصال بمشروع Supabase.');return;}
-    const email=$cloud('cloudEmail').value.trim();
-    const password=$cloud('cloudPassword').value;
-    const button=$cloud('cloudSignIn');
-    button.disabled=true;
-    status('جارٍ التحقق من بيانات الدخول...');
-    try {
-      const {data,error}=await client.auth.signInWithPassword({email,password});
-      if(error){status(friendlyAuthError(error,'signin'));return;}
-      user=data.user||data.session?.user||null;
-      setSignedInUI();
-      status('تم تسجيل الدخول. جارٍ استرجاع تقدم الحساب...');
-      await syncNow();
-    } catch(error) {
-      status(friendlyAuthError(error,'signin'));
-    } finally {
-      button.disabled=!!user;
-    }
-  });
-  $cloud('cloudSignUp')?.addEventListener('click',async()=>{
-    if(!client){status('إنشاء الحساب غير مهيأ: تعذّر الاتصال بمشروع Supabase.');return;}
-    const email=$cloud('cloudEmail').value.trim();
-    const password=$cloud('cloudPassword').value;
-    if(!email||password.length<8){status('أدخل بريدًا صحيحًا وكلمة مرور من 8 أحرف على الأقل.');return;}
-    const button=$cloud('cloudSignUp');
-    button.disabled=true;
-    status('جارٍ إنشاء الحساب...');
-    try {
-      const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{full_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\s+/g,' ').slice(0,32)),display_name:(($cloud('displayNameInput')?.value||'').trim().replace(/\s+/g,' ').slice(0,32))}}});
-      if(error){status(friendlyAuthError(error,'signup'));return;}
-      if(data.session){
-        user=data.user||data.session.user||null;
-        setSignedInUI();
-        status('تم إنشاء الحساب وتسجيل الدخول. جارٍ مزامنة التقدم...');
-        await syncNow();
-      } else {
-        status('تم إرسال طلب إنشاء الحساب. افتح رسالة التأكيد في بريدك، ثم ارجع وسجّل الدخول. إذا لم تصل الرسالة، افحص Spam وإعدادات SMTP/تأكيد البريد في Supabase.');
-      }
-    } catch(error) {
-      status(friendlyAuthError(error,'signup'));
-    } finally {
-      button.disabled=!!user;
-    }
-  });
-  $cloud('cloudGoogle')?.addEventListener('click',async()=>{
-    if(!client){status('تعذر تهيئة تسجيل الدخول.');return;}
-    status('جارٍ تحويلك إلى Google لتسجيل الدخول...');
-    try {
-      const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href}});
-      if(error) status('تعذر تسجيل الدخول عبر Google. تحقق من تفعيل Google في Supabase Auth: '+error.message);
-    }catch(error){status('تعذر بدء تسجيل الدخول عبر Google: '+(error?.message||error));}
-  });
   $cloud('cloudSignOut')?.addEventListener('click',async()=>{
     if(!client)return;
     const button=$cloud('cloudSignOut');
