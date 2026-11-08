@@ -573,3 +573,83 @@ test('restoring local progress after a missing cloud row requires explicit confi
   expect(result.backupXp).toBe(3600);
   expect(result.uploadedXp).toBe(3600);
 });
+
+
+test('switching between two signed-in accounts loads each account progress without cross-merging', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await page.evaluate(() => {
+    document.body.innerHTML = '<div id="cloudStatus"></div><form id="cloudAuthForm"></form><button id="cloudGoogle"></button><button id="cloudSignIn"></button><button id="cloudSignUp"></button><input id="cloudEmail"><input id="cloudPassword"><button id="cloudSignOut"></button><button id="cloudSyncNow"></button><button id="cloudRestoreBackup"></button><div id="cloudUser"></div>';
+    const local = { xp: 0, best: 0, quizzes: 0, completed: [], masteredLessons: [], lessonStarted: [], lessonTrained: [], saved: [], foundationSaved: [], review: {}, misses: {}, daily: {}, lessonPositions: {}, chatHistory: [], displayName: '' };
+    localStorage.setItem('english-hero-academy-3', JSON.stringify(local));
+    window.state = local;
+    window.lessons = [];
+    window.defaults = () => ({ xp: 0, best: 0, quizzes: 0, streak: 0, completed: [], masteredLessons: [], lessonStarted: [], lessonTrained: [], saved: [], foundationSaved: [], review: {}, misses: {}, daily: {}, lessonPositions: {}, chatHistory: [], displayName: '' });
+    window.normalizeMasteredLessons = values => values;
+    window.mergeReviewProgress = () => ({});
+    window.reconcileReviewMisses = () => ({});
+    for (const name of ['renderStats','renderCourses','renderHome','renderProfile','renderReview']) window[name] = () => {};
+    window.ENGLISH_HERO_CLOUD_CONFIG = { supabaseUrl: 'https://example-project.supabase.co', supabaseAnonKey: 'public-anon-key-that-is-long-enough-for-test' };
+    window.__uploads = [];
+    window.supabase = {
+      createClient: () => ({
+        auth: {
+          getSession: async () => ({ data: { session: { user: { id: 'account-A' } } }, error: null }),
+          onAuthStateChange: callback => { window.__authStateCallback = callback; return { data: { subscription: { unsubscribe() {} } } }; },
+          signOut: async () => ({ error: null })
+        },
+        from: () => {
+          let requestedUserId = null;
+          return {
+            select() { return this; },
+            eq(_column, value) { requestedUserId = value; return this; },
+            maybeSingle() {
+              const progress = requestedUserId === 'account-A'
+                ? { xp: 3600, completed: [3], saved: ['email-account-word'] }
+                : { xp: 200, completed: [1], saved: ['google-account-word'] };
+              return { abortSignal: () => Promise.resolve({ data: { progress }, error: null }) };
+            },
+            upsert(payload) {
+              window.__uploads.push({ userId: payload.user_id, progress: payload.progress });
+              return { abortSignal: () => Promise.resolve({ data: null, error: null }) };
+            }
+          };
+        }
+      })
+    };
+  });
+
+  await page.addScriptTag({ path: 'cloud-sync.js' });
+  await page.evaluate(() => window.EnglishHeroCloudReady);
+  await expect.poll(() => page.evaluate(() => window.state.xp)).toBe(3600);
+  expect(await page.evaluate(() => window.state.saved)).toContain('email-account-word');
+
+  await page.evaluate(() => window.__authStateCallback('SIGNED_IN', { user: { id: 'account-B' } }));
+  await expect.poll(() => page.evaluate(() => window.state.xp)).toBe(200);
+  const accountB = await page.evaluate(() => ({
+    owner: localStorage.getItem('english-hero-cloud-owner'),
+    backupA: JSON.parse(localStorage.getItem('english-hero-account-backup-account-A') || 'null'),
+    saved: window.state.saved,
+    completed: window.state.completed
+  }));
+  expect(accountB.owner).toBe('account-B');
+  expect(accountB.backupA.xp).toBe(3600);
+  expect(accountB.saved).toEqual(['google-account-word']);
+  expect(accountB.completed).toEqual([1]);
+
+  await page.evaluate(() => window.__authStateCallback('SIGNED_IN', { user: { id: 'account-A' } }));
+  await expect.poll(() => page.evaluate(() => window.state.xp)).toBe(3600);
+  const accountA = await page.evaluate(() => ({
+    owner: localStorage.getItem('english-hero-cloud-owner'),
+    backupB: JSON.parse(localStorage.getItem('english-hero-account-backup-account-B') || 'null'),
+    saved: window.state.saved,
+    completed: window.state.completed
+  }));
+  expect(accountA.owner).toBe('account-A');
+  expect(accountA.backupB.xp).toBe(200);
+  expect(accountA.saved).toEqual(['email-account-word']);
+  expect(accountA.completed).toEqual([3]);
+
+  const uploads = await page.evaluate(() => window.__uploads);
+  expect(uploads.filter(call => call.userId === 'account-A').every(call => call.progress.xp === 3600 && !call.progress.saved?.includes('google-account-word'))).toBe(true);
+  expect(uploads.filter(call => call.userId === 'account-B').every(call => call.progress.xp === 200 && !call.progress.saved?.includes('email-account-word'))).toBe(true);
+});
