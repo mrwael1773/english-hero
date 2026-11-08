@@ -202,6 +202,8 @@ test('account switch followed by sign-out backs up progress only for its actual 
     };
   });
 
+  // Match index.html's global lexical lesson catalog in this privacy-page fixture.
+  await page.addScriptTag({ content: 'const lessons = window.lessons;' });
   await page.addScriptTag({ path: 'cloud-sync.js' });
   await page.evaluate(() => window.EnglishHeroCloudReady);
   await expect.poll(() => page.evaluate(() => window.state.xp)).toBe(41);
