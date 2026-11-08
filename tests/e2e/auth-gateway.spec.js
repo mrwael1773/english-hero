@@ -96,18 +96,12 @@ test('Google sign-in preserves a validated learning destination after gateway cl
 });
 
 
-test('Google sign-in from the login tab rejects an unregistered identity without onboarding', async ({ page }) => {
+test('Google registration is only offered from the registration tab', async ({ page }) => {
   await installAuthMock(page);
   await page.goto('/');
-  await page.locator('#authLoginPane [data-google-auth]').click();
-
-  await expect(page.locator('#authGateway')).toBeVisible();
-  await expect(page.locator('#authLoginPane')).toBeVisible();
-  await expect(page.locator('#authOnboardingPane')).toBeHidden();
-  await expect(page.locator('#authGatewayMessage')).toContainText('هذا الحساب غير مسجل');
-  await expect.poll(() => page.evaluate(() => window.__mockSignOuts)).toBe(1);
-  await expect.poll(() => page.evaluate(() => window.EnglishHeroCloud.getUser())).toBeNull();
-  expect(await page.evaluate(() => sessionStorage.getItem('englishHeroGoogleAuthIntent'))).toBeNull();
+  await expect(page.locator('#authLoginPane [data-google-auth]')).toHaveCount(0);
+  await page.locator('#authLoginPane [data-auth-mode="register"]').click();
+  await expect(page.locator('#authRegisterPane [data-google-auth]')).toHaveCount(1);
 });
 
 test('Google registration continues to profile and password setup', async ({ page }) => {
