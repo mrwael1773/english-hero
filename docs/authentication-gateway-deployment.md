@@ -158,7 +158,7 @@ GitHub browser tests mock the cloud-auth boundary. They validate gateway navigat
 
 ## Legacy verified email/password account compatibility
 
-The original Google-only onboarding rule blocked verified email/password accounts created before the student gateway existed. Migration `20261107170000_allow_legacy_verified_email_accounts.sql` adds a narrowly bounded compatibility path:
+The original Google-only onboarding rule blocked verified email/password accounts created before the student gateway existed. Migration `20261107145203_allow_legacy_verified_email_accounts.sql` adds a narrowly bounded compatibility path:
 
 - A legacy account may claim its own student username only when its Auth user was created before the fixed UTC cutover `2026-11-07 00:00:00+00`, its email is verified, and the request has an authenticated Supabase session.
 - The RPC still derives ownership exclusively from `auth.uid()`; it cannot create or edit another user's profile.
@@ -167,16 +167,13 @@ The original Google-only onboarding rule blocked verified email/password account
 
 This migration is staged in the PR only. It has not been applied to production. Before production application, review the SQL, reconcile the environment-specific migration ledger, and test both a pre-cutover verified email-only identity and a post-cutover email-only identity in an isolated test project. Verify the legacy account's original progress row remains unchanged.
 
-- The follow-up migration `20261107180000_restrict_legacy_claim_to_existing_learners.sql` tightens that exception further: a pre-cutover email-only account must already own a `learning_progress` row. This prevents unrelated legacy Auth accounts, including deferred staff accounts without learner progress, from claiming student profiles.
+- The follow-up migration `20261107145349_restrict_legacy_claim_to_existing_learners.sql` tightens that exception further: a pre-cutover email-only account must already own a `learning_progress` row. This prevents unrelated legacy Auth accounts, including deferred staff accounts without learner progress, from claiming student profiles.
+- Progress remains scoped to the Supabase Auth user ID. A Google sign-in and an email/password sign-in must not be treated as the same student merely because they use the same display name or email-like label. Do not merge their XP, lessons, or review words automatically. Only Supabase's actual authenticated user ID determines the progress owner.
 
 
-## Follow-up audit correction — 8 November 2026
+## Identity and account separation
 
-A read-only production Auth metadata check found that the existing account with primary provider `email` also has `google` in its linked provider list and a verified email. The current production `claim_student_username` function accepts a verified Google identity whether Google is the primary provider or a linked provider. Therefore, the primary provider label `email` alone does **not** mean this account is blocked by the production Google-identity condition. No account identifiers or email addresses are recorded here. No production data or settings were changed.
-
-The isolated test project's migration ledger records the legacy-claim behavior under versions `20261107145203` and `20261107145349`, while the current PR contains equivalent staged SQL files named `20261107170000` and `20261107180000`. The resulting test function definition matches the restrictive legacy-learner rule, but the migration version history is not identical to the repository filenames. Do not replay or manually rewrite migration history to make the timestamps match. Before release, reconcile this ledger deliberately and verify the exact staged SQL against a clean isolated database or a disposable local database.
-
-This correction narrows the account-specific compatibility concern; it does not establish a completed real OAuth callback, recovery email/session, or device-level Safari test.
+The account identifier used for progress ownership is the authenticated Supabase user ID, not the primary provider label. Provider metadata alone is insufficient to decide whether two sign-in methods belong to one Auth user or two separate Auth users. Keep separate Auth user IDs and their progress separate; do not merge progress or link identities as part of migration deployment. The migration compatibility rule is limited to verified pre-cutover accounts that already own a learning-progress row.
 
 
 ## Leaked-password protection and current plan
@@ -190,4 +187,4 @@ The earlier 7 November initial production snapshot above is historical and is su
 
 A comparison of the recorded migration SQL shows that seven of the eight shared student-auth migration statements are identical after removing comments and whitespace. The remaining foundation migration differs because production enabled RLS on the private login tables in that initial migration, while the test foundation left that to the later FORCE-RLS migration. The later FORCE-RLS migration statements match, and the current production and test tables both report RLS plus FORCE RLS enabled. This is a migration-history/content difference, not evidence that the final RLS state is currently weaker in either environment.
 
-The two environments still record different migration version identifiers for several shared migrations. The test ledger also records the legacy-claim migrations under earlier versions than the staged PR filenames. Do not run a blanket `supabase db push`, replay migrations, or edit migration history by hand. Before any production deployment, prepare a migration reconciliation plan using the exact repository SQL and recorded ledger, then validate it against a clean disposable database. No production schema, data, Edge Function, or Auth setting was changed during this refresh.
+The two environments still record different migration version identifiers for several shared baseline migrations. The two legacy-claim migrations have now been aligned to the exact versions already recorded in the isolated Test ledger (`20261107145203` and `20261107145349`); their SQL matches the Test ledger entries, and Production does not yet contain those versions. This resolves the version mismatch for the new compatibility change without editing either database's migration history. It does **not** reconcile every older baseline migration. Do not run a blanket `supabase db push`; use a reviewed, targeted deployment plan after validating the full migration chain against a clean disposable database. No production schema, data, Edge Function, or Auth setting was changed during this refresh.
