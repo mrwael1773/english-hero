@@ -214,3 +214,46 @@ A separate isolated Test-project transaction created two synthetic Auth users wi
 - The transaction was rolled back, and a follow-up check confirmed the synthetic Auth users were absent.
 
 This validates the database owner-scoped RLS behavior for two distinct Auth user IDs. It does not establish which production account belongs to the project owner, nor does it restore the previously deleted 200-XP row. The client-side account-switch E2E tests and a real Safari session test remain separate checks.
+
+
+## Exact migration-history reconciliation — 8 November 2026
+
+The migration ledgers and SQL were re-read from both projects and compared against the repository files. The nine shared gateway migrations have matching SQL in Production; the repository versions differ from Production's recorded versions. In Test, seven already use the repository version and two (IP throttling and FORCE RLS) are recorded under older versions. This is version-history drift, not missing schema work.
+
+| Migration | Repository version | Production recorded version | Test recorded version | SQL comparison |
+|---|---:|---:|---:|---|
+| student_username_auth_foundation | 20261106110025 | 20261107123333 | 20261106110025 | Production exact; Test version already applied |
+| learning_progress_owner_scope | 20261106143509 | 20261107123342 | 20261106143509 | exact in both |
+| require_google_identity_for_student_profiles | 20261106143515 | 20261107123346 | 20261106143515 | exact in both |
+| optimize_student_rls_auth_uid | 20261106145142 | 20261107123348 | 20261106145142 | exact in both |
+| revoke_public_default_api_grants | 20261106150755 | 20261107123357 | 20261106150755 | exact in both |
+| revoke_global_public_function_execute | 20261106151031 | 20261107123401 | 20261106151031 | exact in both |
+| add_student_login_ip_rate_limit | 20261107110000 | 20261107123404 | 20261106221407 | exact in both |
+| force_rls_on_private_auth_tables | 20261107120000 | 20261107123407 | 20261106221609 | exact in both |
+| standardize_learning_progress_owner_policies | 20261107135349 | 20261107135603 | 20261107135349 | exact in both |
+
+For each row above, repository SQL and the Production ledger SQL were equal after removing comments and whitespace. Test's two older-version entries for IP throttling and FORCE RLS also match the corresponding repository SQL. The Test foundation migration has the same version as the repository file, so it is not pending there; its recorded statement text differs from the repository copy, but the current Test and Production table states both show RLS and FORCE RLS enabled on the relevant private tables. Do not replay that migration in Test.
+
+### Safe CLI repair sequence (not yet executed)
+
+Use the official Supabase CLI `migration repair` command to add the repository version identifiers as already-applied history entries **without executing their SQL again**. This is the supported migration-history repair operation; it does not modify table data or schema. See [Supabase CLI migration repair](https://supabase.com/docs/reference/cli/supabase-migration-repair).
+
+On the **Production** project, after linking to the correct project and rechecking the mapping above, mark the nine shared repository versions plus `20261107145203` as applied:
+
+```bash
+supabase migration repair 20261106110025 20261106143509 20261106143515 20261106145142 20261106150755 20261106151031 20261107110000 20261107120000 20261107135349 20261107145203 --status applied
+supabase migration list
+```
+
+Important: `20261107145203_allow_legacy_verified_email_accounts.sql` is a historical, broader intermediate rule. Production currently has the stricter Google-identity-only rule. Marking this version as applied (rather than executing it) avoids a temporary window in which any verified pre-cutover email account could claim a student profile. Leave `20261107145349_restrict_legacy_claim_to_existing_learners.sql` pending in Production; it is the only intended new Production SQL migration in this PR and restricts the exception to verified pre-cutover accounts that already own a learning-progress row.
+
+On the **Test** project, mark only the two repository versions that are already represented by older recorded versions:
+
+```bash
+supabase migration repair 20261107110000 20261107120000 --status applied
+supabase migration list
+```
+
+Expected result: Test has no pending PR migrations; Production has only `20261107145349` pending from this PR. Stop if `supabase migration list` shows any different pending migration. Do not use `supabase db push` until this exact state is verified.
+
+This sequence has **not** been run by this assistant: the connected Supabase tools can inspect and apply SQL migrations but do not expose the official CLI migration-repair operation. No migration ledger was edited directly, and no Production schema or data was changed. Production execution of the final restrictive migration still requires explicit approval.
