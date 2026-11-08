@@ -304,3 +304,30 @@ test('password recovery remains the active gateway state after a page reload', a
   await expect(page.locator('#authRecoveryCompletePane')).toBeVisible();
   await expect(page.locator('#home')).not.toBeVisible();
 });
+
+
+test('account settings keep sync controls but contain no legacy sign-in interface or handlers', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.locator('#authLoginUsername').fill('mock_student');
+  await page.locator('#authLoginPassword').fill('safe-password-123');
+  await page.locator('#authLoginForm button[type="submit"]').click();
+  await expect(page.locator('#authGateway')).toBeHidden();
+
+  await page.locator('[data-nav="profile"]').click();
+  await expect(page.locator('#cloudStatus')).toBeVisible();
+  await expect(page.locator('#cloudSyncNow')).toBeVisible();
+  await expect(page.locator('#cloudSignOut')).toBeVisible();
+
+  for (const selector of ['#cloudAuthForm','#cloudEmail','#cloudPassword','#cloudSignIn','#cloudSignUp','#cloudGoogle']) {
+    await expect(page.locator(selector)).toHaveCount(0);
+  }
+
+  const cloudSource = await page.evaluate(async () => await (await fetch('./cloud-sync.js?v=7')).text());
+  expect(cloudSource).not.toContain('client.auth.signInWithPassword');
+  expect(cloudSource).not.toContain('client.auth.signUp(');
+  expect(cloudSource).not.toContain("$cloud('cloudAuthForm')");
+  expect(cloudSource).not.toContain("$cloud('cloudGoogle')");
+  expect(cloudSource).toContain('async signInWithUsername(username,password)');
+  expect(cloudSource).toContain('async signInWithGoogle(nextPath=null)');
+});
