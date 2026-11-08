@@ -24,7 +24,6 @@ async function installAuthMock(page) {
         },
         signInWithUsername:async()=>{setMockUser('mock-student',true);return user;},
         signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',false);},
-        signOut:async()=>{window.__mockSignOuts=(window.__mockSignOuts||0)+1;setMockUser(null,false);},
         isReady:()=>ready,
         setPassword:async()=>{},
         sendPasswordRecovery:async(email)=>{window.__recoveryEmail=email;},
