@@ -177,3 +177,8 @@ A read-only production Auth metadata check found that the existing account with 
 The isolated test project's migration ledger records the legacy-claim behavior under versions `20261107145203` and `20261107145349`, while the current PR contains equivalent staged SQL files named `20261107170000` and `20261107180000`. The resulting test function definition matches the restrictive legacy-learner rule, but the migration version history is not identical to the repository filenames. Do not replay or manually rewrite migration history to make the timestamps match. Before release, reconcile this ledger deliberately and verify the exact staged SQL against a clean isolated database or a disposable local database.
 
 This correction narrows the account-specific compatibility concern; it does not establish a completed real OAuth callback, recovery email/session, or device-level Safari test.
+
+
+## Leaked-password protection and current plan
+
+The production Supabase organization is currently on the Free plan. Supabase's current password-security documentation states that leaked-password protection is available on Pro and above. Do not attempt to enable it by changing plans or incurring a charge without the project owner's explicit approval. Until a no-cost supported alternative is verified, keep this as a documented security limitation: retain verified-email requirements and server-side login throttling, review the available password-strength controls in the current plan, and do not describe the authentication gateway as fully hardened for a school-wide rollout. A plan upgrade is not part of this PR and is not authorized by this audit.
