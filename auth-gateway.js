@@ -58,6 +58,19 @@
       // A newer auth event (especially SIGNED_OUT or account switching) invalidates
       // this request. Never unlock based on a profile response for a stale session.
       if(checkId!==sessionCheckId || cloud.getUser()?.id!==user.id)return;
+      if(profile && readGoogleAuthIntent()==='register'){
+        sessionCheckId++;
+        try{
+          await cloud.signOut();
+          clearGoogleAuthIntent();
+          lock();showPane('login');
+          say('هذا الحساب مسجل بالفعل في بطل الإنجليزي. استخدم «تسجيل الدخول» بدلًا من إنشاء حساب جديد.','error');
+        }catch(error){
+          lock();showPane('login');
+          say('هذا الحساب مسجل بالفعل، وتعذر إنهاء جلسة Google تلقائيًا. أعد المحاولة من قسم تسجيل الدخول.','error');
+        }
+        return;
+      }
       if(profile){clearGoogleAuthIntent();unlock();return;}
       if(readGoogleAuthIntent()==='login'){
         // OAuth may return a newly provisioned Auth identity. A login attempt must
