@@ -4,6 +4,8 @@ test('home page loads with a mobile viewport declaration', async ({ page }) => {
   const response = await page.goto('/');
   expect(response?.ok()).toBeTruthy();
   await expect(page.locator('body')).toBeVisible();
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authLoginForm')).toBeVisible();
   await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /width=device-width/);
   await expect(page.locator('html')).toHaveAttribute('lang', /.+/);
 });
@@ -22,5 +24,8 @@ test('home page renders at a narrow mobile width', async ({ page }) => {
   const response = await page.goto('/');
   expect(response?.ok()).toBeTruthy();
   await expect(page.locator('body')).toBeVisible();
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('.auth-gateway-card')).toBeVisible();
   await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /width=device-width/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/teacher-pilot.html');
-  await page.evaluate(() => localStorage.clear());
+  await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
   await page.reload();
 });
 
@@ -34,7 +34,7 @@ test('pilot lesson can complete all six training words and advance through all 1
     await page.locator('#nextQuestion').click();
   }
   await expect(page.locator('#resultArea')).toContainText('٪');
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  const saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('ehTeacherPilotMasterySessionV1')));
   expect(saved.attempts).toBe(1);
   expect(saved.lastAttempt.total).toBe(18);
   expect(saved.reviewDue).toBeTruthy();
@@ -87,7 +87,7 @@ test('writing assessment shows explicit correct and incorrect feedback and requi
 test('a seven-day retention quiz remains available even when the first attempt had no mistakes', async ({ page }) => {
   const due = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   await page.evaluate((reviewDue) => {
-    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+    sessionStorage.setItem('ehTeacherPilotMasterySessionV1', JSON.stringify({
       started: true,
       trained: [0, 1, 2, 3, 4, 5],
       attempts: 1,
@@ -108,7 +108,7 @@ test('a seven-day retention quiz remains available even when the first attempt h
 test('a partial retention quiz preserves the full mastery attempt after reload', async ({ page }) => {
   const due = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   await page.evaluate((reviewDue) => {
-    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+    sessionStorage.setItem('ehTeacherPilotMasterySessionV1', JSON.stringify({
       started: true,
       trained: [0, 1, 2, 3, 4, 5],
       attempts: 1,
@@ -139,14 +139,14 @@ test('a partial retention quiz preserves the full mastery attempt after reload',
   }
 
   await expect(page.locator('#resultArea')).toContainText('100٪');
-  let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  let saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('ehTeacherPilotMasterySessionV1')));
   expect(saved.mastered).toBe(true);
   expect(saved.lastAttempt.total).toBe(18);
   expect(saved.lastRetention.total).toBe(3);
   expect(saved.lastRetention.passed).toBe(true);
 
   await page.reload();
-  saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('ehTeacherPilotMasterySessionV1')));
   expect(saved.mastered).toBe(true);
   expect(saved.lastAttempt.total).toBe(18);
   expect(saved.lastRetention.total).toBe(3);
@@ -156,7 +156,7 @@ test('a partial retention quiz preserves the full mastery attempt after reload',
 test('a failed partial retention quiz keeps the historical mastery but flags review', async ({ page }) => {
   const due = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   await page.evaluate((reviewDue) => {
-    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+    sessionStorage.setItem('ehTeacherPilotMasterySessionV1', JSON.stringify({
       started: true,
       trained: [0, 1, 2, 3, 4, 5],
       attempts: 1,
@@ -185,7 +185,7 @@ test('a failed partial retention quiz keeps the historical mastery but flags rev
 
   await expect(page.locator('#resultArea')).toContainText('يحتاج التعلم إلى مراجعة إضافية');
   await expect(page.locator('#lessonState')).toContainText('أتقن الدرس سابقًا • يحتاج مراجعة');
-  let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  let saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('ehTeacherPilotMasterySessionV1')));
   expect(saved.mastered).toBe(true);
   expect(saved.lastAttempt.total).toBe(18);
   expect(saved.lastRetention.total).toBe(3);
@@ -193,7 +193,7 @@ test('a failed partial retention quiz keeps the historical mastery but flags rev
   expect(saved.wrong).toContain('Name');
 
   await page.reload();
-  saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('ehTeacherPilotMasterySessionV1')));
   expect(saved.mastered).toBe(true);
   expect(saved.lastRetention.passed).toBe(false);
   await expect(page.locator('#lessonState')).toContainText('يحتاج مراجعة');
@@ -201,7 +201,7 @@ test('a failed partial retention quiz keeps the historical mastery but flags rev
 
 test('invalid saved lesson state cannot unlock mastery or retention questions', async ({ page }) => {
   await page.evaluate(() => {
-    localStorage.setItem('ehTeacherPilotMasteryV1', JSON.stringify({
+    sessionStorage.setItem('ehTeacherPilotMasterySessionV1', JSON.stringify({
       started: true,
       trained: [99, 100, 101, 102, 103, 104],
       attempts: 999999,
@@ -214,7 +214,7 @@ test('invalid saved lesson state cannot unlock mastery or retention questions', 
   await page.reload();
   await expect(page.locator('#trainingCount')).toContainText('0 من 6');
   await expect(page.locator('#startTest')).toBeDisabled();
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ehTeacherPilotMasteryV1')));
+  const saved = await page.evaluate(() => JSON.parse(sessionStorage.getItem('ehTeacherPilotMasterySessionV1')));
   expect(saved.mastered).toBe(false);
   expect(saved.trained).toEqual([]);
   expect(saved.wrong).toEqual([]);

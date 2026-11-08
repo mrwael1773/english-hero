@@ -17,6 +17,27 @@ const contactPage = read('contact.html');
 const iconSvg = read('icon.svg');
 const sw = read('sw.js');
 const cloud = read('cloud-sync.js');
+const authGateway = read('auth-gateway.js');
+const authGatewayStyles = read('auth-gateway.css');
+const authGuard = read('auth-guard.js');
+const protectedLearningPages = ['english-basics.html','english-tenses-guide.html','grammar-lesson.html','grammar-library.html','grammar-category.html'].map(read);
+const usernameAuthMigrationPath = 'supabase/migrations/20261106110025_student_username_auth_foundation.sql';
+const usernameAuthMigration = read(usernameAuthMigrationPath);
+const progressMigrationPath = 'supabase/migrations/20261106143509_learning_progress_owner_scope.sql';
+const progressMigration = read(progressMigrationPath);
+const googleIdentityMigrationPath = 'supabase/migrations/20261106143515_require_google_identity_for_student_profiles.sql';
+const googleIdentityMigration = read(googleIdentityMigrationPath);
+const legacyLearnerMigrationPath = 'supabase/migrations/20261107145349_restrict_legacy_claim_to_existing_learners.sql';
+const legacyLearnerMigration = read(legacyLearnerMigrationPath);
+const optimizedRlsMigrationPath = 'supabase/migrations/20261106145142_optimize_student_rls_auth_uid.sql';
+const optimizedRlsMigration = read(optimizedRlsMigrationPath);
+const defaultApiGrantsMigrationPath = 'supabase/migrations/20261106150755_revoke_public_default_api_grants.sql';
+const defaultApiGrantsMigration = read(defaultApiGrantsMigrationPath);
+const globalFunctionDefaultMigrationPath = 'supabase/migrations/20261106151031_revoke_global_public_function_execute.sql';
+const globalFunctionDefaultMigration = read(globalFunctionDefaultMigrationPath);
+const deploymentChecklist = read('docs/authentication-gateway-deployment.md');
+const usernameLoginFunction = read('supabase/functions/student-username-login/index.ts');
+const supabaseConfig = read('supabase/config.toml');
 const progressDashboard = read('pro-dashboard.js');
 const learningExpansion = read('learning-expansion.js');
 const englishHeroPlus = read('english-hero-plus.js');
@@ -32,6 +53,16 @@ const migration = read(migrationPath);
 
 check(html.includes('<!doctype html>') || html.includes('<!DOCTYPE html>'), 'HTML document declaration exists');
 check(html.includes('id="home"') && html.includes('id="profile"'), 'Home and profile screens exist');
+check(['authGateway','authLoginPane','authRegisterPane','authRecoveryRequestPane','authRecoveryCompletePane','authOnboardingPane','authLoginForm','authRecoveryRequestForm','authRecoveryCompleteForm','authOnboardingForm','authLoginUsername','authLoginPassword','authRecoveryEmail','authRecoveryNewPassword','authRecoveryConfirmPassword','authDisplayName','authNewUsername','authNewPassword','authConfirmPassword','authForgotPassword','authGatewayMessage'].every(id => html.includes(`id="${id}"`)), 'First-entry authentication gateway and onboarding fields exist');
+check(html.includes('auth-gateway.css?v=1') && html.includes('auth-gateway.js?v=3') && html.includes("document.body.classList.add('auth-gateway-pending')"), 'Authentication gateway assets load before protected learning content');
+check(authGateway.includes('signInWithUsername') && authGateway.includes('claimProfile') && authGateway.includes('setPassword') && authGateway.includes('getProfile'), 'Authentication gateway uses the cloud account API for login and onboarding');
+check(authGateway.includes('sendPasswordRecovery') && authGateway.includes('updateRecoveredPassword') && authGateway.includes("event.detail?.event==='PASSWORD_RECOVERY'") && cloud.includes('resetPasswordForEmail(email,{redirectTo})') && cloud.includes('client.auth.updateUser({password})'), 'Student password recovery requests and applies a verified Supabase recovery session');
+check(authGateway.includes('cloud.signInWithGoogle(requestedNextPath)') && cloud.includes('async signInWithGoogle(nextPath=null)') && cloud.includes("callbackUrl.searchParams.set('next',target.pathname+target.search+target.hash)") && cloud.includes('allowed.some(file=>target.pathname===basePath+file)') && cloud.includes('redirectTo:callbackUrl.toString()'), 'Google OAuth preserves only a validated learning-page destination through the callback');
+check(!['id="cloudAuthForm"','id="cloudEmail"','id="cloudPassword"','id="cloudSignIn"','id="cloudSignUp"','id="cloudGoogle"'].some(id=>html.includes(id)) && !cloud.includes("$cloud('cloudAuthForm')") && !cloud.includes("$cloud('cloudGoogle')") && !cloud.includes('client.auth.signInWithPassword') && !cloud.includes('client.auth.signUp(') && cloud.includes('async signInWithUsername(username,password)') && cloud.includes('async signInWithGoogle(nextPath=null)'), 'Legacy account-page sign-in handlers are removed; the authentication gateway is the sole sign-in entry point');
+check(authGateway.includes('if(!cloud.isReady?.())') && cloud.includes('isReady: () => !!ready') && cloud.includes("new CustomEvent('englishhero:authready')") && cloud.includes('if(previousUser?.id!==user?.id) ready=false;'), 'Learning gateway remains locked until the active account progress sync completes');
+check(authGatewayStyles.includes('.auth-gateway-shell') && authGatewayStyles.includes('@media(max-width:800px)') && authGatewayStyles.includes('@media(max-width:380px)'), 'Authentication gateway has responsive premium styling');
+check(authGuard.includes('student_profiles') && authGuard.includes('auth.getSession') && authGuard.includes('location.replace'), 'Direct learning routes require a verified session and student profile');
+check(protectedLearningPages.every(page => page.includes('auth-guard.js?v=1') && page.includes('eh-auth-pending')), 'All standalone learning pages use the pre-render authentication guard');
 check(!html.includes('id="conversation"') && !html.includes('data-nav="conversation"') && !html.includes('src="ai-chat.js"'), 'AI chat section and script are disabled');
 check(html.includes('name="viewport"') && html.includes('@media(max-width:720px)') && html.includes('@media(max-width:360px)') && html.includes('overflow-wrap:anywhere'), 'Responsive layout includes viewport and small-screen overflow safeguards');
 check(html.includes('id="studentDesk"') && html.includes('id="studentTaskForm"') && html.includes('id="studentTaskList"'), 'Student study planner UI exists');
@@ -54,7 +85,7 @@ try {
 check(privacyPage.includes('<html') && privacyPage.includes('</html>'), 'Privacy page has an HTML document');
 check(contactPage.includes('<html') && contactPage.includes('</html>'), 'Contact page has an HTML document');
 check(iconSvg.includes('<svg') && iconSvg.includes('</svg>'), 'App icon is a valid SVG document');
-for (const id of ['cloudAuthForm','cloudStatus','cloudSignIn','cloudSignUp','cloudGoogle','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults']) {
+for (const id of ['cloudStatus','cloudSyncNow','cloudSignOut','cloudRestoreBackup','cloudBackupStatus','grammarLibrary','tensesLibrary','vocabResults']) {
   check(html.includes(`id="${id}"`), `Required UI element exists: ${id}`);
 }
 check(/sw\.js\?v=(\d+)/.test(html), 'Service worker registration has a version');
@@ -62,14 +93,29 @@ const registeredVersion = html.match(/sw\.js\?v=(\d+)/)?.[1];
 const cacheVersion = sw.match(/english-hero-shell-v(\d+)/)?.[1];
 check(Boolean(registeredVersion && cacheVersion && registeredVersion === cacheVersion), 'Service worker registration and cache versions match');
 check(sw.includes("fetch(request)") && sw.includes("request.mode === 'navigate'"), 'Service worker refreshes navigation from network first');
-check(/src="\.\/grammar-lessons\.js\?v=3"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
+check(sw.includes('./auth-gateway.css?v=1') && sw.includes('./auth-gateway.js?v=3') && sw.includes('./auth-guard.js?v=1') && sw.includes('./cloud-sync.js?v=7') && html.includes('src="cloud-sync.js?v=7"'), 'Service worker shell includes versioned authentication and cloud-sync assets');
+check(/CREATE TABLE IF NOT EXISTS public\.learning_progress/i.test(progressMigration) && /ALTER TABLE public\.learning_progress ENABLE ROW LEVEL SECURITY/i.test(progressMigration) && /ALTER TABLE public\.learning_progress FORCE ROW LEVEL SECURITY/i.test(progressMigration) && progressMigration.includes('grant select, insert, update on public.learning_progress to authenticated') && progressMigration.includes('auth.uid() = user_id') && progressMigration.includes("jsonb_typeof(progress) = 'object'"), 'Cloud learning progress has owner-scoped RLS, write grants, and object-only JSON data');
+check(/ALTER TABLE public\.student_profiles FORCE ROW LEVEL SECURITY/i.test(usernameAuthMigration) && usernameAuthMigration.includes('claim_student_username') && usernameAuthMigration.includes('resolve_student_login_user_id') && usernameAuthMigration.includes('consume_student_login_attempt') && usernameAuthMigration.includes('to service_role') && usernameAuthMigration.includes('grant select on public.student_profiles to authenticated') && !usernameAuthMigration.includes('grant select, insert, update on public.student_profiles') && usernameAuthMigration.includes('set search_path = pg_catalog') && !usernameAuthMigration.includes('email text not null'), 'Username auth migration enforces owner-scoped profiles and server-only lookup/rate-limit RPCs');
+check(googleIdentityMigration.includes('raw_app_meta_data') && googleIdentityMigration.includes("'google'") && googleIdentityMigration.includes('v_email_confirmed_at is null') && googleIdentityMigration.includes('not coalesce(v_has_google_identity, false)') && googleIdentityMigration.includes('auth.uid()') && googleIdentityMigration.includes('set search_path = pg_catalog'), 'Student onboarding RPC requires a verified Google identity and derives ownership from the authenticated user');
+check(legacyLearnerMigration.includes("created_at < timestamptz '2026-11-07 00:00:00+00'") && legacyLearnerMigration.includes('from public.learning_progress lp') && legacyLearnerMigration.includes('where lp.user_id = auth.users.id') && legacyLearnerMigration.includes('auth.uid()') && legacyLearnerMigration.includes('v_email_confirmed_at is null') && legacyLearnerMigration.includes('revoke all on function public.claim_student_username(text, text) from public, anon'), 'Legacy email-only onboarding is limited to verified pre-cutover accounts with existing learner progress and owner-scoped RPC access');
+check(deploymentChecklist.includes('Integrations > Data API') && deploymentChecklist.includes('Data API exposes schemas, not individual tables') && deploymentChecklist.includes('public.student_profiles') && deploymentChecklist.includes('public.learning_progress') && deploymentChecklist.includes('Do not expose the `private` schema') && deploymentChecklist.includes('different timestamp alone does not mean the migration is missing') && deploymentChecklist.includes('20261106150755_revoke_public_default_api_grants.sql') && deploymentChecklist.includes('20261106151031_revoke_global_public_function_execute.sql'), 'Deployment checklist covers required API schema objects and safe migration-history reconciliation');
+check(usernameLoginFunction.includes('signInWithPassword') && usernameLoginFunction.includes('consume_student_login_attempt') && usernameLoginFunction.includes('resolve_student_login_user_id') && usernameLoginFunction.includes('getUserById') && usernameLoginFunction.includes('SUPABASE_SERVICE_ROLE_KEY') && !usernameLoginFunction.includes('console.log'), 'Username login Edge Function uses server secrets, generic auth errors, and rate limiting');
+const usernameSqlDollarCount = usernameAuthMigration.split('$$').length - 1;
+check(usernameSqlDollarCount >= 10 && usernameSqlDollarCount % 2 === 0 && !usernameAuthMigration.split('\n').some(line => line.trim() === 'as $' || line.includes('as $ select')), 'Username auth SQL function bodies use balanced PostgreSQL dollar quoting');
+check(usernameAuthMigration.includes('revoke insert, update on public.student_profiles from authenticated'), 'Student browsers cannot directly edit profile usernames outside the transactional claim RPC');
+check(cloud.indexOf('if(user) await syncNow()') >= 0 && cloud.indexOf('if(user) await syncNow()') < cloud.indexOf('resolveCloudInitialization(true)'), 'Returning account progress is restored before the authentication gateway is released');
+check(authGateway.includes('cloud.signInWithGoogle(requestedNextPath)') && cloud.includes('async signInWithGoogle(nextPath=null)') && cloud.includes('options:{redirectTo:callbackUrl.toString()}') && cloud.includes("callbackUrl.searchParams.set('next',target.pathname+target.search+target.hash)"), 'Google OAuth preserves only a validated protected learning-page destination through the gateway callback');
+check(supabaseConfig.includes('[functions.student-username-login]') && supabaseConfig.includes('verify_jwt = false'), 'Username login endpoint is configured for its explicit unauthenticated login flow');
+check(/src="\.\/grammar-lessons\.js\?v=4"/.test(html), 'Main page loads the shared interactive grammar lesson catalogue');
+check(html.includes('delete backupData.chatHistory') && html.includes('state.chatHistory=[]'), 'Progress backup export and import exclude private chat history');
+check(html.includes('إعادة ضبط التقدم الحالي') && html.includes('لن تُحذف النسخ الاحتياطية المحلية') && html.includes('تمت إعادة ضبط التقدم الحالي'), 'Progress reset wording accurately distinguishes reset from backup deletion');
 check(html.includes("window.EnglishHeroLessons.grammar") && html.includes("window.EnglishHeroLessons.tenses") && html.includes("grammar-lesson.html#"), 'Grammar and tense cards link to their dedicated lesson pages');
 check(grammarLessonPage.includes('id="lessonRoot"') && grammarLessonPage.includes("makeSection('challenge'") && grammarLessonPage.includes("setAttribute('aria-live','polite')"), 'Dedicated lesson page provides a challenge area with accessible feedback');
 check(grammarLessonPage.includes('window.EnglishHeroLessons') && grammarLessonPage.includes('location.hash'), 'Dedicated lesson page resolves lesson content from its stable URL slug');
 check(grammarLessonPage.includes("const start=safeText('button','btn primary','ابدأ التعلّم ↓')") && grammarLessonPage.includes('formulaArabic') && grammarLessonPage.includes("safeText('p','formula-ar'"), 'Lesson start action preserves the lesson slug and each formula has an Arabic explanation');
 check(grammarLibraryPage.includes('LEARNING MAP') && grammarCategoryPage.includes('window.EnglishHeroLessons.all') && sw.includes("'./grammar-library.html'") && sw.includes("'./grammar-category.html'"), 'Grammar and tense category pages are linked and cached offline');
 check(grammarLessonPage.includes("const stepNames=['افهم الفكرة','تفصيل القاعدة','ابنِ الجملة','شاهد الأمثلة','صحّح الخطأ','تذكّر النصيحة','اختبر نفسك']") && grammarLessonPage.includes('data-step-index') && grammarLessonPage.includes('lessonStepStatus') && grammarLessonPage.includes('activeLesson.guide') && grammarLessonPage.includes('guide-card'), 'Dedicated lesson page guides students through seven detailed learning steps');
-check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=3'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
+check(sw.includes("'./grammar-lesson.html'") && sw.includes("'./grammar-lessons.js?v=4'"), 'Dedicated lesson page and catalogue are included in the offline app shell');
 try {
   new Function(grammarLessonsRaw);
   check(true, 'Grammar lesson catalogue JavaScript syntax is valid');
@@ -123,7 +169,7 @@ try {
   fail.push('Interactive grammar catalogue can be parsed and checked: ' + error.message);
 }
 
-check(cloud.includes("from('learning_progress')") && cloud.includes('signInWithPassword') && cloud.includes('signUp'), 'Cloud progress and email auth flows are present');
+check(cloud.includes("from('learning_progress')") && cloud.includes('window.EnglishHeroCloud') && cloud.includes('signInWithUsername') && cloud.includes('claim_student_username') && cloud.includes('updateUser({password})') && read('tests/e2e/fixtures.js').includes('isReady:()=>true'), 'Cloud progress sync, username/Google gateway API, and authenticated E2E fixture readiness are present');
 check(cloud.includes('async function cloudRequest(query, timeoutMs=15000)') && cloud.includes('query.abortSignal(controller.signal)'), 'Cloud progress requests abort after a bounded timeout');
 check(cloud.includes("English Hero sign out:") && cloud.includes('finally {\n      setSignedInUI();\n    }'), 'Sign-out failures restore the account UI safely');
 check(html.includes("'weekly'") && html.includes('20 سؤالًا متنوعًا') && html.includes('state.weeklyTestLast'), 'Weekly assessment includes mixed questions and stores its result');
@@ -216,6 +262,12 @@ check(html.includes('navigator.serviceWorker.register'), 'Main page registers th
 check(!/(?:service_role|sb_secret_)\s*[:=]\s*['"]/i.test(config) && !/sb_secret_[A-Za-z0-9_-]{12,}/i.test(config), 'Client configuration contains no server secret key');
 check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') && migration.includes('(SELECT auth.uid())'), 'Tracked migration contains the security and RLS policy changes');
 check(existsSync(join(root, migrationPath)), 'Applied Supabase migration is tracked in the repository');
+check(optimizedRlsMigration.includes('drop policy if exists "Students can manage own learning progress"') && optimizedRlsMigration.includes('drop policy if exists "Students can read own profile"') && optimizedRlsMigration.includes('(select auth.uid())'), 'Student RLS optimization preserves both owner-only policies');
+check(existsSync(join(root, optimizedRlsMigrationPath)), 'Student RLS optimization migration is tracked in the repository');
+check(defaultApiGrantsMigration.includes('ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public') && defaultApiGrantsMigration.includes('REVOKE ALL ON TABLES FROM anon, authenticated, service_role') && defaultApiGrantsMigration.includes('REVOKE ALL ON FUNCTIONS FROM anon, authenticated, service_role') && defaultApiGrantsMigration.includes('REVOKE ALL ON SEQUENCES FROM anon, authenticated, service_role'), 'Future public objects created by postgres do not receive broad default API grants');
+check(existsSync(join(root, defaultApiGrantsMigrationPath)), 'Public API default-grants migration is tracked in the repository');
+check(globalFunctionDefaultMigration.includes('ALTER DEFAULT PRIVILEGES FOR ROLE postgres') && globalFunctionDefaultMigration.includes('REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC'), 'Future postgres-owned functions do not receive PUBLIC execute by default');
+check(existsSync(join(root, globalFunctionDefaultMigrationPath)), 'Global function default-privilege migration is tracked in the repository');
 
 let vocabulary;
 try {

@@ -2,10 +2,15 @@ name: Playwright browser tests
 
 on:
   push:
-    branches: [main, 'fix/**']
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+# Keep only the newest run for a branch/PR; avoid duplicate push + PR runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -51,6 +56,6 @@ jobs:
           }
           JS
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
       - name: Run browser tests
         run: npm run test:e2e
