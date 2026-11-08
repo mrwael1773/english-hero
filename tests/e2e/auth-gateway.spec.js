@@ -306,7 +306,7 @@ test('password recovery remains the active gateway state after a page reload', a
 });
 
 
-test('account settings keep sync controls but contain no legacy sign-in interface or handlers', async ({ page }) => {
+test('account settings keep sync controls but contain no legacy sign-in interface or handlers', async ({ page, request }) => {
   await installAuthMock(page);
   await page.goto('/');
   await page.locator('#authLoginUsername').fill('mock_student');
@@ -323,7 +323,10 @@ test('account settings keep sync controls but contain no legacy sign-in interfac
     await expect(page.locator(selector)).toHaveCount(0);
   }
 
-  const cloudSource = await page.evaluate(async () => await (await fetch('./cloud-sync.js?v=7')).text());
+  // Use APIRequestContext so the page's auth mock route cannot replace the source file.
+  const cloudResponse = await request.get('http://127.0.0.1:4173/cloud-sync.js?v=7');
+  expect(cloudResponse.ok()).toBe(true);
+  const cloudSource = await cloudResponse.text();
   expect(cloudSource).not.toContain('client.auth.signInWithPassword');
   expect(cloudSource).not.toContain('client.auth.signUp(');
   expect(cloudSource).not.toContain("$cloud('cloudAuthForm')");
