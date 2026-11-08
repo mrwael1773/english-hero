@@ -625,6 +625,8 @@ test('switching between two signed-in accounts loads each account progress witho
     };
   });
 
+  // Match index.html's global lexical lesson catalog in this privacy-page fixture.
+  await page.addScriptTag({ content: 'const lessons = window.lessons;' });
   await page.addScriptTag({ path: 'cloud-sync.js' });
   await page.evaluate(() => window.EnglishHeroCloudReady);
   await expect.poll(() => page.evaluate(() => window.state.xp)).toBe(3600);
