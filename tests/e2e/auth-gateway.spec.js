@@ -23,7 +23,8 @@ async function installAuthMock(page) {
           return requestedProfile;
         },
         signInWithUsername:async()=>{setMockUser('mock-student',true);return user;},
-        signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',false);},
+        signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',window.__googleHasProfile===true);},
+        signOut:async()=>{setMockUser(null,false);},
         isReady:()=>ready,
         setPassword:async()=>{},
         sendPasswordRecovery:async(email)=>{window.__recoveryEmail=email;},
@@ -111,6 +112,18 @@ test('Google sign-in is available in login and registration keeps its onboarding
   await expect(page.locator('#authLoginPane [data-google-auth]')).toHaveCount(1);
   await page.locator('#authLoginPane [data-auth-mode="register"]').click();
   await expect(page.locator('#authRegisterPane [data-google-auth]')).toHaveCount(1);
+});
+
+test('Google registration rejects an account that already has a student profile', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.evaluate(() => { window.__googleHasProfile = true; });
+  await page.locator('#authLoginPane [data-auth-mode="register"]').click();
+  await page.locator('#authRegisterPane [data-google-auth]').click();
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authLoginPane')).toBeVisible();
+  await expect(page.locator('#authGatewayMessage')).toContainText('مسجل بالفعل');
+  await expect(page.locator('#authOnboardingPane')).toBeHidden();
 });
 
 test('Google registration continues to profile and password setup', async ({ page }) => {
