@@ -24,6 +24,7 @@ async function installAuthMock(page) {
         },
         signInWithUsername:async()=>{setMockUser('mock-student',true);return user;},
         signInWithGoogle:async(nextPath)=>{window.__googleNextPath=nextPath;setMockUser('google-student',false);},
+        signOut:async()=>{window.__mockSignOuts=(window.__mockSignOuts||0)+1;setMockUser(null,false);},
         isReady:()=>ready,
         setPassword:async()=>{},
         sendPasswordRecovery:async(email)=>{window.__recoveryEmail=email;},
@@ -92,6 +93,21 @@ test('Google sign-in preserves a validated learning destination after gateway cl
   await page.locator('#authRegisterPane [data-google-auth]').click();
   await expect.poll(() => page.evaluate(() => window.__googleNextPath)).toBe('/english-basics.html');
   expect(new URL(page.url()).searchParams.has('next')).toBe(false);
+});
+
+
+test('Google sign-in from the login tab rejects an unregistered identity without onboarding', async ({ page }) => {
+  await installAuthMock(page);
+  await page.goto('/');
+  await page.locator('#authLoginPane [data-google-auth]').click();
+
+  await expect(page.locator('#authGateway')).toBeVisible();
+  await expect(page.locator('#authLoginPane')).toBeVisible();
+  await expect(page.locator('#authOnboardingPane')).toBeHidden();
+  await expect(page.locator('#authGatewayMessage')).toContainText('هذا الحساب غير مسجل');
+  await expect.poll(() => page.evaluate(() => window.__mockSignOuts)).toBe(1);
+  await expect.poll(() => page.evaluate(() => window.EnglishHeroCloud.getUser())).toBeNull();
+  expect(await page.evaluate(() => sessionStorage.getItem('englishHeroGoogleAuthIntent'))).toBeNull();
 });
 
 test('Google registration continues to profile and password setup', async ({ page }) => {
