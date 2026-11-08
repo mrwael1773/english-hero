@@ -582,7 +582,9 @@ test('switching between two signed-in accounts loads each account progress witho
     const local = { xp: 0, best: 0, quizzes: 0, completed: [], masteredLessons: [], lessonStarted: [], lessonTrained: [], saved: [], foundationSaved: [], review: {}, misses: {}, daily: {}, lessonPositions: {}, chatHistory: [], displayName: '' };
     localStorage.setItem('english-hero-academy-3', JSON.stringify(local));
     window.state = local;
-    window.lessons = [];
+    // The production normalizer discards lesson indexes outside the loaded lesson catalog.
+    // Provide a representative catalog so this account-isolation test exercises valid IDs.
+    window.lessons = Array.from({ length: 10 }, (_, index) => ({ id: index }));
     window.defaults = () => ({ xp: 0, best: 0, quizzes: 0, streak: 0, completed: [], masteredLessons: [], lessonStarted: [], lessonTrained: [], saved: [], foundationSaved: [], review: {}, misses: {}, daily: {}, lessonPositions: {}, chatHistory: [], displayName: '' });
     window.normalizeMasteredLessons = values => values;
     window.mergeReviewProgress = () => ({});
