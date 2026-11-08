@@ -203,3 +203,14 @@ The two migration files now use the exact Test ledger versions `20261107145203` 
 ## Deployment boundary
 
 Do not use a blanket migration push to resolve the older version drift between environments. The new compatibility change is isolated to these two function migrations. Production application remains a separate deployment action and must occur only after the full PR checks pass and the production change is explicitly approved. No Production migration was applied during this audit.
+
+
+## Two-account progress isolation test — 8 November 2026
+
+A separate isolated Test-project transaction created two synthetic Auth users with different providers and different progress values (200 XP and 3,600 XP). Under each user's authenticated role and JWT subject:
+
+- Each user could read exactly one `learning_progress` row, containing only their own XP value.
+- An update targeting the other user's row affected zero rows in both directions.
+- The transaction was rolled back, and a follow-up check confirmed the synthetic Auth users were absent.
+
+This validates the database owner-scoped RLS behavior for two distinct Auth user IDs. It does not establish which production account belongs to the project owner, nor does it restore the previously deleted 200-XP row. The client-side account-switch E2E tests and a real Safari session test remain separate checks.
