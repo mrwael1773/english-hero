@@ -95,7 +95,7 @@ test('bottom navigation opens the reading journey', async ({ page }) => {
   await expect(page.locator('#readingRoot')).toBeVisible();
 });
 
-test('consonant digraph audio uses real example words, not letter names', async ({ page }) => {
+test('consonant digraph highlighted words are spoken as whole words', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
       'englishHeroReadingProgressV1:e2e-student',
@@ -119,13 +119,16 @@ test('consonant digraph audio uses real example words, not letter names', async 
   });
 
   await page.goto('/reading-digraphs.html');
-  const buttons = page.locator('.lesson-card .example-grid').last().locator('[data-speak]');
+  const exampleCard = page.locator('.lesson-card').filter({
+    has: page.getByRole('heading', { name: '👀 أمثلة مع تحديد الجزء المستهدف' })
+  });
+  const buttons = exampleCard.locator('.example-grid [data-speak]');
   await expect(buttons).toHaveCount(8);
   for (let i = 0; i < 8; i++) await buttons.nth(i).click();
   await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual([
-    'Ship', 'Chair', 'Think', 'This', 'Phone', 'Sing', 'Duck', 'Wheel'
+    'ship', 'fish', 'chair', 'think', 'this', 'phone', 'sing', 'duck'
   ]);
-  await expect.poll(() => page.locator('.lesson-card .example-grid').last().locator('[data-speak]').evaluateAll(nodes => nodes.map(node => node.dataset.speak))).toEqual([
-    'Ship', 'Chair', 'Think', 'This', 'Phone', 'Sing', 'Duck', 'Wheel'
+  await expect.poll(() => buttons.evaluateAll(nodes => nodes.map(node => node.dataset.speak))).toEqual([
+    'ship', 'fish', 'chair', 'think', 'this', 'phone', 'sing', 'duck'
   ]);
 });
