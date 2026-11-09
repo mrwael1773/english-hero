@@ -123,12 +123,12 @@ test('consonant digraph highlighted words are spoken as whole words', async ({ p
     has: page.getByRole('heading', { name: '👀 أمثلة مع تحديد الجزء المستهدف' })
   });
   const buttons = exampleCard.locator('.example-grid [data-speak]');
-  await expect(buttons).toHaveCount(8);
-  for (let i = 0; i < 8; i++) await buttons.nth(i).click();
+  await expect(buttons).toHaveCount(18);
+  for (let i = 0; i < 18; i++) await buttons.nth(i).click();
   await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual([
-    'The word ship', 'The word fish', 'The word chair', 'The word think', 'The word this', 'The word phone', 'The word sing', 'The word duck'
+    'The word ship', 'The word shop', 'The word fish', 'The word dish', 'The word chair', 'The word lunch', 'The word think', 'The word bath', 'The word this', 'The word mother', 'The word phone', 'The word graph', 'The word sing', 'The word ring', 'The word duck', 'The word black', 'The word whale', 'The word wheel'
   ]);
   await expect.poll(() => buttons.evaluateAll(nodes => nodes.map(node => node.dataset.speak))).toEqual([
-    'The word ship', 'The word fish', 'The word chair', 'The word think', 'The word this', 'The word phone', 'The word sing', 'The word duck'
+    'The word ship', 'The word shop', 'The word fish', 'The word dish', 'The word chair', 'The word lunch', 'The word think', 'The word bath', 'The word this', 'The word mother', 'The word phone', 'The word graph', 'The word sing', 'The word ring', 'The word duck', 'The word black', 'The word whale', 'The word wheel'
   ]);
 });
