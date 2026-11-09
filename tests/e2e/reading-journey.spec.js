@@ -126,9 +126,9 @@ test('consonant digraph highlighted words are spoken as whole words', async ({ p
   await expect(buttons).toHaveCount(8);
   for (let i = 0; i < 8; i++) await buttons.nth(i).click();
   await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual([
-    'ship', 'fish', 'chair', 'think', 'this', 'phone', 'sing', 'duck'
+    'The word ship', 'The word fish', 'The word chair', 'The word think', 'The word this', 'The word phone', 'The word sing', 'The word duck'
   ]);
   await expect.poll(() => buttons.evaluateAll(nodes => nodes.map(node => node.dataset.speak))).toEqual([
-    'ship', 'fish', 'chair', 'think', 'this', 'phone', 'sing', 'duck'
+    'The word ship', 'The word fish', 'The word chair', 'The word think', 'The word this', 'The word phone', 'The word sing', 'The word duck'
   ]);
 });
