@@ -73,13 +73,14 @@ test('alphabet lesson speaks letter names rather than spelling labels', async ({
   });
 
   await page.goto('/reading-letters.html');
+  await page.locator('.lesson-card .audio-row button').first().click();
   await page.locator('.example [data-speak]').nth(0).click();
   await page.locator('.example [data-speak]').nth(1).click();
   await page.locator('.example [data-speak]').nth(4).click();
   await page.locator('.example [data-speak]').nth(6).click();
   await page.locator('.example [data-speak]').nth(7).click();
   await page.locator('.example [data-speak]').nth(11).click();
-  await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual(['A', 'B', 'E', 'G', 'H', 'L']);
+  await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual(['ay. bee. see', 'ay', 'bee', 'ee', 'jee', 'aitch', 'ell']);
   await expect(page.locator('.alphabet-grid .example-word')).toHaveCount(26);
   const alphabet = await page.locator('.alphabet-grid .example-word').evaluateAll(nodes => nodes.map(node => node.textContent.trim().charAt(0)));
   expect(alphabet).toEqual('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
