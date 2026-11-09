@@ -151,7 +151,10 @@ test('letter sounds lesson explains common sound changes across multiple letters
     'حرف X له أكثر من نطق',
     'حرف Y قد يكون ساكنًا أو حرف علة',
     'حرف Q يأتي غالبًا مع U',
-    'ماذا عن بقية الحروف والحركات؟'
+    'حروف لها صوت أساسي شائع',
+    'الحركات الخمس لها أصوات متعددة',
+    'كيف أستخدم القاعدة؟',
+    'هل القواعد تنطبق دائمًا؟'
   ]) {
     await expect(lesson).toContainText(pattern);
   }
