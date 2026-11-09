@@ -132,3 +132,23 @@ test('consonant digraph highlighted words are spoken as whole words', async ({ p
     'Ship', 'shop', 'Fish', 'dish', 'Chair', 'lunch', 'Think', 'bath', 'This', 'mother', 'Phone', 'graph', 'Sing', 'ring', 'Duck', 'black', 'Whale', 'wheel'
   ]);
 });
+
+
+test('letter sounds lesson teaches hard and soft C with examples and a mastery check', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: ['letters'] })
+    );
+  });
+
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.mini-lesson')).toContainText('متى يكون C مثل K؟');
+  await expect(page.locator('.mini-lesson')).toContainText('متى يكون C مثل S؟');
+  await expect(page.locator('.example-word')).toContainText('Cold');
+  await expect(page.locator('.example-word')).toContainText('City');
+  await expect(page.locator('.example-word')).toContainText('Cent');
+  await expect(page.locator('.example-word')).toContainText('Cycle');
+  await page.locator('[data-choice="1"]').click();
+  await expect(page.locator('#quizFeedback')).toContainText('تم حفظ اجتياز المرحلة');
+});
