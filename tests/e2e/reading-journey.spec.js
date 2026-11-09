@@ -94,3 +94,41 @@ test('bottom navigation opens the reading journey', async ({ page }) => {
   await expect(page).toHaveURL(/\/reading\.html$/);
   await expect(page.locator('#readingRoot')).toBeVisible();
 });
+
+test('consonant digraph highlighted words are spoken as whole words', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: ['letters', 'letter-sounds'] })
+    );
+    window.__readingSpoken = [];
+    class MockUtterance {
+      constructor(text) { this.text = text; }
+    }
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      configurable: true,
+      value: MockUtterance
+    });
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        cancel() {},
+        speak(utterance) { window.__readingSpoken.push(utterance.text); }
+      }
+    });
+  });
+
+  await page.goto('/reading-digraphs.html');
+  const exampleCard = page.locator('.lesson-card').filter({
+    has: page.getByRole('heading', { name: '👀 أمثلة مع تحديد الجزء المستهدف' })
+  });
+  const buttons = exampleCard.locator('.example-grid [data-speak]');
+  await expect(buttons).toHaveCount(18);
+  for (let i = 0; i < 18; i++) await buttons.nth(i).click();
+  await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual([
+    'The word ship', 'The word shop', 'The word fish', 'The word dish', 'The word chair', 'The word lunch', 'The word think', 'The word bath', 'The word this', 'The word mother', 'The word phone', 'The word graph', 'The word sing', 'The word ring', 'The word duck', 'The word black', 'The word whale', 'The word wheel'
+  ]);
+  await expect.poll(() => buttons.evaluateAll(nodes => nodes.map(node => node.dataset.speak))).toEqual([
+    'The word ship', 'The word shop', 'The word fish', 'The word dish', 'The word chair', 'The word lunch', 'The word think', 'The word bath', 'The word this', 'The word mother', 'The word phone', 'The word graph', 'The word sing', 'The word ring', 'The word duck', 'The word black', 'The word whale', 'The word wheel'
+  ]);
+});
