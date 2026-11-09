@@ -144,7 +144,6 @@ test('letter sounds lesson explains common sound changes across multiple letters
   });
 
   await page.goto('/reading-letter-sounds.html');
-  const lesson = page.locator('.mini-lesson');
   for (const pattern of [
     'حرف G له صوتان شائعان',
     'حرف S قد يكون /s/ أو /z/',
@@ -156,10 +155,10 @@ test('letter sounds lesson explains common sound changes across multiple letters
     'كيف أستخدم القاعدة؟',
     'هل القواعد تنطبق دائمًا؟'
   ]) {
-    await expect(lesson).toContainText(pattern);
+    await expect(page.locator('.mini-lesson').filter({ hasText: pattern })).toHaveCount(1);
   }
   for (const word of ['Game', 'Gem', 'Get', 'Rose', 'Exam', 'Xylophone', 'Happy', 'Queen']) {
-    await expect(page.locator('.example-word')).toContainText(word);
+    await expect(page.locator('.example-word').filter({ hasText: word }).first()).toContainText(word);
   }
 });
 
@@ -172,12 +171,11 @@ test('letter sounds lesson teaches hard and soft C with examples and a mastery c
   });
 
   await page.goto('/reading-letter-sounds.html');
-  await expect(page.locator('.mini-lesson')).toContainText('متى يكون C مثل K؟');
-  await expect(page.locator('.mini-lesson')).toContainText('متى يكون C مثل S؟');
-  await expect(page.locator('.example-word')).toContainText('Cold');
-  await expect(page.locator('.example-word')).toContainText('City');
-  await expect(page.locator('.example-word')).toContainText('Cent');
-  await expect(page.locator('.example-word')).toContainText('Cycle');
+  await expect(page.locator('.mini-lesson').filter({ hasText: 'متى يكون C مثل K؟' })).toHaveCount(1);
+  await expect(page.locator('.mini-lesson').filter({ hasText: 'متى يكون C مثل S؟' })).toHaveCount(1);
+  for (const word of ['Cold', 'City', 'Cent', 'Cycle']) {
+    await expect(page.locator('.example-word').filter({ hasText: word }).first()).toContainText(word);
+  }
   await page.locator('[data-choice="1"]').click();
   await expect(page.locator('#quizFeedback')).toContainText('تم حفظ اجتياز المرحلة');
 });
