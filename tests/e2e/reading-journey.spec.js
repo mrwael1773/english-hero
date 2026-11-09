@@ -134,6 +134,32 @@ test('consonant digraph highlighted words are spoken as whole words', async ({ p
 });
 
 
+
+test('letter sounds lesson explains common sound changes across multiple letters', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: ['letters'] })
+    );
+  });
+
+  await page.goto('/reading-letter-sounds.html');
+  const lesson = page.locator('.mini-lesson');
+  for (const pattern of [
+    'حرف G له صوتان شائعان',
+    'حرف S قد يكون /s/ أو /z/',
+    'حرف X له أكثر من نطق',
+    'حرف Y قد يكون ساكنًا أو حرف علة',
+    'حرف Q يأتي غالبًا مع U',
+    'ماذا عن بقية الحروف والحركات؟'
+  ]) {
+    await expect(lesson).toContainText(pattern);
+  }
+  for (const word of ['Game', 'Gem', 'Get', 'Rose', 'Exam', 'Xylophone', 'Happy', 'Queen']) {
+    await expect(page.locator('.example-word')).toContainText(word);
+  }
+});
+
 test('letter sounds lesson teaches hard and soft C with examples and a mastery check', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
