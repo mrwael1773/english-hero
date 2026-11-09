@@ -94,3 +94,38 @@ test('bottom navigation opens the reading journey', async ({ page }) => {
   await expect(page).toHaveURL(/\/reading\.html$/);
   await expect(page.locator('#readingRoot')).toBeVisible();
 });
+
+test('consonant digraph audio uses real example words, not letter names', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: ['letters', 'letter-sounds'] })
+    );
+    window.__readingSpoken = [];
+    class MockUtterance {
+      constructor(text) { this.text = text; }
+    }
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
+      configurable: true,
+      value: MockUtterance
+    });
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        cancel() {},
+        speak(utterance) { window.__readingSpoken.push(utterance.text); }
+      }
+    });
+  });
+
+  await page.goto('/reading-digraphs.html');
+  const buttons = page.locator('.lesson-card .example-grid').last().locator('[data-speak]');
+  await expect(buttons).toHaveCount(8);
+  for (let i = 0; i < 8; i++) await buttons.nth(i).click();
+  await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual([
+    'Ship', 'Chair', 'Think', 'This', 'Phone', 'Sing', 'Duck', 'Wheel'
+  ]);
+  await expect.poll(() => page.locator('.lesson-card .example-grid').last().locator('[data-speak]').evaluateAll(nodes => nodes.map(node => node.dataset.speak))).toEqual([
+    'Ship', 'Chair', 'Think', 'This', 'Phone', 'Sing', 'Duck', 'Wheel'
+  ]);
+});
