@@ -132,3 +132,50 @@ test('consonant digraph highlighted words are spoken as whole words', async ({ p
     'Ship', 'shop', 'Fish', 'dish', 'Chair', 'lunch', 'Think', 'bath', 'This', 'mother', 'Phone', 'graph', 'Sing', 'ring', 'Duck', 'black', 'Whale', 'wheel'
   ]);
 });
+
+
+
+test('letter sounds lesson explains common sound changes across multiple letters', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: ['letters'] })
+    );
+  });
+
+  await page.goto('/reading-letter-sounds.html');
+  for (const pattern of [
+    'حرف G له صوتان شائعان',
+    'حرف S قد يكون /s/ أو /z/',
+    'حرف X له أكثر من نطق',
+    'حرف Y قد يكون ساكنًا أو حرف علة',
+    'حرف Q يأتي غالبًا مع U',
+    'حروف لها صوت أساسي شائع',
+    'الحركات الخمس لها أصوات متعددة',
+    'كيف أستخدم القاعدة؟',
+    'هل القواعد تنطبق دائمًا؟'
+  ]) {
+    await expect(page.locator('.mini-lesson').filter({ hasText: pattern })).toHaveCount(1);
+  }
+  for (const word of ['Game', 'Gem', 'Get', 'Rose', 'Exam', 'Xylophone', 'Happy', 'Queen']) {
+    await expect(page.locator('.example-word').filter({ hasText: word }).first()).toContainText(word);
+  }
+});
+
+test('letter sounds lesson teaches hard and soft C with examples and a mastery check', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: ['letters'] })
+    );
+  });
+
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.mini-lesson').filter({ hasText: 'متى يكون C مثل K؟' })).toHaveCount(1);
+  await expect(page.locator('.mini-lesson').filter({ hasText: 'متى يكون C مثل S؟' })).toHaveCount(1);
+  for (const word of ['Cold', 'City', 'Cent', 'Cycle']) {
+    await expect(page.locator('.example-word').filter({ hasText: word }).first()).toContainText(word);
+  }
+  await page.locator('[data-choice="1"]').click();
+  await expect(page.locator('#quizFeedback')).toContainText('تم حفظ اجتياز المرحلة');
+});
