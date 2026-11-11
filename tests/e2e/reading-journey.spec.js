@@ -134,6 +134,29 @@ test('letter sounds lesson explains common sound changes across multiple letters
   }
 });
 
+test('letter sounds lesson shows its visual pronunciation map', async ({ page }) => {
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.sound-map-grid .sound-rule-card')).toHaveCount(6);
+  await expect(page.locator('.sound-rule-card.sound-c')).toContainText('CENT');
+  await expect(page.locator('.sound-rule-card.sound-g')).toContainText('GET');
+  await expect(page.locator('.sound-rule-card.sound-x')).toContainText('XYLOPHONE');
+});
+
+test('legacy alphabet completion does not count as phonics mastery', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: ['letters'] })
+    );
+  });
+  await page.goto('/reading.html');
+  await expect(page.locator('.stage-card')).toHaveCount(11);
+  await expect(page.locator('.stage-card').first()).not.toHaveClass(/stage-locked/);
+  await expect(page.locator('.stage-card').nth(1)).toHaveClass(/stage-locked/);
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.reading-meta')).toContainText('لم تُجتز بعد');
+});
+
 test('letter sounds lesson teaches hard and soft C with examples and a mastery check', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
