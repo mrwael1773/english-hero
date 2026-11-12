@@ -56,7 +56,8 @@ test('legacy alphabet URL now opens the letter-sounds lesson without teaching le
   await expect(page.locator('.reading-hero h1')).toContainText('أصوات الحروف');
   await expect(page.locator('.mini-lesson').filter({ hasText: 'متى يكون C مثل K؟' })).toHaveCount(1);
   await expect(page.locator('.alphabet-grid')).toHaveCount(0);
-  await expect(page.locator('.example-word')).not.toContainText('Aa');
+  const exampleWords = await page.locator('.example-word').evaluateAll(nodes => nodes.map(node => node.textContent.trim()));
+  expect(exampleWords).not.toContain('Aa');
 });
 
 
