@@ -118,7 +118,8 @@ test('letter sounds lesson explains common sound changes across multiple letters
 
   await page.goto('/reading-letter-sounds.html');
   for (const pattern of [
-    'حرف G له صوتان شائعان',
+    'حرف G: الصوت القوي',
+    'حرف G: الصوت الناعم (ج)',
     'حرف S قد يكون /s/ أو /z/',
     'حرف X له أكثر من نطق',
     'حرف Y قد يكون ساكنًا أو حرف علة',
@@ -137,9 +138,14 @@ test('letter sounds lesson explains common sound changes across multiple letters
 
 test('letter sounds lesson shows its visual pronunciation map', async ({ page }) => {
   await page.goto('/reading-letter-sounds.html');
-  await expect(page.locator('.sound-map-grid .sound-rule-card')).toHaveCount(6);
+  await expect(page.locator('.sound-map-grid .sound-rule-card')).toHaveCount(7);
   await expect(page.locator('.sound-rule-card.sound-c')).toContainText('CENT');
-  await expect(page.locator('.sound-rule-card.sound-g')).toContainText('GET');
+  const gCards = page.locator('.sound-map-grid .sound-rule-card.sound-g');
+  await expect(gCards).toHaveCount(2);
+  await expect(gCards.nth(0)).toContainText('الصوت القوي');
+  await expect(gCards.nth(1)).toContainText('ج');
+  await expect(gCards.nth(1)).toContainText('GEM');
+  await expect(gCards.nth(1)).toContainText('GIVE');
   await expect(page.locator('.sound-rule-card.sound-x')).toContainText('XYLOPHONE');
 });
 
