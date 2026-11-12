@@ -2,33 +2,31 @@ import { test, expect } from './fixtures.js';
 
 test('reading journey locks later stages until the previous check is passed', async ({ page }) => {
   await page.goto('/reading.html');
-  await expect(page.locator('.stage-card')).toHaveCount(12);
-  await expect(page.locator('.stage-card.stage-locked')).toHaveCount(11);
+  await expect(page.locator('.stage-card')).toHaveCount(11);
+  await expect(page.locator('.stage-card.stage-locked')).toHaveCount(10);
 
-  await page.goto('/reading-letter-sounds.html');
+  await page.goto('/reading-digraphs.html');
   await expect(page.locator('.activity-card')).toContainText('هذه المرحلة لم تُفتح بعد');
 
-  await page.goto('/reading-letters.html');
-  await page.locator('[data-choice="0"]').click();
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.reading-hero h1')).toContainText('أصوات الحروف');
+  await page.locator('[data-choice="1"]').click();
   await expect(page.locator('#quizFeedback')).toContainText('تم حفظ اجتياز المرحلة');
 
   const saved = await page.evaluate(() =>
     JSON.parse(localStorage.getItem('englishHeroReadingProgressV1:e2e-student'))
   );
-  expect(saved).toEqual({ version: 1, completed: ['letters'] });
-
-  await page.goto('/reading-letter-sounds.html');
-  await expect(page.locator('.reading-hero h1')).toContainText('أصوات الحروف');
+  expect(saved).toEqual({ version: 1, completed: ['letter-sounds'] });
 
   await page.goto('/reading-digraphs.html');
-  await expect(page.locator('.activity-card')).toContainText('هذه المرحلة لم تُفتح بعد');
+  await expect(page.locator('.reading-hero h1')).toContainText('الحروف المركبة');
 });
 
 test('reading audio button requests the complete example word once', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
       'englishHeroReadingProgressV1:e2e-student',
-      JSON.stringify({ version: 1, completed: ['letters'] })
+      JSON.stringify({ version: 1, completed: [] })
     );
     window.__readingSpoken = [];
     class MockUtterance {
@@ -53,38 +51,13 @@ test('reading audio button requests the complete example word once', async ({ pa
 });
 
 
-test('alphabet lesson speaks letter names rather than spelling labels', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.__readingSpoken = [];
-    class MockUtterance {
-      constructor(text) { this.text = text; }
-    }
-    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
-      configurable: true,
-      value: MockUtterance
-    });
-    Object.defineProperty(window, 'speechSynthesis', {
-      configurable: true,
-      value: {
-        cancel() {},
-        speak(utterance) { window.__readingSpoken.push(utterance.text); }
-      }
-    });
-  });
-
+test('legacy alphabet URL now opens the letter-sounds lesson without teaching letter names', async ({ page }) => {
   await page.goto('/reading-letters.html');
-  await page.locator('.lesson-card .audio-row button').first().click();
-  await page.locator('.example [data-speak]').nth(0).click();
-  await page.locator('.example [data-speak]').nth(1).click();
-  await page.locator('.example [data-speak]').nth(4).click();
-  await page.locator('.example [data-speak]').nth(6).click();
-  await page.locator('.example [data-speak]').nth(7).click();
-  await page.locator('.example [data-speak]').nth(11).click();
-  await expect.poll(() => page.evaluate(() => window.__readingSpoken)).toEqual(['the letter A. the letter B. the letter C', 'the letter A', 'the letter B', 'the letter E', 'the letter G', 'the letter H', 'the letter L']);
-  await expect(page.locator('.alphabet-grid .example-word')).toHaveCount(26);
-  const alphabet = await page.locator('.alphabet-grid .example-word').evaluateAll(nodes => nodes.map(node => node.textContent.trim().charAt(0)));
-  expect(alphabet).toEqual('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
-  await expect.poll(() => page.locator('.alphabet-grid').evaluate(el => getComputedStyle(el).direction)).toBe('ltr');
+  await expect(page.locator('.reading-hero h1')).toContainText('أصوات الحروف');
+  await expect(page.locator('.mini-lesson').filter({ hasText: 'متى يكون C مثل K؟' })).toHaveCount(1);
+  await expect(page.locator('.alphabet-grid')).toHaveCount(0);
+  const exampleWords = await page.locator('.example-word').evaluateAll(nodes => nodes.map(node => node.textContent.trim()));
+  expect(exampleWords).not.toContain('Aa');
 });
 
 
@@ -99,7 +72,7 @@ test('consonant digraph highlighted words are spoken as whole words', async ({ p
   await page.addInitScript(() => {
     localStorage.setItem(
       'englishHeroReadingProgressV1:e2e-student',
-      JSON.stringify({ version: 1, completed: ['letters', 'letter-sounds'] })
+      JSON.stringify({ version: 1, completed: ['letter-sounds'] })
     );
     window.__readingSpoken = [];
     class MockUtterance {
@@ -139,7 +112,7 @@ test('letter sounds lesson explains common sound changes across multiple letters
   await page.addInitScript(() => {
     localStorage.setItem(
       'englishHeroReadingProgressV1:e2e-student',
-      JSON.stringify({ version: 1, completed: ['letters'] })
+      JSON.stringify({ version: 1, completed: [] })
     );
   });
 
@@ -162,11 +135,34 @@ test('letter sounds lesson explains common sound changes across multiple letters
   }
 });
 
-test('letter sounds lesson teaches hard and soft C with examples and a mastery check', async ({ page }) => {
+test('letter sounds lesson shows its visual pronunciation map', async ({ page }) => {
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.sound-map-grid .sound-rule-card')).toHaveCount(6);
+  await expect(page.locator('.sound-rule-card.sound-c')).toContainText('CENT');
+  await expect(page.locator('.sound-rule-card.sound-g')).toContainText('GET');
+  await expect(page.locator('.sound-rule-card.sound-x')).toContainText('XYLOPHONE');
+});
+
+test('legacy alphabet completion does not count as phonics mastery', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
       'englishHeroReadingProgressV1:e2e-student',
       JSON.stringify({ version: 1, completed: ['letters'] })
+    );
+  });
+  await page.goto('/reading.html');
+  await expect(page.locator('.stage-card')).toHaveCount(11);
+  await expect(page.locator('.stage-card').first()).not.toHaveClass(/stage-locked/);
+  await expect(page.locator('.stage-card').nth(1)).toHaveClass(/stage-locked/);
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.reading-meta')).toContainText('لم تُجتز بعد');
+});
+
+test('letter sounds lesson teaches hard and soft C with examples and a mastery check', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'englishHeroReadingProgressV1:e2e-student',
+      JSON.stringify({ version: 1, completed: [] })
     );
   });
 
