@@ -23,7 +23,7 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return response({ error: "Method not allowed" }, 405);
 
   const origin = req.headers.get("origin");
-  if (origin && origin !== allowedOrigin) return response({ error: "Origin not allowed" }, 403);
+  if (origin !== allowedOrigin) return response({ error: "Origin not allowed" }, 403);
 
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!/^[0-9a-f]{64}$/.test(token)) return response({ error: "Invalid or expired link" }, 401);
