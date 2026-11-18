@@ -100,7 +100,7 @@ h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px 
    });
    const {data,error}=await client.auth.getSession();
    if(error){say('تعذر التحقق من الجلسة الحالية.',true);return;}
-   if(data.session)await loadOverview();else say('سجّل الدخول بحساب الموجه المعتمد.');
+   if(data.session){$('signOut').hidden=false;await loadOverview();}else say('سجّل الدخول بحساب الموجه المعتمد.');
  }
  $('googleLogin').addEventListener('click',async()=>{
    if(!client)return;
