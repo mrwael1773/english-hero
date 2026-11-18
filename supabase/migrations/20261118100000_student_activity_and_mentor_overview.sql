@@ -50,11 +50,9 @@ grant execute on function public.record_student_activity() to authenticated;
 
 create or replace function public.get_mentor_student_overview()
 returns table (
-  user_id uuid,
   username text,
   display_name text,
   last_seen_at timestamptz,
-  progress_updated_at timestamptz,
   progress jsonb
 )
 language plpgsql
@@ -71,14 +69,12 @@ begin
   end if;
 
   return query
-    select p.user_id, p.username, p.display_name,
-           a.last_seen_at, lp.updated_at,
+    select p.username, p.display_name,
+           a.last_seen_at,
            jsonb_build_object(
              'xp', lp.progress->'xp',
              'completed', lp.progress->'completed',
-             'masteredLessons', lp.progress->'masteredLessons',
-             'quizzes', lp.progress->'quizzes',
-             'level', lp.progress->'level'
+             'masteredLessons', lp.progress->'masteredLessons'
            )
     from public.student_profiles as p
     left join public.student_activity as a on a.user_id = p.user_id
