@@ -338,7 +338,8 @@
         if(event==='PASSWORD_RECOVERY') markPasswordRecovery();
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
-      if(user){ await syncNow(); await recordStudentActivity(); }
+      if(user) await syncNow();
+      if(user) await recordStudentActivity();
       else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
       // Release the gateway only after the returning user's cloud progress has been restored.
       resolveCloudInitialization(true);
