@@ -5,7 +5,7 @@ create table if not exists public.student_activity (
   last_seen_at timestamptz not null default now()
 );
 alter table public.student_activity enable row level security;
-revoke all on public.student_activity from anon, authenticated;
+revoke all on public.student_activity from public, anon, authenticated;
 
 create table if not exists public.student_access_roles (
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -14,7 +14,7 @@ create table if not exists public.student_access_roles (
   primary key (user_id, role)
 );
 alter table public.student_access_roles enable row level security;
-revoke all on public.student_access_roles from anon, authenticated;
+revoke all on public.student_access_roles from public, anon, authenticated;
 
 create or replace function public.record_student_activity()
 returns timestamptz
