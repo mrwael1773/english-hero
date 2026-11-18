@@ -31,7 +31,7 @@ jobs:
           from pathlib import Path
 
           inline_count = 0
-          for page_path in ["index.html", "grammar-lesson.html"]:
+          for page_path in ["index.html", "grammar-lesson.html", "mentor-dashboard.html"]:
               html = Path(page_path).read_text(encoding="utf-8")
               scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
               for attrs, script in scripts:
@@ -67,6 +67,9 @@ jobs:
       - name: Type-check username login Edge Function
         run: deno check --no-lock supabase/functions/student-username-login/index.ts
 
+      - name: Type-check mentor overview Edge Function
+        run: deno check --no-lock supabase/functions/mentor-overview/index.ts
+
       - name: Validate JSON data and vocabulary count
         run: |
           node --input-type=module <<'JS'
@@ -99,6 +102,7 @@ jobs:
           test -s auth-gateway.css
           test -s auth-guard.js
           test -s supabase/functions/student-username-login/index.ts
+          test -s supabase/functions/mentor-overview/index.ts
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg
