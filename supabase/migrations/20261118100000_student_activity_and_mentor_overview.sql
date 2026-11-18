@@ -72,7 +72,14 @@ begin
 
   return query
     select p.user_id, p.username, p.display_name,
-           a.last_seen_at, lp.updated_at, coalesce(lp.progress, '{}'::jsonb)
+           a.last_seen_at, lp.updated_at,
+           jsonb_build_object(
+             'xp', lp.progress->'xp',
+             'completed', lp.progress->'completed',
+             'masteredLessons', lp.progress->'masteredLessons',
+             'quizzes', lp.progress->'quizzes',
+             'level', lp.progress->'level'
+           )
     from public.student_profiles as p
     left join public.student_activity as a on a.user_id = p.user_id
     left join public.learning_progress as lp on lp.user_id = p.user_id
