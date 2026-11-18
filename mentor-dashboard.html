@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#101a2d">
+<title>متابعة الطلاب | بطل الإنجليزي</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#17243a;--line:#354967;--text:#f2f6ff;--muted:#a9bad3;--mint:#70e4c3;--red:#ff9baa}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 0,#30275b,transparent 35%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.7}
+main{max-width:1100px;margin:auto;padding:24px 16px 60px}.panel{background:linear-gradient(160deg,var(--panel),#121d30);border:1px solid var(--line);border-radius:18px;padding:20px;margin:16px 0}
+header,.toolbar,.stats{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.eyebrow{color:var(--mint);font-size:12px;font-weight:800;letter-spacing:1px}
+h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px solid var(--line);border-radius:11px;padding:10px 15px;background:#263650;color:var(--text);font:inherit;font-weight:750;cursor:pointer}.btn.primary{background:#246b66;border:0}.btn:disabled{opacity:.55;cursor:wait}
+.stat{flex:1;min-width:150px;border:1px solid var(--line);border-radius:13px;padding:14px;background:#202f49}.stat b{display:block;font-size:25px}
+.notice{padding:12px;border-radius:12px;background:#26374c;color:#dce8fa}.error{color:var(--red)}.hidden{display:none!important}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:right;padding:11px 9px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mint);white-space:nowrap}
+@media(max-width:520px){.panel{padding:15px}main{padding:16px 12px 40px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="./config.js" defer></script>
+</head>
+<body>
+<main>
+<header><div><div class="eyebrow">ENGLISH HERO • متابعة المدرسة</div><h1>لوحة متابعة الطلاب</h1><p class="muted small">عرض محدود للتقدم التعليمي وآخر اتصال بالحساب.</p></div><button class="btn" id="signOut" type="button" hidden>تسجيل الخروج</button></header>
+<section class="panel" id="loginPanel">
+<h2>دخول الموجه الطلابي</h2>
+<p class="muted">استخدم حساب Google المعتمد للموجه. لن تظهر بيانات الطلاب إلا بعد تفعيل صلاحية الموجه لهذا الحساب.</p>
+<button class="btn primary" id="googleLogin" type="button">المتابعة باستخدام Google</button>
+<p class="small muted" id="loginStatus" role="status" aria-live="polite"></p>
+</section>
+<section class="panel hidden" id="dashboard">
+<div class="toolbar"><div><h2 style="margin:0">ملخص الطلاب</h2><p class="muted small" id="updatedAt">—</p></div><button class="btn" id="refresh" type="button">تحديث البيانات</button></div>
+<div class="stats">
+<div class="stat"><span class="muted small">إجمالي الحسابات</span><b id="total">—</b></div>
+<div class="stat"><span class="muted small">اتصلوا سابقًا</span><b id="seen">—</b></div>
+<div class="stat"><span class="muted small">لم يسجل اتصال بعد</span><b id="notSeen">—</b></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>الطالب</th><th>اسم المستخدم</th><th>آخر اتصال</th><th>الدروس المكتملة</th><th>دروس الإتقان</th><th>النقاط</th></tr></thead><tbody id="students"></tbody></table></div>
+<p class="small muted">يعرض هذا الجدول ملخصًا فقط. لا يعرض البريد الإلكتروني أو سجل الإجابات أو بيانات الجلسات الخاصة.</p>
+</section>
+<p class="notice small" id="status" role="status" aria-live="polite">جارٍ التحقق من إعدادات الحساب...</p>
+</main>
+<script>
+'use strict';
+(()=> {
+ const $=id=>document.getElementById(id);
+ let client=null, loading=false;
+ const say=(message,isError=false)=>{ $('status').textContent=message; $('status').classList.toggle('error',isError); };
+ const formatDate=value=>{
+   if(!value)return 'لم يسجل بعد';
+   const date=new Date(value);
+   if(Number.isNaN(date.getTime()))return 'غير متاح';
+   return new Intl.DateTimeFormat('ar-SA',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Riyadh'}).format(date);
+ };
+ const cell=(row,value)=>{
+   const td=document.createElement('td');td.textContent=value;row.appendChild(td);
+ };
+ async function loadOverview(){
+   if(!client||loading)return;
+   loading=true;$('refresh').disabled=true;say('جارٍ تحميل بيانات الطلاب...');
+   try{
+     const {data,error}=await client.rpc('get_mentor_student_overview');
+     if(error)throw error;
+     const rows=Array.isArray(data)?data:[];
+     const tbody=$('students');tbody.replaceChildren();
+     for(const student of rows){
+       const tr=document.createElement('tr');
+       const progress=student.progress&&typeof student.progress==='object'?student.progress:{};
+       const count=value=>Array.isArray(value)?value.length:0;
+       cell(tr,student.display_name||'—');
+       cell(tr,student.username||'—');
+       cell(tr,formatDate(student.last_seen_at));
+       cell(tr,String(count(progress.completed)));
+       cell(tr,String(count(progress.masteredLessons)));
+       cell(tr,progress.xp==null?'—':String(progress.xp));
+       tbody.appendChild(tr);
+     }
+     $('total').textContent=String(rows.length);
+     $('seen').textContent=String(rows.filter(x=>x.last_seen_at).length);
+     $('notSeen').textContent=String(rows.filter(x=>!x.last_seen_at).length);
+     $('updatedAt').textContent='آخر تحديث للوحة: '+formatDate(new Date().toISOString());
+     $('dashboard').classList.remove('hidden');$('loginPanel').classList.add('hidden');
+     $('signOut').hidden=false;say('تم تحميل الملخص بنجاح.');
+   }catch(error){
+     const message=String(error?.message||'');
+     if(/Mentor access required|42501|permission denied/i.test(message)){
+       say('تم تسجيل الدخول، لكن صلاحية الموجه غير مفعّلة لهذا الحساب بعد. لم يتم عرض أي بيانات للطلاب.',true);
+     }else say('تعذر تحميل البيانات. تحقق من الاتصال وإعدادات الصلاحية.',true);
+     $('dashboard').classList.add('hidden');
+   }finally{loading=false;$('refresh').disabled=false;}
+ }
+ async function start(){
+   const config=window.ENGLISH_HERO_CLOUD_CONFIG;
+   if(!window.supabase?.createClient||!config?.supabaseUrl||!config?.supabaseAnonKey){
+     say('إعدادات الاتصال غير مكتملة. لم يتم تحميل أي بيانات.',true);return;
+   }
+   client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{
+     auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+   });
+   const {data,error}=await client.auth.getSession();
+   if(error){say('تعذر التحقق من الجلسة الحالية.',true);return;}
+   if(data.session)await loadOverview();else say('سجّل الدخول بحساب الموجه المعتمد.');
+ }
+ $('googleLogin').addEventListener('click',async()=>{
+   if(!client)return;
+   $('googleLogin').disabled=true;$('loginStatus').textContent='جارٍ تحويلك إلى Google...';
+   const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href,queryParams:{prompt:'select_account'}}});
+   if(error){$('loginStatus').textContent='تعذر بدء تسجيل الدخول.';$('googleLogin').disabled=false;}
+ });
+ $('refresh').addEventListener('click',loadOverview);
+ $('signOut').addEventListener('click',async()=>{
+   if(!client)return;
+   const {error}=await client.auth.signOut();
+   if(error){say('تعذر تسجيل الخروج.',true);return;}
+   location.reload();
+ });
+ start().catch(()=>say('تعذر تهيئة لوحة المتابعة.',true));
+})();
+</script>
+</body>
+</html>
