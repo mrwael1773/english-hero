@@ -96,7 +96,7 @@ h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px 
      say('إعدادات الاتصال غير مكتملة. لم يتم تحميل أي بيانات.',true);return;
    }
    client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{
-     auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+     auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'english-hero-mentor-auth-token'}
    });
    const {data,error}=await client.auth.getSession();
    if(error){say('تعذر التحقق من الجلسة الحالية.',true);return;}
