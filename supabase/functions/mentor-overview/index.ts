@@ -49,7 +49,12 @@ Deno.serve(async (req: Request) => {
     const tokenRows = await tokenRes.json();
     if (!Array.isArray(tokenRows) || tokenRows.length !== 1) return response({ error: "Invalid or expired link" }, 401);
 
-    const updateRes = await fetch(api + "mentor_link_tokens?token_hash=eq." + tokenHash + "&revoked_at=is.null&expires_at=gt." + encodeURIComponent(new Date().toISOString())", {
+    const updateQuery = new URLSearchParams({
+      token_hash: "eq." + tokenHash,
+      revoked_at: "is.null",
+      expires_at: "gt." + new Date().toISOString(),
+    });
+    const updateRes = await fetch(api + "mentor_link_tokens?" + updateQuery, {
       method: "PATCH",
       headers: { ...headers, Prefer: "return=minimal" },
       body: JSON.stringify({ last_used_at: new Date().toISOString() }),
