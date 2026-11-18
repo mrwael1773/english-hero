@@ -115,7 +115,7 @@ h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px 
    if(error){say('تعذر تسجيل الخروج.',true);return;}
    location.reload();
  });
- start().catch(()=>say('تعذر تهيئة لوحة المتابعة.',true));
+ document.addEventListener('DOMContentLoaded',()=>start().catch(()=>say('تعذر تهيئة لوحة المتابعة.',true)),{once:true});
 })();
 </script>
 </body>
