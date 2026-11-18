@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#101a2d">
 <title>متابعة الطلاب | بطل الإنجليزي</title>
 <style>
@@ -17,36 +18,39 @@ h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px 
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:right;padding:11px 9px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mint);white-space:nowrap}
 @media(max-width:520px){.panel{padding:15px}main{padding:16px 12px 40px}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="./config.js" defer></script>
 </head>
 <body>
 <main>
-<header><div><div class="eyebrow">ENGLISH HERO • متابعة المدرسة</div><h1>لوحة متابعة الطلاب</h1><p class="muted small">عرض محدود للتقدم التعليمي وآخر اتصال بالحساب.</p></div><button class="btn" id="signOut" type="button" hidden>تسجيل الخروج</button></header>
-<section class="panel" id="loginPanel">
-<h2>دخول الموجه الطلابي</h2>
-<p class="muted">استخدم حساب Google المعتمد للموجه. لن تظهر بيانات الطلاب إلا بعد تفعيل صلاحية الموجه لهذا الحساب.</p>
-<button class="btn primary" id="googleLogin" type="button">المتابعة باستخدام Google</button>
-<p class="small muted" id="loginStatus" role="status" aria-live="polite"></p>
+<header><div><div class="eyebrow">ENGLISH HERO • متابعة المدرسة</div><h1>لوحة متابعة الطلاب</h1><p class="muted small">ملخص التقدم التعليمي وآخر اتصال بالحساب.</p></div></header>
+<section class="panel" id="accessPanel">
+<h2>رابط متابعة الموجّه</h2>
+<p class="muted">تُفتح اللوحة بالرابط المخصص فقط، دون كلمة مرور أو تسجيل دخول. لا تشارك الرابط؛ فهو يمنح حامله صلاحية مشاهدة ملخص بيانات الطلاب حتى انتهاء صلاحيته أو إبطاله.</p>
+<button class="btn primary" id="openDashboard" type="button">فتح لوحة المتابعة</button>
+<p class="small muted" id="accessStatus" role="status" aria-live="polite">جارٍ التحقق من الرابط...</p>
 </section>
 <section class="panel hidden" id="dashboard">
 <div class="toolbar"><div><h2 style="margin:0">ملخص الطلاب</h2><p class="muted small" id="updatedAt">—</p></div><button class="btn" id="refresh" type="button">تحديث البيانات</button></div>
 <div class="stats">
 <div class="stat"><span class="muted small">إجمالي الحسابات</span><b id="total">—</b></div>
 <div class="stat"><span class="muted small">اتصلوا سابقًا</span><b id="seen">—</b></div>
-<div class="stat"><span class="muted small">لم يسجل اتصال بعد</span><b id="notSeen">—</b></div>
+<div class="stat"><span class="muted small">لم يسجلوا اتصالًا</span><b id="notSeen">—</b></div>
 </div>
 <div class="table-wrap"><table><thead><tr><th>الطالب</th><th>اسم المستخدم</th><th>آخر اتصال</th><th>الدروس المكتملة</th><th>دروس الإتقان</th><th>النقاط</th></tr></thead><tbody id="students"></tbody></table></div>
-<p class="small muted">يعرض هذا الجدول ملخصًا فقط. لا يعرض البريد الإلكتروني أو سجل الإجابات أو بيانات الجلسات الخاصة.</p>
+<p class="small muted">يعرض الجدول ملخصًا فقط، ولا يعرض البريد الإلكتروني أو إجابات الاختبارات أو سجلات الجلسات.</p>
 </section>
-<p class="notice small" id="status" role="status" aria-live="polite">جارٍ التحقق من إعدادات الحساب...</p>
+<p class="notice small" id="status" role="status" aria-live="polite">لا يتم عرض بيانات الطلاب قبل التحقق من صلاحية الرابط.</p>
 </main>
 <script>
 'use strict';
-(()=> {
+(()=>{
  const $=id=>document.getElementById(id);
- let client=null, loading=false;
- const say=(message,isError=false)=>{ $('status').textContent=message; $('status').classList.toggle('error',isError); };
+ const config=window.ENGLISH_HERO_CLOUD_CONFIG;
+ let token='',loading=false;
+ const say=(message,isError=false)=>{
+   $('status').textContent=message;
+   $('status').classList.toggle('error',isError);
+ };
  const formatDate=value=>{
    if(!value)return 'لم يسجل بعد';
    const date=new Date(value);
@@ -54,68 +58,86 @@ h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px 
    return new Intl.DateTimeFormat('ar-SA',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Riyadh'}).format(date);
  };
  const cell=(row,value)=>{
-   const td=document.createElement('td');td.textContent=value;row.appendChild(td);
+   const td=document.createElement('td');
+   td.textContent=value;
+   row.appendChild(td);
  };
- async function loadOverview(){
-   if(!client||loading)return;
-   loading=true;$('refresh').disabled=true;say('جارٍ تحميل بيانات الطلاب...');
-   try{
-     const {data,error}=await client.rpc('get_mentor_student_overview');
-     if(error)throw error;
-     const rows=Array.isArray(data)?data:[];
-     const tbody=$('students');tbody.replaceChildren();
-     for(const student of rows){
-       const tr=document.createElement('tr');
-       const progress=student.progress&&typeof student.progress==='object'?student.progress:{};
-       const count=value=>Array.isArray(value)?value.length:0;
-       cell(tr,student.display_name||'—');
-       cell(tr,student.username||'—');
-       cell(tr,formatDate(student.last_seen_at));
-       cell(tr,String(count(progress.completed)));
-       cell(tr,String(count(progress.masteredLessons)));
-       cell(tr,progress.xp==null?'—':String(progress.xp));
-       tbody.appendChild(tr);
-     }
-     $('total').textContent=String(rows.length);
-     $('seen').textContent=String(rows.filter(x=>x.last_seen_at).length);
-     $('notSeen').textContent=String(rows.filter(x=>!x.last_seen_at).length);
-     $('updatedAt').textContent='آخر تحديث للوحة: '+formatDate(new Date().toISOString());
-     $('dashboard').classList.remove('hidden');$('loginPanel').classList.add('hidden');
-     $('signOut').hidden=false;say('تم تحميل الملخص بنجاح.');
-   }catch(error){
-     const message=String(error?.message||'');
-     if(/Mentor access required|42501|permission denied/i.test(message)){
-       say('تم تسجيل الدخول، لكن صلاحية الموجه غير مفعّلة لهذا الحساب بعد. لم يتم عرض أي بيانات للطلاب.',true);
-     }else say('تعذر تحميل البيانات. تحقق من الاتصال وإعدادات الصلاحية.',true);
-     $('dashboard').classList.add('hidden');
-   }finally{loading=false;$('refresh').disabled=false;}
- }
- async function start(){
-   const config=window.ENGLISH_HERO_CLOUD_CONFIG;
-   if(!window.supabase?.createClient||!config?.supabaseUrl||!config?.supabaseAnonKey){
-     say('إعدادات الاتصال غير مكتملة. لم يتم تحميل أي بيانات.',true);return;
+ function render(rows,generatedAt){
+   const tbody=$('students');
+   tbody.replaceChildren();
+   for(const student of rows){
+     const tr=document.createElement('tr');
+     const progress=student.progress&&typeof student.progress==='object'?student.progress:{};
+     const count=value=>Array.isArray(value)?value.length:0;
+     cell(tr,student.display_name||'—');
+     cell(tr,student.username||'—');
+     cell(tr,formatDate(student.last_seen_at));
+     cell(tr,String(count(progress.completed)));
+     cell(tr,String(count(progress.masteredLessons)));
+     cell(tr,progress.xp==null?'—':String(progress.xp));
+     tbody.appendChild(tr);
    }
-   client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{
-     auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'english-hero-mentor-auth-token'}
-   });
-   const {data,error}=await client.auth.getSession();
-   if(error){say('تعذر التحقق من الجلسة الحالية.',true);return;}
-   if(data.session){$('signOut').hidden=false;await loadOverview();}else say('سجّل الدخول بحساب الموجه المعتمد.');
+   $('total').textContent=String(rows.length);
+   $('seen').textContent=String(rows.filter(x=>x.last_seen_at).length);
+   $('notSeen').textContent=String(rows.filter(x=>!x.last_seen_at).length);
+   $('updatedAt').textContent='آخر تحديث: '+formatDate(generatedAt);
+   $('dashboard').classList.remove('hidden');
+   $('accessPanel').classList.add('hidden');
  }
- $('googleLogin').addEventListener('click',async()=>{
-   if(!client)return;
-   $('googleLogin').disabled=true;$('loginStatus').textContent='جارٍ تحويلك إلى Google...';
-   const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href,queryParams:{prompt:'select_account'}}});
-   if(error){$('loginStatus').textContent='تعذر بدء تسجيل الدخول.';$('googleLogin').disabled=false;}
- });
+ async function loadOverview(){
+   if(!token||loading)return;
+   if(!config?.supabaseUrl||!config?.supabaseAnonKey){
+     say('إعدادات الاتصال غير مكتملة. لم يتم عرض بيانات.',true);
+     return;
+   }
+   loading=true;
+   $('refresh').disabled=true;
+   $('openDashboard').disabled=true;
+   say('جارٍ التحقق وتحميل ملخص الطلاب...');
+   try{
+     const endpoint=config.supabaseUrl.replace(/\/$/,'')+'/functions/v1/mentor-overview';
+     const response=await fetch(endpoint,{
+       method:'POST',
+       headers:{
+         'Content-Type':'application/json',
+         'apikey':config.supabaseAnonKey,
+         'Authorization':'Bearer '+token
+       },
+       body:'{}',
+       cache:'no-store',
+       referrerPolicy:'no-referrer'
+     });
+     const payload=await response.json().catch(()=>({}));
+     if(!response.ok){
+       if(response.status===401){
+         say('الرابط غير صالح أو انتهت صلاحيته أو تم إبطاله. اطلب رابطًا جديدًا من مسؤول الموقع.',true);
+       }else say('تعذر تحميل البيانات حاليًا. لم يتم عرض أي بيانات.',true);
+       $('dashboard').classList.add('hidden');
+       return;
+     }
+     render(Array.isArray(payload.students)?payload.students:[],payload.generated_at);
+     say('تم التحقق من الرابط وتحميل الملخص.');
+   }catch{
+     say('تعذر الاتصال بالخدمة. حاول التحديث عند توفر الاتصال.',true);
+   }finally{
+     loading=false;
+     $('refresh').disabled=false;
+     $('openDashboard').disabled=false;
+   }
+ }
+ $('openDashboard').addEventListener('click',loadOverview);
  $('refresh').addEventListener('click',loadOverview);
- $('signOut').addEventListener('click',async()=>{
-   if(!client)return;
-   const {error}=await client.auth.signOut();
-   if(error){say('تعذر تسجيل الخروج.',true);return;}
-   location.reload();
- });
- document.addEventListener('DOMContentLoaded',()=>start().catch(()=>say('تعذر تهيئة لوحة المتابعة.',true)),{once:true});
+ // The bearer token is kept only in memory. The URL fragment is removed immediately
+ // so it is not sent in HTTP requests, referrers, or retained in browser history.
+ token=location.hash.startsWith('#')?location.hash.slice(1):'';
+ if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+ if(!/^[0-9a-f]{64}$/.test(token)){
+   $('accessStatus').textContent='لم يتم العثور على رمز وصول صالح في الرابط. افتح الرابط الكامل الذي استلمه الموجّه.';
+   $('openDashboard').disabled=true;
+   say('الرابط غير مكتمل؛ لم يتم إرسال أي طلب لبيانات الطلاب.',true);
+ }else{
+   $('accessStatus').textContent='تم استلام رمز الوصول. اضغط فتح لوحة المتابعة للتحقق منه.';
+ }
 })();
 </script>
 </body>
