@@ -1,5 +1,3 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
 const allowedOrigin = "https://mrwael1773.github.io";
 const corsHeaders = {
   "Access-Control-Allow-Origin": allowedOrigin,
