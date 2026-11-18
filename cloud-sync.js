@@ -269,6 +269,22 @@
       if(user && client && user.id!==requestedUserId) queueMicrotask(()=>syncNow());
     }
   }
+  async function recordStudentActivity(){
+    if(!client || !user || !ready || progressOwnerUserId!==user.id) return;
+    try {
+      const {error}=await client.rpc('record_student_activity');
+      if(error) throw error;
+    } catch(error) {
+      // Activity reporting is best-effort and must never block learning or sync.
+      console.warn('English Hero activity tracking:',error?.message||error);
+    }
+  }
+
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') recordStudentActivity();
+  });
+  window.addEventListener('focus',recordStudentActivity);
+
   async function init(){
     if(!validConfig()){
       status('تسجيل الدخول السحابي جاهز للتهيئة، لكنه غير مفعّل بعد. يلزم إعداد مشروع Supabase ومفتاحه العام في config.js.');
@@ -297,6 +313,7 @@
         setSignedInUI();
         if(event==='SIGNED_IN' && user) setTimeout(async()=>{
           await syncNow();
+          await recordStudentActivity();
           window.dispatchEvent(new CustomEvent('englishhero:authready'));
         },0);
         if(event==='SIGNED_OUT'){
@@ -321,7 +338,7 @@
         if(event==='PASSWORD_RECOVERY') markPasswordRecovery();
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
-      if(user) await syncNow();
+      if(user){ await syncNow(); await recordStudentActivity(); }
       else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
       // Release the gateway only after the returning user's cloud progress has been restored.
       resolveCloudInitialization(true);
