@@ -8,7 +8,7 @@ set search_path = ''
 as $$
 declare
   v_students jsonb;
-  v_now timestamptz := clock_timestamp();
+  v_now timestamptz;
 begin
   if coalesce(p_token_hash, '') !~ '^[0-9a-f]{64}$' then
     raise exception 'Invalid or expired mentor link' using errcode = '28000';
@@ -19,16 +19,23 @@ begin
   from public.mentor_link_tokens as t
   where t.token_hash = p_token_hash
     and t.revoked_at is null
-    and t.expires_at > v_now
+    and t.expires_at > clock_timestamp()
   for update;
 
   if not found then
     raise exception 'Invalid or expired mentor link' using errcode = '28000';
   end if;
 
+  v_now := clock_timestamp();
   update public.mentor_link_tokens
   set last_used_at = v_now
-  where token_hash = p_token_hash;
+  where token_hash = p_token_hash
+    and revoked_at is null
+    and expires_at > v_now;
+
+  if not found then
+    raise exception 'Invalid or expired mentor link' using errcode = '28000';
+  end if;
 
   select coalesce(
     jsonb_agg(
