@@ -18,7 +18,7 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
-Deno.serve(async (req: Request) => {
+export async function handleMentorOverview(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return response({ error: "Method not allowed" }, 405);
 
@@ -64,4 +64,8 @@ Deno.serve(async (req: Request) => {
   } catch {
     return response({ error: "Request could not be completed" }, 500);
   }
-});
+}
+
+if (import.meta.main) {
+  Deno.serve(handleMentorOverview);
+}
