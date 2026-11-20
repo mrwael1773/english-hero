@@ -44,7 +44,7 @@ test('mentor dashboard sends the token only in Authorization and renders a minim
           username: 'student_one',
           display_name: '<img src=x onerror=alert(1)>',
           last_seen_at: '2026-11-18T03:55:00Z',
-          progress: { xp: 120, completed: ['lesson-1', 'lesson-2'], masteredLessons: ['lesson-1'] }
+          progress: { xp: 120, completed_count: 2, mastered_count: 1 }
         }]
       }
     });
@@ -60,6 +60,8 @@ test('mentor dashboard sends the token only in Authorization and renders a minim
   await expect(page.locator('#students tr')).toHaveCount(1);
   await expect(page.locator('#students')).toContainText('<img src=x onerror=alert(1)>');
   await expect(page.locator('#students img')).toHaveCount(0);
+  await expect(page.locator('#students tr td').nth(3)).toHaveText('2');
+  await expect(page.locator('#students tr td').nth(4)).toHaveText('1');
 
   expect(capturedRequest.method).toBe('POST');
   expect(capturedRequest.authorization).toBe('Bearer ' + validToken);
@@ -100,4 +102,25 @@ test('mentor dashboard rejects a missing token without calling the data endpoint
   await expect(page.locator('#openDashboard')).toBeDisabled();
   await expect(page.locator('#status')).toContainText('الرابط غير مكتمل');
   expect(requestCount).toBe(0);
+});
+
+test('mentor dashboard does not render data when the service is unavailable', async ({ page }) => {
+  await page.route('**/config.js*', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `window.ENGLISH_HERO_CLOUD_CONFIG = {
+      supabaseUrl: 'https://example.supabase.co',
+      supabaseAnonKey: 'public-anon-test-key'
+    };`
+  }));
+  await page.route('**/functions/v1/mentor-overview', route => route.fulfill({
+    status: 503,
+    json: { error: 'Student overview unavailable' }
+  }));
+
+  await page.goto('/mentor-dashboard.html#' + validToken);
+  await page.locator('#openDashboard').click();
+
+  await expect(page.locator('#dashboard')).toBeHidden();
+  await expect(page.locator('#status')).toContainText('تعذر تحميل البيانات');
+  await expect(page.locator('#students tr')).toHaveCount(0);
 });
