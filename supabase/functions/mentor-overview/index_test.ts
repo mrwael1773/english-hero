@@ -1,7 +1,10 @@
-import { assertEquals, assertStringIncludes } from "jsr:@std/assert";
 import { handleMentorOverview } from "./index.ts";
 
 const origin = "https://mrwael1773.github.io";
+
+function assertEquals(actual: unknown, expected: unknown) {
+  if (actual !== expected) throw new Error(`Expected ${String(expected)}, received ${String(actual)}`);
+}
 const token = "a".repeat(64);
 
 function request(auth = "Bearer " + token, requestOrigin = origin) {
@@ -113,7 +116,7 @@ Deno.test("returns unavailable when the RPC response is malformed", async () => 
     const response = await handleMentorOverview(request());
     assertEquals(response.status, 503);
     const body = await response.text();
-    assertStringIncludes(body, "Student overview unavailable");
+    if (!body.includes("Student overview unavailable")) throw new Error("Expected generic unavailable response");
   } finally {
     globalThis.fetch = originalFetch;
     if (oldUrl === undefined) Deno.env.delete("SUPABASE_URL");
