@@ -68,12 +68,12 @@ h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px 
    for(const student of rows){
      const tr=document.createElement('tr');
      const progress=student.progress&&typeof student.progress==='object'?student.progress:{};
-     const count=value=>Array.isArray(value)?value.length:0;
+     const count=value=>Number.isSafeInteger(value)&&value>=0?value:0;
      cell(tr,student.display_name||'—');
      cell(tr,student.username||'—');
      cell(tr,formatDate(student.last_seen_at));
-     cell(tr,String(count(progress.completed)));
-     cell(tr,String(count(progress.masteredLessons)));
+     cell(tr,String(count(progress.completed_count)));
+     cell(tr,String(count(progress.mastered_count)));
      cell(tr,progress.xp==null?'—':String(progress.xp));
      tbody.appendChild(tr);
    }
@@ -115,10 +115,16 @@ h1{margin:4px 0}.muted{color:var(--muted)}.small{font-size:13px}.btn{border:1px 
        $('dashboard').classList.add('hidden');
        return;
      }
-     render(Array.isArray(payload.students)?payload.students:[],payload.generated_at);
+     if(!Array.isArray(payload.students)||typeof payload.generated_at!=='string'){
+       say('استجابة الخدمة غير مكتملة؛ لم يتم عرض بيانات الطلاب.',true);
+       $('dashboard').classList.add('hidden');
+       return;
+     }
+     render(payload.students,payload.generated_at);
      say('تم التحقق من الرابط وتحميل الملخص.');
    }catch{
      say('تعذر الاتصال بالخدمة. حاول التحديث عند توفر الاتصال.',true);
+     $('dashboard').classList.add('hidden');
    }finally{
      loading=false;
      $('refresh').disabled=false;
