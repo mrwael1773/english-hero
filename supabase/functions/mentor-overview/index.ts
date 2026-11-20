@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   if (origin !== allowedOrigin) return response({ error: "Origin not allowed" }, 403);
 
-  const token = (req.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
+  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!/^[0-9a-f]{64}$/.test(token)) return response({ error: "Invalid or expired link" }, 401);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
   try {
     const tokenHash = await sha256(token);
     const rpcResponse = await fetch(
-      supabaseUrl.replace(/\\/$/, "") + "/rest/v1/rpc/mentor_get_student_overview",
+      supabaseUrl.replace(/\/$/, "") + "/rest/v1/rpc/mentor_get_student_overview",
       {
         method: "POST",
         headers: {
@@ -50,7 +50,7 @@ Deno.serve(async (req: Request) => {
 
     const payload = await rpcResponse.json().catch(() => null);
     if (!rpcResponse.ok) {
-      if (rpcResponse.status === 400 && payload?.code === "28000") {
+      if (payload?.code === "28000") {
         return response({ error: "Invalid or expired link" }, 401);
       }
       return response({ error: "Student overview unavailable" }, 503);
