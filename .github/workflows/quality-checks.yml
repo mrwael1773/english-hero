@@ -70,6 +70,9 @@ jobs:
       - name: Type-check mentor overview Edge Function
         run: deno check --no-lock supabase/functions/mentor-overview/index.ts
 
+      - name: Test mentor overview Edge Function
+        run: deno test --no-lock --allow-env supabase/functions/mentor-overview/index_test.ts
+
       - name: Validate JSON data and vocabulary count
         run: |
           node --input-type=module <<'JS'
