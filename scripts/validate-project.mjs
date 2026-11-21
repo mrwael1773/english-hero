@@ -53,6 +53,8 @@ const championsMigration = read('supabase/migrations/20261121143000_student_cham
 const championsImprovementMigration = read('supabase/migrations/20261121150000_student_champions_improvement_category.sql');
 const championChallengeMigration = read('supabase/migrations/20261121210000_server_verified_champion_challenges.sql');
 const championChallengeFunction = read('supabase/functions/student-champion-challenge/index.ts');
+const championBankImporter = read('scripts/import-champion-question-bank.mjs');
+const championBankImporterTests = read('tests/integration/champion-question-bank-import.test.mjs');
 const config = read('config.js');
 const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-20000.json');
@@ -306,6 +308,10 @@ check(migration.includes('REVOKE EXECUTE ON FUNCTION public.rls_auto_enable()') 
 check(existsSync(join(root, migrationPath)), 'Applied Supabase migration is tracked in the repository');
 check(optimizedRlsMigration.includes('drop policy if exists "Students can manage own learning progress"') && optimizedRlsMigration.includes('drop policy if exists "Students can read own profile"') && optimizedRlsMigration.includes('(select auth.uid())'), 'Student RLS optimization preserves both owner-only policies');
 check(existsSync(join(root, optimizedRlsMigrationPath)), 'Student RLS optimization migration is tracked in the repository');
+check(championChallengeMigration.includes('student_champion_question_bank') && championChallengeMigration.includes('import_student_champion_question_bank') && championChallengeMigration.includes('grant execute on function public.import_student_champion_question_bank(jsonb) to service_role'), 'Champion question bank is private and has a service-role-only atomic import RPC');
+check(championBankImporter.includes('validateQuestionBank') && championBankImporter.includes('import_student_champion_question_bank') && championBankImporter.includes('ENGLISH_HERO_ALLOW_PRODUCTION_IMPORT') && championBankImporter.includes('SUPABASE_SERVICE_ROLE_KEY'), 'Private champion bank importer validates the full bank and blocks production by default');
+check(championBankImporterTests.includes('dry-run') && championBankImporterTests.includes('blocks the production project') && championBankImporterTests.includes('posts the private payload once'), 'Private champion bank importer has validation, production-guard, and request tests');
+check(existsSync(join(root, 'scripts/import-champion-question-bank.mjs')) && existsSync(join(root, 'tests/integration/champion-question-bank-import.test.mjs')), 'Private champion bank importer and tests are tracked in the repository');
 check(defaultApiGrantsMigration.includes('ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public') && defaultApiGrantsMigration.includes('REVOKE ALL ON TABLES FROM anon, authenticated, service_role') && defaultApiGrantsMigration.includes('REVOKE ALL ON FUNCTIONS FROM anon, authenticated, service_role') && defaultApiGrantsMigration.includes('REVOKE ALL ON SEQUENCES FROM anon, authenticated, service_role'), 'Future public objects created by postgres do not receive broad default API grants');
 check(existsSync(join(root, defaultApiGrantsMigrationPath)), 'Public API default-grants migration is tracked in the repository');
 check(globalFunctionDefaultMigration.includes('ALTER DEFAULT PRIVILEGES FOR ROLE postgres') && globalFunctionDefaultMigration.includes('REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC'), 'Future postgres-owned functions do not receive PUBLIC execute by default');
