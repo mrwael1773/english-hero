@@ -61,7 +61,7 @@ export async function handleMentorOverview(req: Request): Promise<Response> {
   const origin = req.headers.get("origin");
   if (origin !== allowedOrigin) return response({ error: "Origin not allowed" }, 403);
 
-  const token = (req.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
+  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!/^[0-9a-f]{64}$/.test(token)) return response({ error: "Invalid or expired link" }, 401);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -71,7 +71,7 @@ export async function handleMentorOverview(req: Request): Promise<Response> {
   try {
     const tokenHash = await sha256(token);
     const rpcResponse = await fetch(
-      supabaseUrl.replace(/\\/$/, "") + "/rest/v1/rpc/mentor_get_student_overview",
+      supabaseUrl.replace(/\/$/, "") + "/rest/v1/rpc/mentor_get_student_overview",
       {
         method: "POST",
         headers: {
