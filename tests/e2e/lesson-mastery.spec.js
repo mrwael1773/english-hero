@@ -56,7 +56,7 @@ async function answerAll(page, translations, shouldPass, wrongIndices = []) {
     }
     // Verify visible correctness feedback for both writing and multiple-choice answers.
     await expect(page.locator('#quizFeedback')).toBeVisible();
-    await expect(page.locator('#quizFeedback')).toContainText(passThis ? 'ممتاز' : 'الصحيح:');
+    await expect(page.locator('#quizFeedback')).toContainText(passThis ? /ممتاز|سبق احتساب/ : 'الصحيح:');
     await expect(page.locator('#quizNext')).toBeVisible();
     await page.locator('#quizNext').click();
   }
@@ -83,6 +83,25 @@ test('a score above 80% records mastery and unlocks the next lesson', async ({ p
   await page.evaluate(() => window.page('courses'));
   await expect(page.locator('#courseGrid button').nth(1)).toBeEnabled();
   await expect(page.locator('#done')).toContainText('1/');
+});
+
+test('repeating a mastered lesson does not award the same XP again', async ({ page }) => {
+  const translations = await openFirstLesson(page);
+  await answerAll(page, translations, true);
+  const first = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(first.xp).toBe(220);
+  expect(first.rewardClaims).toHaveLength(19);
+
+  await page.evaluate(() => window.page('courses'));
+  await page.locator('#courseGrid button').first().click();
+  for (let i = 0; i < 6; i++) await page.locator('#nextWord').click();
+  await expect(page.locator('#quizArea')).toBeVisible();
+  await answerAll(page, translations, true);
+
+  const repeated = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
+  expect(repeated.xp).toBe(first.xp);
+  expect(repeated.rewardClaims).toEqual(first.rewardClaims);
+  expect(repeated.masteredLessons).toContain(0);
 });
 
 
