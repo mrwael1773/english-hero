@@ -125,6 +125,17 @@ select public.record_student_learning_activity('lesson_mastered', 3, 2);
 
 -- A second synthetic learner has two new masteries this week versus one
 -- in the matching elapsed period last week, so improvement is +1.
+-- No improvement ranking is shown until a full post-activation comparison window exists.
+do $baseline$
+declare
+  v_result jsonb;
+begin
+  v_result := public.get_student_champions();
+  if jsonb_array_length(v_result->'improvement_leaders') <> 0 then
+    raise exception 'Improvement leaderboard appeared before a full baseline existed';
+  end if;
+end;
+$baseline$;
 -- Simulate a deployment old enough to have a complete comparison baseline.
 update public.student_champions_config set activated_at = now() - interval '15 days' where singleton = true;
 insert into auth.users (id)
