@@ -114,6 +114,22 @@ begin
 end;
 $block$;
 
+-- The leaderboard accepts only the 84 lesson IDs that exist in the learning map.
+do $lesson_bounds$
+declare
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.record_student_learning_activity('lesson_mastered', 84, 1);
+  exception when sqlstate '22023' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'A mastery event for a non-existent lesson index was accepted';
+  end if;
+end;
+$lesson_bounds$;
+
 -- A mastered lesson clears the active lesson pointer without deleting the last action.
 -- The new mastery-event recorder requires the synced progress snapshot to contain the lesson.
 update public.learning_progress
@@ -142,6 +158,11 @@ insert into auth.users (id)
 values ('33333333-3333-4333-8333-333333333333');
 insert into public.student_profiles (user_id, username, display_name)
 values ('33333333-3333-4333-8333-333333333333', 'synthetic-improver', 'Improved Learner');
+insert into public.learning_progress (user_id, progress)
+values (
+  '33333333-3333-4333-8333-333333333333',
+  '{"masteredLessons":[0,0,83,84,99,-1,"3","bad"]}'::jsonb
+);
 insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
 values
   ('33333333-3333-4333-8333-333333333333', 4, now()),
@@ -176,7 +197,15 @@ begin
      or v_result->'improvement_leaders'->0->>'score' <> '1' then
     raise exception 'Student champions aggregates were not calculated as expected';
   end if;
-  if (v_result::text like '%user_id%' or v_result::text like '%username%' or v_result::text like '%email%') then
+  if not exists (
+    select 1
+    from jsonb_array_elements(v_result->'mastery_leaders') as mastery_row
+    where mastery_row->>'display_name' = 'Improved Learner'
+      and mastery_row->>'score' = '2'
+  ) then
+    raise exception 'Mastery leaderboard counted duplicates, strings, or out-of-range lesson indices';
+  end if;
+  if v_result::text like '%user_id%' or v_result::text like '%username%' or v_result::text like '%email%' then
     raise exception 'Student champions RPC leaked private identity fields';
   end if;
 end;
