@@ -155,7 +155,7 @@ jobs:
             supabase/migrations/20261118110000_mentor_passwordless_link_access.sql \
             supabase/migrations/20261121010000_atomic_mentor_overview_access.sql \
             supabase/migrations/20261121100000_mentor_learning_activity_summary.sql \
-            supabase/migrations/20261121120000_mentor_comprehensive_progress_summary.sql \\
+            supabase/migrations/20261121120000_mentor_comprehensive_progress_summary.sql \
             supabase/migrations/20261121143000_student_champions_leaderboard.sql
           do
             echo "Applying $migration"
