@@ -42,7 +42,6 @@ declare
     'letter-sounds','digraphs','short-vowels','blends','cvc','magic-e',
     'vowel-teams','r-controlled','diphthongs','syllables','practice'
   ]::text[];
-  v_existing text[] := '{}'::text[];
   v_result text[] := '{}'::text[];
   v_count integer;
 begin
@@ -414,7 +413,7 @@ $$; and e.value::integer between 0 and 99
   );
 end;
 $$;
-              and (r.value->>'due')::date <= (now() at time zone 'Asia/Riyadh')::date
+              and (r.value->>'due') <= to_char((now() at time zone 'Asia/Riyadh')::date, 'YYYY-MM-DD')
               and coalesce(r.value->>'stage', '') <> 'retained'
           ),
           'missed_words_count', (
