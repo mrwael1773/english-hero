@@ -137,7 +137,7 @@ begin
   if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
-  if p_attempt_id is null or p_user_id is null or jsonb_typeof(p_answers) <> 'array' then
+  if p_attempt_id is null or p_user_id is null or p_answers is null or jsonb_typeof(p_answers) is distinct from 'array' then
     raise exception 'Invalid challenge submission' using errcode = '22023';
   end if;
 
@@ -166,9 +166,9 @@ begin
   end if;
 
   for v_index in 0..v_attempt.question_count - 1 loop
-    if jsonb_typeof(p_answers->v_index) <> 'number'
+    if jsonb_typeof(p_answers->v_index) is distinct from 'number'
        or (p_answers->>v_index) !~ '^[0-3]$'
-       or jsonb_typeof(v_attempt.answer_key->v_index) <> 'number'
+       or jsonb_typeof(v_attempt.answer_key->v_index) is distinct from 'number'
        or (v_attempt.answer_key->>v_index) !~ '^[0-3]$' then
       raise exception 'Invalid answer value' using errcode = '22023';
     end if;
