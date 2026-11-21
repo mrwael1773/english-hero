@@ -470,17 +470,20 @@ test('repeating an already mastered lesson does not award XP again', async ({ pa
   await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
   const firstResult = await page.evaluate(() => {
     const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
-    return { xp: saved.xp, mastered: saved.masteredLessons || [] };
+    return { xp: saved.xp, mastered: saved.masteredLessons || [], rewardClaims: saved.rewardClaims || [] };
   });
   expect(firstResult.mastered).toContain(0);
+  expect(firstResult.xp).toBe(220);
+  expect(firstResult.rewardClaims).toHaveLength(19);
 
   const secondTranslations = await reopenFirstLesson(page);
   await answerAll(page, secondTranslations, true);
   await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
   const secondResult = await page.evaluate(() => {
     const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
-    return { xp: saved.xp, mastered: saved.masteredLessons || [] };
+    return { xp: saved.xp, mastered: saved.masteredLessons || [], rewardClaims: saved.rewardClaims || [] };
   });
   expect(secondResult.xp).toBe(firstResult.xp);
   expect(secondResult.mastered).toEqual(firstResult.mastered);
+  expect(secondResult.rewardClaims).toEqual(firstResult.rewardClaims);
 });
