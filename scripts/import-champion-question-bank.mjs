@@ -58,6 +58,7 @@ export function validateQuestionBank(questions) {
 function projectRefFromUrl(url) {
   try {
     const host = new URL(url).hostname;
+    if (host === "localhost" || host === "127.0.0.1") return "local";
     return host.endsWith(".supabase.co") ? host.split(".")[0] : null;
   } catch {
     return null;
