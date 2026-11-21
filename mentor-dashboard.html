@@ -159,7 +159,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    const startedIndices=safeIndices(progress.started_indices);
    const current=lessonName(progress.current_lesson_index);
    const lines=[
-     'المستوى '+levelFromXp(progress.xp)+' • '+(progress.xp===null?'النقاط غير متاحة':count(progress.xp)+' XP'),
+     (progress.xp===null?'المستوى غير متاح':'المستوى '+levelFromXp(progress.xp)+' • '+count(progress.xp)+' XP'),
      'الدروس: '+mastered+' أتقنها الطالب، '+trained+' أكمل تدريبها، '+started+' بدأها',
      describeLessonGroup('الدروس المتقنة',masteredIndices),
      describeLessonGroup('تدريب مكتمل دون إتقان',trainedIndices),
