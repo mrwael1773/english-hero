@@ -303,8 +303,13 @@
     if(!pending.length)return true;
     for(const lessonIndex of pending){
       if(!user||user.id!==expectedUserId||!ready||progressOwnerUserId!==expectedUserId)return false;
-      // Only replay events still supported by this account's verified cloud progress.
-      if(!Array.isArray(state.masteredLessons)||!state.masteredLessons.includes(lessonIndex))continue;
+      // The caller reaches this point only after the same account's current progress
+      // was uploaded successfully. Drop stale events that the verified snapshot no longer masters.
+      if(!Array.isArray(state.masteredLessons)||!state.masteredLessons.includes(lessonIndex)){
+        const remaining=readPendingMasteryEvents(expectedUserId).filter(index=>index!==lessonIndex);
+        if(!writePendingMasteryEvents(expectedUserId,remaining))return false;
+        continue;
+      }
       try{
         const {error}=await client.rpc('record_student_learning_activity',{
           p_action:'lesson_mastered',p_lesson_index:lessonIndex,p_word_index:null
