@@ -81,7 +81,17 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
                 return resolved({ data: row, error: null });
               }
             }),
-            rpc: async () => ({ data: null, error: null })
+            rpc: async (name, args) => {
+              if (name === 'record_student_learning_activity' && args?.p_action === 'lesson_mastered') {
+                if (localStorage.getItem('__e2e_fail_mastery_rpc') === '1') {
+                  return { data: null, error: { message: 'simulated offline RPC failure' } };
+                }
+                const events = JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]');
+                if (!events.some(event => event.p_lesson_index === args.p_lesson_index)) events.push(args);
+                localStorage.setItem('__e2e_mastery_events', JSON.stringify(events));
+              }
+              return { data: null, error: null };
+            }
           };
         }
       };
@@ -92,6 +102,7 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
     if (!localStorage.getItem('__e2e_cloud_test_initialized')) {
       localStorage.setItem('__e2e_cloud_test_initialized', '1');
       localStorage.setItem('english-hero-cloud-owner', 'cloud-e2e-student');
+      localStorage.setItem('__e2e_fail_mastery_rpc', '1');
     }
   });
 
@@ -115,6 +126,23 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
       masteredLessons: row.progress.masteredLessons
     };
   });
+
+  const pendingKey = 'english-hero-pending-mastery-events-cloud-e2e-student';
+  await page.waitForFunction(key => {
+    const pending = JSON.parse(localStorage.getItem(key) || '[]');
+    return pending.includes(0);
+  }, pendingKey);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]'))).toHaveLength(0);
+
+  // Restore connectivity: the queued event is replayed only after cloud progress is saved.
+  await page.evaluate(() => {
+    localStorage.setItem('__e2e_fail_mastery_rpc', '0');
+    window.dispatchEvent(new Event('online'));
+  });
+  await page.waitForFunction(key => localStorage.getItem(key) === null, pendingKey);
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]').length === 1);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]')[0]))
+    .toMatchObject({ p_action: 'lesson_mastered', p_lesson_index: 0 });
 
   // Simulate a fresh device/page state while retaining only the mocked cloud row.
   await page.evaluate(() => localStorage.removeItem('english-hero-academy-3'));
