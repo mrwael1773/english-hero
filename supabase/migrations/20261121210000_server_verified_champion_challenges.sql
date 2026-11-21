@@ -238,6 +238,6 @@ grant execute on function public.complete_student_champion_attempt(uuid, uuid, j
 comment on table public.student_champion_question_bank is
   'Private server-only question bank. Correct options must never be shipped to browser code or public migrations.';
 comment on table public.student_champion_attempts is
-  'Private one-use challenge attempts; answer keys and snapshots are accessible only to trusted server code.';
+  'Private one-use challenge attempts; per-attempt answer keys are accessible only to trusted server code.';
 comment on function public.complete_student_champion_attempt(uuid, uuid, jsonb) is
   'Atomically scores a one-use challenge attempt and records mastery only after a server-verified 80 percent pass.';
