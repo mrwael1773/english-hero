@@ -124,3 +124,55 @@ test('mentor dashboard does not render data when the service is unavailable', as
   await expect(page.locator('#status')).toContainText('تعذر تحميل البيانات');
   await expect(page.locator('#students tr')).toHaveCount(0);
 });
+
+test('mentor dashboard rejects malformed student fields without showing the dashboard', async ({ page }) => {
+  await page.route('**/config.js*', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `window.ENGLISH_HERO_CLOUD_CONFIG = {
+      supabaseUrl: 'https://example.supabase.co',
+      supabaseAnonKey: 'public-anon-test-key'
+    };`
+  }));
+  await page.route('**/functions/v1/mentor-overview', route => route.fulfill({
+    json: {
+      generated_at: '2026-11-18T04:00:00Z',
+      students: [{ username: 42, display_name: 'Invalid record', last_seen_at: null, progress: {} }]
+    }
+  }));
+
+  await page.goto('/mentor-dashboard.html#' + validToken);
+  await page.locator('#openDashboard').click();
+
+  await expect(page.locator('#dashboard')).toBeHidden();
+  await expect(page.locator('#accessPanel')).toBeVisible();
+  await expect(page.locator('#status')).toContainText('استجابة الخدمة غير مكتملة');
+  await expect(page.locator('#students tr')).toHaveCount(0);
+});
+
+test('mentor dashboard returns to the access panel if a refresh fails after a successful load', async ({ page }) => {
+  let requests = 0;
+  await page.route('**/config.js*', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `window.ENGLISH_HERO_CLOUD_CONFIG = {
+      supabaseUrl: 'https://example.supabase.co',
+      supabaseAnonKey: 'public-anon-test-key'
+    };`
+  }));
+  await page.route('**/functions/v1/mentor-overview', route => {
+    requests++;
+    if (requests === 1) {
+      return route.fulfill({ json: { students: [], generated_at: '2026-11-18T04:00:00Z' } });
+    }
+    return route.fulfill({ status: 503, json: { error: 'unavailable' } });
+  });
+
+  await page.goto('/mentor-dashboard.html#' + validToken);
+  await page.locator('#openDashboard').click();
+  await expect(page.locator('#dashboard')).toBeVisible();
+
+  await page.locator('#refresh').click();
+  await expect(page.locator('#dashboard')).toBeHidden();
+  await expect(page.locator('#accessPanel')).toBeVisible();
+  await expect(page.locator('#status')).toContainText('تعذر تحميل البيانات');
+  await expect(page.locator('#students tr')).toHaveCount(0);
+});
