@@ -32,6 +32,9 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
     "lesson_mastered",
     "quiz_completed",
   ]);
+  const readingStageIds = ["letter-sounds","digraphs","short-vowels","blends","cvc","magic-e","vowel-teams","r-controlled","diphthongs","syllables","practice"];
+  const validReading = value => Array.isArray(value) && value.length <= readingStageIds.length &&
+    value.every((id, index) => id === readingStageIds[index]);
   const students: Record<string, unknown>[] = [];
   for (const value of source.students) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -48,6 +51,7 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
       value.every(index => validCount(index) && index <= 99);
     if (!validIndexArray(stats.mastered_indices) || !validIndexArray(stats.trained_indices) ||
         !validIndexArray(stats.started_indices) ||
+        !validReading(stats.reading_completed) ||
         ![stats.saved_words_count, stats.foundation_saved_count, stats.review_words_count,
           stats.review_due_count, stats.missed_words_count, stats.quiz_attempts,
           stats.answers_count, stats.correct_answers_count, stats.active_days_count,
@@ -89,6 +93,7 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
         active_days_count: stats.active_days_count,
         learning_streak: stats.learning_streak,
         vocab_level: stats.vocab_level,
+        reading_completed: stats.reading_completed,
         current_lesson_index: stats.current_lesson_index,
         current_word_index: stats.current_word_index,
         last_action: stats.last_action,
