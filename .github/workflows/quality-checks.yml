@@ -271,7 +271,11 @@ jobs:
 
           export API_URL ANON_KEY SERVICE_ROLE_KEY DB_URL ALLOWED_ORIGIN
           node tests/integration/student-username-login.test.mjs
-          node tests/integration/student-champion-challenge.test.mjs
+          if ! node tests/integration/student-champion-challenge.test.mjs; then
+            echo "Champion challenge Edge Function diagnostics:"
+            cat /tmp/english-hero-edge-function.log
+            exit 1
+          fi
 
       - name: Stop local Supabase stack
         if: always() && steps.setup_supabase_cli.outcome == 'success'
