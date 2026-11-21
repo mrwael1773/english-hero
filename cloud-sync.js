@@ -503,18 +503,20 @@
     },
     async recordLearningActivity(action, lessonIndex=null, wordIndex=null) {
       const allowed = ['lesson_started','lesson_progress','lesson_training_completed','lesson_assessment_attempted','lesson_mastered','quiz_completed'];
-      if(!allowed.includes(action) || !client || !user || !ready || progressOwnerUserId!==user.id) return false;
+      if(!allowed.includes(action) || !client || !user || progressOwnerUserId!==user.id) return false;
       if(action.startsWith('lesson_') && !Number.isInteger(lessonIndex)) return false;
-      // Mastery is recorded only after the current account's progress snapshot is
-      // successfully synced, so the database can verify the lesson is mastered.
+      // Queue mastery even if the initial cloud read failed while offline.
+      // Replay waits until this account's progress is verified and uploaded.
       if(action === 'lesson_mastered') {
         const eventUserId=user.id;
         if(!queuePendingMasteryEvent(eventUserId,lessonIndex))return false;
+        if(!ready)return false;
         clearTimeout(timer);
         const synced = await uploadProgress();
         if(!synced || !user || user.id!==eventUserId || progressOwnerUserId!==eventUserId) return false;
         return flushPendingMasteryEvents(eventUserId);
       }
+      if(!ready)return false;
       const {error}=await client.rpc('record_student_learning_activity',{
         p_action:action,
         p_lesson_index:Number.isInteger(lessonIndex)?lessonIndex:null,
