@@ -20,7 +20,7 @@ export function extractLessons(html) {
         en: match[1].trim(),
         ar: match[2].trim(),
       }));
-      const words = triples.slice(1);
+      const words = triples;
       if (words.length !== WORDS_PER_LESSON) throw new Error(`Source lesson ${index + 1} does not contain six words.`);
       return { lesson_index: index, words };
     });
