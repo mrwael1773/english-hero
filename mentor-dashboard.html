@@ -120,7 +120,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
  }
  function lessonName(index){
    if(!Number.isInteger(index)||index<0||index>99)return null;
-   return index<lessonTitles.length?lessonTitles[index]:'حزمة المفردات رقم '+(index+1);
+   return index<lessonTitles.length?lessonTitles[index]:'المفردات '+(index+1);
  }
  function describeActivity(progress){
    const action=progress.last_action;
