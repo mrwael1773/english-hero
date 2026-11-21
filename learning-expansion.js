@@ -314,7 +314,7 @@
       const result=original();
       if (Array.isArray(state.quizHistory) && state.quizHistory.length) {
         const last=state.quizHistory[state.quizHistory.length-1];last.mode='pro';last.label='الاختبار الاحترافي الموقّت';
-        if(pct>=80 && typeof gain==='function'){gain(30);if(typeof toast==='function')toast('🏅 نتيجة ممتازة! مكافأة الاختبار الاحترافي: +30 XP');}
+        if(pct>=80 && typeof gain==='function'){if(gain(30,'professional-exam')){if(typeof toast==='function')toast('🏅 نتيجة ممتازة! مكافأة الاختبار الاحترافي: +30 XP');}else if(typeof toast==='function')toast('🏅 نتيجة ممتازة! سبق احتساب مكافأة هذا الاختبار.');}
         if(typeof save==='function')save();
       }
       const heading=$('quizArea')?.querySelector('h2');
