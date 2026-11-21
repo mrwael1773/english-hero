@@ -281,3 +281,9 @@ $$;
 end;
 $$;
 
+
+revoke all on function public.record_student_learning_activity(text, integer, integer) from public, anon;
+grant execute on function public.record_student_learning_activity(text, integer, integer) to authenticated;
+
+revoke all on function public.get_student_champions() from public, anon;
+grant execute on function public.get_student_champions() to authenticated;
