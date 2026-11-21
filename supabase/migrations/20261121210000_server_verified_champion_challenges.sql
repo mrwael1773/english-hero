@@ -49,7 +49,6 @@ as $$
 declare
   v_user_id uuid := auth.uid();
   v_now timestamptz := now();
-  v_day date := (v_now at time zone 'Asia/Riyadh')::date;
 begin
   if v_user_id is null then
     raise exception 'Authentication required' using errcode = '42501';
@@ -231,6 +230,8 @@ $$;
 
 revoke all on function public.complete_student_champion_attempt(uuid, uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.complete_student_champion_attempt(uuid, uuid, jsonb) to service_role;
+comment on table public.student_learning_days is
+  'One daily participation marker per authenticated student after submitting a server-issued champion challenge; no raw answers or device data.';
 comment on table public.student_champion_question_bank is
   'Private server-only question bank. Correct options must never be shipped to browser code or public migrations.';
 comment on table public.student_champion_attempts is
