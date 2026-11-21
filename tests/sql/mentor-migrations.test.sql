@@ -133,7 +133,22 @@ $$;
 
 -- Malformed or out-of-range JSON progress must not break the overview RPC.
 update public.learning_progress
-set progress = '{"xp":999999999999999999999999999,"completed":[],"masteredLessons":[],"lessonStarted":["99999999999999999999","3"],"lessonTrained":[],"lessonPositions":{"3":"99999999999999999999"}}'::jsonb
+set progress = '{
+  "xp":999999999999999999999999999,"completed":[0,1],"masteredLessons":[0],
+  "lessonStarted":["99999999999999999999","3"],"lessonTrained":[0],
+  "lessonPositions":{"3":"99999999999999999999"},
+  "saved":["word-1","word-2"],"foundationSaved":["hello"],
+  "review":{
+    "word-1":{"due":"1900-01-01","stage":"practice"},
+    "word-2":{"due":"9999-12-31","stage":"retention"},
+    "word-3":{"due":"1900-01-01","stage":"retained"}
+  },
+  "misses":{"word-1":true,"word-2":false},
+  "quizHistory":[{}, {}, {}],"best":90,
+  "answerStats":{"answered":10,"correct":8},
+  "daily":{"1900-01-01":{"quiz":true},"1900-01-02":{"review":true},"1900-01-03":{"other":false}},
+  "streak":4,"vocabLevel":"all"
+}'::jsonb
 where user_id = '11111111-1111-4111-8111-111111111111';
 
 -- Use a known synthetic bearer token and store only its SHA-256 hash.
@@ -163,6 +178,29 @@ begin
   end if;
   if v_student->'progress'->'current_word_index' <> 'null'::jsonb then
     raise exception 'Out-of-range word index was not rejected';
+  end if;
+  if v_student->'progress'->'mastered_indices' <> '[0]'::jsonb
+     or v_student->'progress'->'trained_indices' <> '[0]'::jsonb
+     or v_student->'progress'->'started_indices' <> '[3]'::jsonb then
+    raise exception 'Per-lesson progress indices were not safely summarized';
+  end if;
+  if v_student->'progress'->'saved_words_count' <> '2'::jsonb
+     or v_student->'progress'->'foundation_saved_count' <> '1'::jsonb
+     or v_student->'progress'->'review_words_count' <> '3'::jsonb
+     or v_student->'progress'->'review_due_count' <> '1'::jsonb
+     or v_student->'progress'->'missed_words_count' <> '1'::jsonb then
+    raise exception 'Vocabulary or review aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'quiz_attempts' <> '3'::jsonb
+     or v_student->'progress'->'best_quiz_score' <> '90'::jsonb
+     or v_student->'progress'->'answers_count' <> '10'::jsonb
+     or v_student->'progress'->'correct_answers_count' <> '8'::jsonb then
+    raise exception 'Quiz aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'active_days_count' <> '2'::jsonb
+     or v_student->'progress'->'learning_streak' <> '4'::jsonb
+     or v_student->'progress'->'vocab_level' <> '"all"'::jsonb then
+    raise exception 'Daily activity or vocabulary level aggregates were calculated incorrectly';
   end if;
   if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
     raise exception 'Mentor overview did not include the student reading stage summary';
