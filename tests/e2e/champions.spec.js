@@ -9,6 +9,7 @@ test('champions view shows daily and weekly winners plus achievement categories'
   await expect(page.locator('#championsWeek')).toContainText('بطل الأسبوع');
   await expect(page.locator('#championsMastery')).toContainText('الأكثر إتقانًا');
   await expect(page.locator('#championsConsistency')).toContainText('نجم الاستمرارية');
+  await expect(page.locator('#championsImprovement')).toContainText('الأكثر تطورًا');
   await expect(page.locator('#championsStatus')).toContainText('الأسبوع من الأحد إلى السبت');
 });
 
