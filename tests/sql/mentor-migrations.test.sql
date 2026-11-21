@@ -34,7 +34,7 @@ end;
 $$;
 
 -- Reject unauthenticated writes and invalid learning-event payloads.
-do $
+do $block$
 begin
   perform set_config('request.jwt.claim.sub', '', false);
   begin
@@ -66,7 +66,7 @@ begin
     when sqlstate '22023' then null;
   end;
 end;
-$;
+$block$;
 
 -- A mastered lesson clears the active lesson pointer without deleting the last action.
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
