@@ -60,6 +60,8 @@ jobs:
           node --check english-hero-plus.js
           node --check grammar-lessons.js
           node --check tests/integration/student-username-login.test.mjs
+          node --check scripts/import-champion-question-bank.mjs
+          node --check tests/integration/champion-question-bank-import.test.mjs
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
@@ -80,6 +82,9 @@ jobs:
 
       - name: Test champion challenge Edge Function
         run: deno test --no-lock --allow-env --node-modules-dir=auto supabase/functions/student-champion-challenge/index_test.ts
+
+      - name: Test private champion question bank importer
+        run: node --test tests/integration/champion-question-bank-import.test.mjs
 
       - name: Validate JSON data and vocabulary count
         run: |
@@ -117,6 +122,8 @@ jobs:
           test -s supabase/functions/student-username-login/index.ts
           test -s supabase/functions/mentor-overview/index.ts
           test -s supabase/functions/student-champion-challenge/index.ts
+          test -s scripts/import-champion-question-bank.mjs
+          test -s tests/integration/champion-question-bank-import.test.mjs
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg
