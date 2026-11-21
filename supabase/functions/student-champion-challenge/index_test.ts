@@ -33,6 +33,10 @@ Deno.test("invalid and insufficient question banks fail closed", () => {
     ...row, id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
     options: ["same", "same", "C", "D"],
   }))), null);
+  assertEquals(prepareChallenge(Array.from({ length: 10 }, (_, i) => ({
+    ...row, id: `10000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+    prompt: "Repeated prompt",
+  }))), null);
 });
 
 Deno.test("answers must contain exactly ten valid option indexes", () => {
