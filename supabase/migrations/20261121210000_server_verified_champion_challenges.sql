@@ -56,15 +56,12 @@ begin
     raise exception 'Authentication required' using errcode = '42501';
   end if;
 
-  if p_action = 'lesson_mastered' then
-    raise exception 'Use a server-verified champion challenge to record mastery' using errcode = '42501';
-  end if;
-
   if p_action is null or p_action not in (
     'lesson_started',
     'lesson_progress',
     'lesson_training_completed',
     'lesson_assessment_attempted',
+    'lesson_mastered',
     'quiz_completed'
   ) then
     raise exception 'Invalid learning activity' using errcode = '22023';
@@ -74,6 +71,9 @@ begin
   end if;
   if p_word_index is not null and p_word_index not between 0 and 99 then
     raise exception 'Invalid word index' using errcode = '22023';
+  end if;
+  if p_action = 'lesson_mastered' then
+    raise exception 'Use a server-verified champion challenge to record mastery' using errcode = '42501';
   end if;
   if p_action like 'lesson_%' and p_lesson_index is null then
     raise exception 'Lesson index required' using errcode = '22023';
