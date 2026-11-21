@@ -52,6 +52,13 @@ async function seedStudentRows(users) {
     );
   });
   const sql = `
+    -- Simulate a verified Google identity for learner one; learner two remains
+    -- a password-only new account and must not be allowed to claim a profile.
+    UPDATE auth.users
+    SET raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+      || jsonb_build_object('provider', 'google', 'providers', jsonb_build_array('google'))
+    WHERE id = :'user1_id'::uuid;
+
     INSERT INTO public.student_profiles(user_id, username, display_name)
     VALUES
       (:'user1_id'::uuid, :'user1_username', :'user1_display_name'),
@@ -155,6 +162,36 @@ const unknownUsername = await callLogin(`missing_${suffix}`);
 const unknownUsernameBody = await unknownUsername.json();
 assert.equal(unknownUsername.status, 401, 'Unknown usernames must not authenticate');
 assert.equal(unknownUsernameBody.error, wrongPasswordBody.error, 'Unknown usernames and wrong passwords must have the same public error');
+
+// The SECURITY DEFINER onboarding RPC must derive ownership from auth.uid().
+// A verified Google identity may claim its own username, while a new
+// password-only account must not bypass the Google onboarding requirement.
+const deniedClaim = await restRequest('rpc/claim_student_username', secondSession.token, {
+  method: 'POST',
+  body: { p_username: `denied_${suffix}`, p_display_name: 'Unverified Learner' },
+});
+assert.equal(deniedClaim.status, 403, 'New password-only accounts must not claim student profiles');
+
+const claimedUsername = `claimed_${suffix}`;
+const claimResponse = await restRequest('rpc/claim_student_username', firstSession.token, {
+  method: 'POST',
+  body: { p_username: claimedUsername, p_display_name: 'Verified Learner' },
+});
+assert.equal(claimResponse.status, 200, 'Verified Google learner should claim their own username');
+const claimBody = await claimResponse.json();
+assert.equal(claimBody.username, claimedUsername);
+assert.equal(claimBody.display_name, 'Verified Learner');
+
+const claimedProfileResponse = await restRequest(
+  `student_profiles?select=username,display_name&user_id=eq.${users[0].id}`,
+  firstSession.token,
+);
+assert.equal(claimedProfileResponse.status, 200);
+const claimedProfiles = await claimedProfileResponse.json();
+assert.deepEqual(claimedProfiles, [{ username: claimedUsername, display_name: 'Verified Learner' }]);
+
+const claimedSession = await signIn(claimedUsername);
+assert.equal(claimedSession.user.id, users[0].id, 'Claimed username must resolve to its authenticated owner');
 
 // A fresh authenticated session can read its own persisted progress.
 const firstRead = await restRequest('learning_progress?select=user_id,progress', firstSession.token);
