@@ -124,14 +124,6 @@ export async function handleChampionChallenge(request: Request): Promise<Respons
       return json({ error: "رقم الدرس غير صالح." }, 400);
     }
 
-    const windowStart = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { count, error: countError } = await admin.from("student_champion_attempts")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", authData.user.id)
-      .gte("created_at", windowStart);
-    if (countError) return json({ error: "تعذر التحقق من المحاولات. حاول لاحقًا." }, 503);
-    if ((count ?? 0) >= MAX_STARTS_PER_WINDOW) return json({ error: "وصلت إلى حد المحاولات المؤقت. حاول بعد ساعة." }, 429);
-
     const { data: bankRows, error: bankError } = await admin.from("student_champion_question_bank")
       .select("id,prompt,options,correct_option")
       .eq("lesson_index", lessonIndex)
@@ -141,17 +133,19 @@ export async function handleChampionChallenge(request: Request): Promise<Respons
     if (!prepared) return json({ error: "تحدي هذا الدرس غير متاح بعد. اختر درسًا آخر لاحقًا." }, 409);
 
     const expiresAt = new Date(Date.now() + ATTEMPT_MINUTES * 60 * 1000).toISOString();
-    const { data: attempt, error: insertError } = await admin.from("student_champion_attempts")
-      .insert({
-        user_id: authData.user.id,
-        lesson_index: lessonIndex,
-        answer_key: prepared.answerKey,
-        question_count: QUESTION_COUNT,
-        expires_at: expiresAt,
-      })
-      .select("id")
-      .single();
-    if (insertError || !attempt?.id) return json({ error: "تعذر بدء التحدي. حاول مجددًا." }, 503);
+    const { data: attemptId, error: reserveError } = await admin.rpc("start_student_champion_attempt", {
+      p_user_id: authData.user.id,
+      p_lesson_index: lessonIndex,
+      p_answer_key: prepared.answerKey,
+      p_expires_at: expiresAt,
+    });
+    if (reserveError) {
+      if (reserveError.code === "P0001" && reserveError.message?.includes("rate limit")) {
+        return json({ error: "وصلت إلى حد المحاولات المؤقت. حاول بعد ساعة." }, 429);
+      }
+      return json({ error: "تعذر بدء التحدي. حاول مجددًا." }, 503);
+    }
+    if (typeof attemptId !== "string") return json({ error: "تعذر بدء التحدي. حاول مجددًا." }, 503);
 
     return json({
       attempt_id: attempt.id,
