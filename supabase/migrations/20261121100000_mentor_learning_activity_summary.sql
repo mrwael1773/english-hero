@@ -165,8 +165,138 @@ begin
           'current_word_index', coalesce(
             a.current_word_index,
             case
-              when jsonb_typeof(lp.progress->'lessonPositions'->(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) = 'number'
-              then (lp.progress->'lessonPositions'->(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::text::integer
+              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}
+          ),
+          'last_action', a.last_learning_action,
+          'last_action_at', a.last_learning_activity_at,
+          'last_action_lesson_index', a.last_learning_lesson_index,
+          'last_action_word_index', a.last_learning_word_index
+        )
+      )
+      order by p.display_name, p.username
+    ),
+    '[]'::jsonb
+  )
+  into v_students
+  from public.student_profiles as p
+  left join public.student_activity as a on a.user_id = p.user_id
+  left join public.learning_progress as lp on lp.user_id = p.user_id
+  left join lateral (
+    select started.lesson_index
+    from (
+      select
+        case
+          when lesson_index_text ~ '^[0-9]{1,2}
+  ) as active_lesson on true;
+
+  return jsonb_build_object(
+    'students', v_students,
+    'generated_at', v_now
+  );
+end;
+$$;
+
+revoke all on function public.mentor_get_student_overview(text) from public, anon, authenticated;
+grant execute on function public.mentor_get_student_overview(text) to service_role;
+
+comment on table public.student_activity is
+  'Minimal latest activity marker and last-seen timestamp; no answer content, IP address, or device fingerprint is stored.';
+comment on function public.record_student_learning_activity(text, integer, integer) is
+  'Stores only the latest allowlisted learning action and numeric lesson position for the authenticated student.';
+
+              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
+              else null
+            end
+          ),
+          'last_action', a.last_learning_action,
+          'last_action_at', a.last_learning_activity_at,
+          'last_action_lesson_index', a.last_learning_lesson_index,
+          'last_action_word_index', a.last_learning_word_index
+        )
+      )
+      order by p.display_name, p.username
+    ),
+    '[]'::jsonb
+  )
+  into v_students
+  from public.student_profiles as p
+  left join public.student_activity as a on a.user_id = p.user_id
+  left join public.learning_progress as lp on lp.user_id = p.user_id
+  left join lateral (
+    select started.lesson_index_text::integer as lesson_index
+    from jsonb_array_elements_text(
+      case
+        when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
+        then lp.progress->'lessonStarted'
+        else '[]'::jsonb
+      end
+    ) with ordinality as started(lesson_index_text, ordinal)
+    where started.lesson_index_text ~ '^[0-9]+$'
+      and not (
+        case
+          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
+          then lp.progress->'masteredLessons'
+          else '[]'::jsonb
+        end @> jsonb_build_array(started.lesson_index_text::integer)
+      )
+    order by started.ordinal desc
+    limit 1
+  ) as active_lesson on true;
+
+  return jsonb_build_object(
+    'students', v_students,
+    'generated_at', v_now
+  );
+end;
+$$;
+
+revoke all on function public.mentor_get_student_overview(text) from public, anon, authenticated;
+grant execute on function public.mentor_get_student_overview(text) to service_role;
+
+comment on table public.student_activity is
+  'Minimal latest activity marker and last-seen timestamp; no answer content, IP address, or device fingerprint is stored.';
+comment on function public.record_student_learning_activity(text, integer, integer) is
+  'Stores only the latest allowlisted learning action and numeric lesson position for the authenticated student.';
+ then lesson_index_text::integer
+          else null
+        end as lesson_index,
+        ordinal
+      from jsonb_array_elements_text(
+        case
+          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
+          then lp.progress->'lessonStarted'
+          else '[]'::jsonb
+        end
+      ) with ordinality as raw_started(lesson_index_text, ordinal)
+    ) as started
+    where started.lesson_index between 0 and 99
+      and not (
+        case
+          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
+          then lp.progress->'masteredLessons'
+          else '[]'::jsonb
+        end @> jsonb_build_array(started.lesson_index)
+      )
+    order by started.ordinal desc
+    limit 1
+  ) as active_lesson on true;
+
+  return jsonb_build_object(
+    'students', v_students,
+    'generated_at', v_now
+  );
+end;
+$$;
+
+revoke all on function public.mentor_get_student_overview(text) from public, anon, authenticated;
+grant execute on function public.mentor_get_student_overview(text) to service_role;
+
+comment on table public.student_activity is
+  'Minimal latest activity marker and last-seen timestamp; no answer content, IP address, or device fingerprint is stored.';
+comment on function public.record_student_learning_activity(text, integer, integer) is
+  'Stores only the latest allowlisted learning action and numeric lesson position for the authenticated student.';
+
+              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
               else null
             end
           ),
