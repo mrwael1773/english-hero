@@ -272,6 +272,7 @@ begin
      or v_result->'week_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'week_leaders'->0->>'score' <> '2'
      or v_result->'mastery_leaders'->0->>'score' <> '3'
+     or v_result->'consistency_leaders'->0->>'display_name' <> 'Synthetic Learner'
      or v_result->'consistency_leaders'->0->>'score' <> '1'
      or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'improvement_leaders'->0->>'score' <> '1' then
