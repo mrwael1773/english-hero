@@ -86,7 +86,7 @@ begin
         case when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
           then lp.progress->'masteredLessons' else '[]'::jsonb end
       ) as item(value)
-      where item.value ~ '^(0|[1-9]|[1-9][0-9])
+      where item.value ~ '^(0|[1-9]|[1-9][0-9])$'
 
   select coalesce(jsonb_agg(jsonb_build_object(
     'display_name', ranked.display_name, 'score', ranked.score
