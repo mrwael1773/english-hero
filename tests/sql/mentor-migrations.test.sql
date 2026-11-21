@@ -143,9 +143,9 @@ values ('33333333-3333-4333-8333-333333333333');
 insert into public.student_profiles (user_id, username, display_name)
 values ('33333333-3333-4333-8333-333333333333', 'synthetic-improver', 'Improved Learner');
 insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
-select '33333333-3333-4333-8333-333333333333', lesson_index,
-       now() + make_interval(hours => lesson_index)
-from (values (4),(5)) as lessons(lesson_index);
+values
+  ('33333333-3333-4333-8333-333333333333', 4, now()),
+  ('33333333-3333-4333-8333-333333333333', 5, now());
 insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
 values ('33333333-3333-4333-8333-333333333333', 6, now() - interval '7 days');
 
