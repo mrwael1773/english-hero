@@ -51,14 +51,22 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 export function prepareChallenge(rows: BankRow[]) {
-  const valid = rows.filter((row) => {
-    if (!row || typeof row.id !== "string" || !/^[0-9a-f-]{36}$/i.test(row.id)) return false;
-    if (typeof row.prompt !== "string" || row.prompt.trim().length < 1 || row.prompt.length > 300) return false;
-    if (!Array.isArray(row.options) || row.options.length !== 4) return false;
-    if (!row.options.every((option) => typeof option === "string" && option.trim().length > 0 && option.length <= 120)) return false;
-    if (new Set((row.options as string[]).map((option) => option.trim().toLocaleLowerCase())).size !== 4) return false;
-    return Number.isInteger(row.correct_option) && row.correct_option >= 0 && row.correct_option < 4;
-  });
+  const valid: BankRow[] = [];
+  const seenIds = new Set<string>();
+  const seenPrompts = new Set<string>();
+  for (const row of rows) {
+    if (!row || typeof row.id !== "string" || !/^[0-9a-f-]{36}$/i.test(row.id)) continue;
+    if (typeof row.prompt !== "string" || row.prompt.trim().length < 1 || row.prompt.length > 300) continue;
+    if (!Array.isArray(row.options) || row.options.length !== 4) continue;
+    if (!row.options.every((option) => typeof option === "string" && option.trim().length > 0 && option.length <= 120)) continue;
+    if (new Set((row.options as string[]).map((option) => option.trim().toLocaleLowerCase())).size !== 4) continue;
+    if (!Number.isInteger(row.correct_option) || row.correct_option < 0 || row.correct_option > 3) continue;
+    const promptKey = row.prompt.trim().toLocaleLowerCase();
+    if (seenIds.has(row.id) || seenPrompts.has(promptKey)) continue;
+    seenIds.add(row.id);
+    seenPrompts.add(promptKey);
+    valid.push(row);
+  }
   if (valid.length < QUESTION_COUNT) return null;
 
   const selected = shuffle(valid).slice(0, QUESTION_COUNT);
