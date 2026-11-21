@@ -221,7 +221,7 @@ declare
   v_student jsonb;
 begin
   v_result := public.mentor_get_student_overview(
-    encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'sha256'), 'hex')
+    encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex')
   );
   select item into v_student
   from jsonb_array_elements(v_result->'students') as item
