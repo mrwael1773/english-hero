@@ -73,13 +73,13 @@ jobs:
         run: deno check --no-lock supabase/functions/mentor-overview/index.ts
 
       - name: Type-check champion challenge Edge Function
-        run: deno check --no-lock supabase/functions/student-champion-challenge/index.ts
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/student-champion-challenge/index.ts
 
       - name: Test mentor overview Edge Function
         run: deno test --no-lock --allow-env supabase/functions/mentor-overview/index_test.ts
 
       - name: Test champion challenge Edge Function
-        run: deno test --no-lock supabase/functions/student-champion-challenge/index_test.ts
+        run: deno test --no-lock --allow-env --node-modules-dir=auto supabase/functions/student-champion-challenge/index_test.ts
 
       - name: Validate JSON data and vocabulary count
         run: |
