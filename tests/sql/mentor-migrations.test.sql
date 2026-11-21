@@ -34,6 +34,11 @@ begin
     raise exception 'Reading progress did not round-trip for the authenticated student';
   end if;
 
+  perform public.save_my_reading_progress(array['letter-sounds']::text[]);
+  if public.get_my_reading_progress() <> array['letter-sounds','digraphs']::text[] then
+    raise exception 'Reading progress update unexpectedly regressed completed stages';
+  end if;
+
   begin
     perform public.save_my_reading_progress(array['letter-sounds','blends']::text[]);
     raise exception 'Out-of-order reading stages were accepted';
@@ -231,6 +236,12 @@ begin
   if has_table_privilege('authenticated', 'public.mentor_link_tokens', 'SELECT')
      or has_table_privilege('anon', 'public.mentor_link_tokens', 'SELECT') then
     raise exception 'A client role can read private mentor token hashes';
+  end if;
+  if not exists (
+    select 1 from pg_class
+    where oid = 'public.reading_progress'::regclass and relrowsecurity
+  ) then
+    raise exception 'Reading progress table does not have row-level security enabled';
   end if;
   if has_table_privilege('authenticated', 'public.reading_progress', 'SELECT')
      or has_table_privilege('authenticated', 'public.reading_progress', 'INSERT')
