@@ -2,7 +2,7 @@ name: Local Supabase migration tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feature/student-champions-leaderboard]
     paths:
       - "supabase/**"
       - ".github/workflows/local-supabase-migrations.yml"
