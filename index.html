@@ -423,6 +423,11 @@ input,select,textarea,button{max-width:100%;min-width:0}
         <p>أكثر أيام النشاط التعليمي خلال آخر سبعة أيام.</p>
         <div id="championsConsistency" aria-live="polite"><div class="champions-loading">جارٍ تحميل المتصدرين…</div></div>
       </article>
+      <article class="champion-secondary-card">
+        <h3>📈 الأكثر تطورًا</h3>
+        <p>أكبر تحسّن في إتقان الدروس مقارنة بالفترة المماثلة من الأسبوع السابق.</p>
+        <div id="championsImprovement" aria-live="polite"><div class="champions-loading">جارٍ تحميل المتصدرين…</div></div>
+      </article>
 
     </div>
     <div class="champion-note">تُحتسب بطولة اليوم والأسبوع من الدروس الجديدة التي تم إتقانها بعد تفعيل سجل البطولة. يبدأ الأسبوع يوم الأحد وفق توقيت السعودية. لا تظهر هنا أسماء المستخدمين أو البريد الإلكتروني أو تفاصيل تقدم الطلاب. النتائج تحفيزية وليست تقييمًا مدرسيًا رسميًا.</div>
@@ -2148,7 +2153,7 @@ theme();renderStats();renderCourses();renderHome();
   window.addEventListener('storage',event=>{if(event.key==='english-hero-academy-3')render()});
 })();
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=143').catch(()=>{}));}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=144').catch(()=>{}));}</script>
   <script src="./site-quick-nav.js?v=1"></script>
 </body>
 </html>
