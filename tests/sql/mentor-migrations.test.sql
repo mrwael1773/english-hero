@@ -19,6 +19,47 @@ select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111
 select public.record_student_activity();
 select public.record_student_learning_activity('lesson_started', 3, 2);
 
+-- Reading completion is isolated by authenticated account and ordered stage ID.
+insert into auth.users (id)
+values ('22222222-2222-4222-8222-222222222222');
+
+select public.save_my_reading_progress(array['letter-sounds','digraphs']::text[]);
+
+do $
+declare
+  v_completed text[];
+begin
+  v_completed := public.get_my_reading_progress();
+  if v_completed <> array['letter-sounds','digraphs']::text[] then
+    raise exception 'Reading progress did not round-trip for the authenticated student';
+  end if;
+
+  begin
+    perform public.save_my_reading_progress(array['letter-sounds','blends']::text[]);
+    raise exception 'Out-of-order reading stages were accepted';
+  exception
+    when sqlstate '22023' then null;
+  end;
+
+  begin
+    perform public.save_my_reading_progress(array['unknown-stage']::text[]);
+    raise exception 'Unknown reading stage was accepted';
+  exception
+    when sqlstate '22023' then null;
+  end;
+end;
+$;
+
+select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', false);
+do $
+begin
+  if public.get_my_reading_progress() <> '{}'::text[] then
+    raise exception 'Reading progress leaked across student accounts';
+  end if;
+end;
+$;
+select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
+
 do $$
 declare
   v_row public.student_activity%rowtype;
@@ -118,6 +159,9 @@ begin
   if v_student->'progress'->'current_word_index' <> 'null'::jsonb then
     raise exception 'Out-of-range word index was not rejected';
   end if;
+  if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
+    raise exception 'Mentor overview did not include the student reading stage summary';
+  end if;
 end;
 $$;
 
@@ -187,6 +231,20 @@ begin
   if has_table_privilege('authenticated', 'public.mentor_link_tokens', 'SELECT')
      or has_table_privilege('anon', 'public.mentor_link_tokens', 'SELECT') then
     raise exception 'A client role can read private mentor token hashes';
+  end if;
+  if has_table_privilege('authenticated', 'public.reading_progress', 'SELECT')
+     or has_table_privilege('authenticated', 'public.reading_progress', 'INSERT')
+     or has_table_privilege('authenticated', 'public.reading_progress', 'UPDATE')
+     or has_table_privilege('anon', 'public.reading_progress', 'SELECT') then
+    raise exception 'A client role can directly access private reading progress';
+  end if;
+  if not has_function_privilege('authenticated', 'public.get_my_reading_progress()', 'EXECUTE')
+     or not has_function_privilege('authenticated', 'public.save_my_reading_progress(text[])', 'EXECUTE') then
+    raise exception 'Authenticated students cannot use their reading progress RPCs';
+  end if;
+  if has_function_privilege('anon', 'public.get_my_reading_progress()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.save_my_reading_progress(text[])', 'EXECUTE') then
+    raise exception 'Anonymous users can access student reading progress RPCs';
   end if;
 end;
 $$;
