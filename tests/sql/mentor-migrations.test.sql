@@ -148,12 +148,11 @@ $legacy_mastery$;
 
 -- Only the trusted server role can complete a challenge and create a mastery event.
 insert into public.student_champion_attempts (
-  id, user_id, lesson_index, question_snapshot, answer_key, question_count, expires_at
+  id, user_id, lesson_index, answer_key, question_count, expires_at
 ) values (
   '44444444-4444-4444-8444-444444444444',
   '11111111-1111-4111-8111-111111111111',
   3,
-  '[{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]'::jsonb,
   '[0,0,0,0,0,0,0,0,0,0]'::jsonb,
   10,
   now() + interval '15 minutes'
