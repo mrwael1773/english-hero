@@ -18,7 +18,7 @@ From the repository root, run:
 node scripts/build-champion-question-bank.mjs
 ```
 
-The default output is `../english-hero-private/champion-question-bank.json`, outside this repository. The file is created with owner-only permissions and will not overwrite an existing file. Do not move it into the repository or upload it to a public artifact.
+The default output is `../english-hero-private/champion-question-bank.json`, outside this repository. The generator refuses paths inside the repository, creates the directory with owner-only permissions, creates the file with mode `0600`, and will not overwrite an existing file. Do not move it into the repository or upload it to a public artifact.
 
 ## Validate and import
 
