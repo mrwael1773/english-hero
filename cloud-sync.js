@@ -133,6 +133,7 @@
     state={...r,...local,
       displayName:String(local.displayName||r.displayName||user?.user_metadata?.full_name||user?.user_metadata?.display_name||'').trim().slice(0,32),
       xp:Math.max(0,Number(r.xp)||0,Number(local.xp)||0),
+      rewardClaims:union(r.rewardClaims,local.rewardClaims).filter(x=>typeof x==='string'&&x.length<=240),
       best:Math.min(100,Math.max(0,Number(r.best)||0,Number(local.best)||0)),
       quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
       streak:Math.max(0,Number(r.streak)||0,Number(local.streak)||0),
@@ -161,7 +162,8 @@
     state.best=Math.min(100,Math.max(0,Number(state.best)||0));
     state.quizzes=Math.max(0,Number(state.quizzes)||0);
     state.streak=Math.max(0,Number(state.streak)||0);
-    for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
+    for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory','rewardClaims']) if(!Array.isArray(state[key])) state[key]=[];
+    state.rewardClaims=[...new Set(state.rewardClaims.filter(x=>typeof x==='string'&&x.length<=240))];
     state.masteredLessons=typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(state.masteredLessons):[...new Set(state.masteredLessons.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];for(const key of ['lessonStarted','lessonTrained']) state[key]=[...new Set(state[key].filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     for(const key of ['misses','review','daily','lessonPositions']) if(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])) state[key]={};
     state.review=mergeReviewProgress({},state.review,{},state.misses);
