@@ -144,7 +144,7 @@ set progress = '{
     "word-3":{"due":"1900-01-01","stage":"retained"}
   },
   "misses":{"word-1":true,"word-2":false},
-  "quizHistory":[{}, {}, {}],"best":90,
+  "quizHistory":[{}, {}, {}],"quizzes":7,"best":90,
   "answerStats":{"answered":10,"correct":8},
   "daily":{"1900-01-01":{"quiz":true},"1900-01-02":{"review":true},"1900-01-03":{"other":false}},
   "streak":4,"vocabLevel":"all"
@@ -191,7 +191,7 @@ begin
      or v_student->'progress'->'missed_words_count' <> '1'::jsonb then
     raise exception 'Vocabulary or review aggregates were calculated incorrectly';
   end if;
-  if v_student->'progress'->'quiz_attempts' <> '3'::jsonb
+  if v_student->'progress'->'quiz_attempts' <> '7'::jsonb
      or v_student->'progress'->'best_quiz_score' <> '90'::jsonb
      or v_student->'progress'->'answers_count' <> '10'::jsonb
      or v_student->'progress'->'correct_answers_count' <> '8'::jsonb then
