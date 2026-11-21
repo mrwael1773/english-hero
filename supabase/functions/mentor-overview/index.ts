@@ -18,6 +18,42 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
+function sanitizeOverview(payload: unknown): { students: Record<string, unknown>[]; generated_at: string } | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const source = payload as Record<string, unknown>;
+  if (!Array.isArray(source.students) || typeof source.generated_at !== "string" ||
+      !Number.isFinite(Date.parse(source.generated_at))) return null;
+
+  const students: Record<string, unknown>[] = [];
+  for (const value of source.students) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const student = value as Record<string, unknown>;
+    const progress = student.progress;
+    if ((student.username !== null && typeof student.username !== "string") ||
+        (student.display_name !== null && typeof student.display_name !== "string") ||
+        (student.last_seen_at !== null && typeof student.last_seen_at !== "string") ||
+        !progress || typeof progress !== "object" || Array.isArray(progress)) return null;
+
+    const stats = progress as Record<string, unknown>;
+    const validCount = (number: unknown) => Number.isSafeInteger(number) && (number as number) >= 0;
+    if (!validCount(stats.completed_count) || !validCount(stats.mastered_count) ||
+        !(stats.xp === null || validCount(stats.xp))) return null;
+
+    // Explicit allowlist: unexpected database fields never leave this function.
+    students.push({
+      username: student.username,
+      display_name: student.display_name,
+      last_seen_at: student.last_seen_at,
+      progress: {
+        xp: stats.xp,
+        completed_count: stats.completed_count,
+        mastered_count: stats.mastered_count,
+      },
+    });
+  }
+  return { students, generated_at: source.generated_at };
+}
+
 export async function handleMentorOverview(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return response({ error: "Method not allowed" }, 405);
@@ -25,7 +61,7 @@ export async function handleMentorOverview(req: Request): Promise<Response> {
   const origin = req.headers.get("origin");
   if (origin !== allowedOrigin) return response({ error: "Origin not allowed" }, 403);
 
-  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  const token = (req.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
   if (!/^[0-9a-f]{64}$/.test(token)) return response({ error: "Invalid or expired link" }, 401);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -35,7 +71,7 @@ export async function handleMentorOverview(req: Request): Promise<Response> {
   try {
     const tokenHash = await sha256(token);
     const rpcResponse = await fetch(
-      supabaseUrl.replace(/\/$/, "") + "/rest/v1/rpc/mentor_get_student_overview",
+      supabaseUrl.replace(/\\/$/, "") + "/rest/v1/rpc/mentor_get_student_overview",
       {
         method: "POST",
         headers: {
@@ -56,11 +92,9 @@ export async function handleMentorOverview(req: Request): Promise<Response> {
       return response({ error: "Student overview unavailable" }, 503);
     }
 
-    if (!payload || !Array.isArray(payload.students) || typeof payload.generated_at !== "string") {
-      return response({ error: "Student overview unavailable" }, 503);
-    }
-
-    return response(payload);
+    const safePayload = sanitizeOverview(payload);
+    if (!safePayload) return response({ error: "Student overview unavailable" }, 503);
+    return response(safePayload);
   } catch {
     return response({ error: "Request could not be completed" }, 500);
   }
