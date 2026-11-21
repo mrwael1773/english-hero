@@ -269,6 +269,22 @@
       if(user && client && user.id!==requestedUserId) queueMicrotask(()=>syncNow());
     }
   }
+  async function recordStudentActivity(){
+    if(!client || !user || !ready || progressOwnerUserId!==user.id) return;
+    try {
+      const {error}=await client.rpc('record_student_activity');
+      if(error) throw error;
+    } catch(error) {
+      // Activity reporting is best-effort and must never block learning or sync.
+      console.warn('English Hero activity tracking:',error?.message||error);
+    }
+  }
+
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') recordStudentActivity();
+  });
+  window.addEventListener('focus',recordStudentActivity);
+
   async function init(){
     if(!validConfig()){
       status('تسجيل الدخول السحابي جاهز للتهيئة، لكنه غير مفعّل بعد. يلزم إعداد مشروع Supabase ومفتاحه العام في config.js.');
@@ -297,6 +313,7 @@
         setSignedInUI();
         if(event==='SIGNED_IN' && user) setTimeout(async()=>{
           await syncNow();
+          await recordStudentActivity();
           window.dispatchEvent(new CustomEvent('englishhero:authready'));
         },0);
         if(event==='SIGNED_OUT'){
@@ -322,6 +339,7 @@
         window.dispatchEvent(new CustomEvent('englishhero:authstate',{detail:{event,user}}));
       });
       if(user) await syncNow();
+      if(user) await recordStudentActivity();
       else status('أنشئ حسابًا أو سجّل الدخول لمزامنة تقدمك بين الأجهزة.');
       // Release the gateway only after the returning user's cloud progress has been restored.
       resolveCloudInitialization(true);
@@ -431,6 +449,21 @@
         .select('username,display_name').eq('user_id',user.id).maybeSingle();
       if(error) throw error;
       return data || null;
+    },
+    async recordLearningActivity(action, lessonIndex=null, wordIndex=null) {
+      const allowed = ['lesson_started','lesson_progress','lesson_training_completed','lesson_assessment_attempted','lesson_mastered','quiz_completed'];
+      if(!allowed.includes(action) || !client || !user || !ready || progressOwnerUserId!==user.id) return false;
+      if(action.startsWith('lesson_') && !Number.isInteger(lessonIndex)) return false;
+      const {error}=await client.rpc('record_student_learning_activity',{
+        p_action:action,
+        p_lesson_index:Number.isInteger(lessonIndex)?lessonIndex:null,
+        p_word_index:Number.isInteger(wordIndex)?wordIndex:null
+      });
+      if(error){
+        console.warn('English Hero learning activity:',error.message||error);
+        return false;
+      }
+      return true;
     },
     async signInWithUsername(username,password) {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');

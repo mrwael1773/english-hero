@@ -1,2 +1,5 @@
 [functions.student-username-login]
 verify_jwt = false
+
+[functions.mentor-overview]
+verify_jwt = false

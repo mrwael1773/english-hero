@@ -26,6 +26,7 @@ export default defineConfig({
         '**/auth-gateway.spec.js',
         '**/core-learning-flows.spec.js',
         '**/site-smoke.spec.js',
+        '**/mentor-dashboard.spec.js',
         '**/reading-journey.spec.js',
       ],
     },

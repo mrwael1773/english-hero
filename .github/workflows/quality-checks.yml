@@ -31,7 +31,7 @@ jobs:
           from pathlib import Path
 
           inline_count = 0
-          for page_path in ["index.html", "grammar-lesson.html"]:
+          for page_path in ["index.html", "grammar-lesson.html", "mentor-dashboard.html"]:
               html = Path(page_path).read_text(encoding="utf-8")
               scripts = re.findall(r"<script\b([^>]*)>([\s\S]*?)</script\s*>", html, re.I)
               for attrs, script in scripts:
@@ -67,6 +67,12 @@ jobs:
       - name: Type-check username login Edge Function
         run: deno check --no-lock supabase/functions/student-username-login/index.ts
 
+      - name: Type-check mentor overview Edge Function
+        run: deno check --no-lock supabase/functions/mentor-overview/index.ts
+
+      - name: Test mentor overview Edge Function
+        run: deno test --no-lock --allow-env supabase/functions/mentor-overview/index_test.ts
+
       - name: Validate JSON data and vocabulary count
         run: |
           node --input-type=module <<'JS'
@@ -99,8 +105,60 @@ jobs:
           test -s auth-gateway.css
           test -s auth-guard.js
           test -s supabase/functions/student-username-login/index.ts
+          test -s supabase/functions/mentor-overview/index.ts
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg
           grep -q 'لا تكتفِ بحفظ الكلمات' index.html
           grep -q 'English Hero' index.html
+
+  mentor-postgres-integration:
+    name: Mentor PostgreSQL migration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Bootstrap isolated synthetic database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/sql/mentor-bootstrap.sql
+
+      - name: Apply mentor migrations in order
+        env:
+          PGPASSWORD: postgres
+        run: |
+          for migration in \
+            supabase/migrations/20261118100000_student_activity_and_mentor_overview.sql \
+            supabase/migrations/20261118110000_mentor_passwordless_link_access.sql \
+            supabase/migrations/20261121010000_atomic_mentor_overview_access.sql \
+            supabase/migrations/20261121100000_mentor_learning_activity_summary.sql
+          do
+            echo "Applying $migration"
+            psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$migration"
+          done
+
+      - name: Verify mentor access controls and student activity behavior
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/sql/mentor-migrations.test.sql
