@@ -25,7 +25,7 @@ values ('22222222-2222-4222-8222-222222222222');
 
 select public.save_my_reading_progress(array['letter-sounds','digraphs']::text[]);
 
-do $
+do $reading$
 declare
   v_completed text[];
 begin
@@ -53,16 +53,16 @@ begin
     when sqlstate '22023' then null;
   end;
 end;
-$;
+$reading$;
 
 select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', false);
-do $
+do $isolation$
 begin
   if public.get_my_reading_progress() <> '{}'::text[] then
     raise exception 'Reading progress leaked across student accounts';
   end if;
 end;
-$;
+$isolation$;
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
 
 do $$
