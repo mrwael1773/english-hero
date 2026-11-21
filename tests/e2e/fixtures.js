@@ -22,7 +22,7 @@ export const test = base.extend({
           getSession:async()=>({data:{session:{user:{id:'e2e-student'},access_token:'e2e-access-token'}},error:null})
         },
         from:()=>({select(){return this;},eq(){return this;},
-          maybeSingle:async()=>({data:{user_id:'e2e-student'},error:null})})
+          maybeSingle:async()=>({data:{user_id:'e2e-student',progress:{}},error:null})})
       })};`
     }));
     // Keep reading RPCs isolated: tests never contact a real Supabase project.
