@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { extractLessons, buildQuestionBank } from "../../scripts/build-champion-question-bank.mjs";
+import { readFileSync, mkdtempSync, statSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { extractLessons, buildQuestionBank, writePrivateBank } from "../../scripts/build-champion-question-bank.mjs";
 import { validateQuestionBank } from "../../scripts/import-champion-question-bank.mjs";
 
 const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
@@ -50,4 +52,22 @@ test("reverse questions do not use a translation shared by multiple words", () =
       assert.equal(words.filter(word => word.ar.toLocaleLowerCase() === translation.toLocaleLowerCase()).length, 1);
     }
   }
+});
+
+test("writes private answer keys outside the repository with owner-only permissions", () => {
+  const dir = mkdtempSync(join(tmpdir(), "english-hero-private-bank-"));
+  const output = join(dir, "champion-question-bank.json");
+  try {
+    assert.equal(writePrivateBank(bank, output), output);
+    assert.equal(statSync(output).mode & 0o777, 0o600);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("refuses to write a private answer bank inside the public repository", () => {
+  assert.throws(
+    () => writePrivateBank(bank, join(process.cwd(), "must-not-be-created.json")),
+    /outside the repository/,
+  );
 });
