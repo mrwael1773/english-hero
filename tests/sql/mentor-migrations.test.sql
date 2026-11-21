@@ -115,7 +115,42 @@ end;
 $block$;
 
 -- A mastered lesson clears the active lesson pointer without deleting the last action.
+-- The new mastery-event recorder requires the synced progress snapshot to contain the lesson.
+update public.learning_progress
+set progress = jsonb_set(progress, '{masteredLessons}', '[0,3]'::jsonb)
+where user_id = '11111111-1111-4111-8111-111111111111';
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
+-- Replaying the same mastery event must not create a second leaderboard entry.
+select public.record_student_learning_activity('lesson_mastered', 3, 2);
+select public.record_student_learning_activity('quiz_completed', null, null);
+
+do $champions$
+declare
+  v_result jsonb;
+begin
+  if (select count(*) from public.student_mastery_events
+      where user_id = '11111111-1111-4111-8111-111111111111' and lesson_index = 3) <> 1 then
+    raise exception 'Repeated lesson mastery created duplicate champion events';
+  end if;
+  if (select count(*) from public.student_learning_days
+      where user_id = '11111111-1111-4111-8111-111111111111') <> 1 then
+    raise exception 'Learning-day tracking did not deduplicate the current Saudi day';
+  end if;
+
+  v_result := public.get_student_champions();
+  if v_result->>'timezone' <> 'Asia/Riyadh'
+     or v_result->'today_leaders'->0->>'display_name' <> 'Synthetic Learner'
+     or v_result->'today_leaders'->0->>'score' <> '1'
+     or v_result->'week_leaders'->0->>'score' <> '1'
+     or v_result->'mastery_leaders'->0->>'score' <> '2'
+     or v_result->'consistency_leaders'->0->>'score' <> '1' then
+    raise exception 'Student champions aggregates were not calculated as expected';
+  end if;
+  if (v_result::text like '%user_id%' or v_result::text like '%username%' or v_result::text like '%email%') then
+    raise exception 'Student champions RPC leaked private identity fields';
+  end if;
+end;
+$champions$;
 
 do $$
 begin
