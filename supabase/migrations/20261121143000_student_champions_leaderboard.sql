@@ -20,6 +20,17 @@ alter table public.student_mastery_events enable row level security;
 alter table public.student_mastery_events force row level security;
 revoke all on table public.student_mastery_events from public, anon, authenticated;
 
+-- The improvement category stays empty until a full prior comparison window exists.
+create table if not exists public.student_champions_config (
+  singleton boolean primary key default true check (singleton),
+  activated_at timestamptz not null default now()
+);
+insert into public.student_champions_config(singleton) values (true)
+on conflict (singleton) do nothing;
+alter table public.student_champions_config enable row level security;
+alter table public.student_champions_config force row level security;
+revoke all on table public.student_champions_config from public, anon, authenticated;
+
 create or replace function public.record_student_learning_activity(
   p_action text,
   p_lesson_index integer default null,
@@ -130,6 +141,8 @@ declare
   v_week_leaders jsonb;
   v_mastery_leaders jsonb;
   v_consistency_leaders jsonb;
+  v_improvement_leaders jsonb := '[]'::jsonb;
+  v_tracking_started_at timestamptz;
 begin
   if v_user_id is null then
     raise exception 'Authentication required' using errcode = '42501';
@@ -137,6 +150,9 @@ begin
 
   -- Saudi school week: Sunday through Saturday.
   v_week_start := v_today - extract(dow from v_today)::integer;
+  select activated_at into v_tracking_started_at
+  from public.student_champions_config where singleton = true;
+  if not found then v_tracking_started_at := v_now; end if;
 
   select coalesce(jsonb_agg(jsonb_build_object(
     'display_name', ranked.display_name, 'score', ranked.score
@@ -200,6 +216,32 @@ begin
     limit 3
   ) as ranked;
 
+  -- Compare equal-length periods (week start through today vs. the same days last week).
+  -- Do not publish this category until the previous comparison window is fully post-activation.
+  if v_today >= (v_tracking_started_at at time zone 'Asia/Riyadh')::date + 14 then
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'display_name', ranked.display_name, 'score', ranked.score
+    ) order by ranked.score desc, ranked.current_score desc, ranked.display_name asc), '[]'::jsonb)
+    into v_improvement_leaders
+    from (
+      select p.display_name,
+        (
+          count(*) filter (where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start and v_today)
+          - count(*) filter (where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start - 7 and v_today - 7)
+        )::integer as score,
+        count(*) filter (where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start and v_today)::integer as current_score
+      from public.student_mastery_events as e
+      join public.student_profiles as p on p.user_id = e.user_id
+      where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start - 7 and v_today
+        and p.display_name is not null and btrim(p.display_name) <> ''
+      group by p.user_id, p.display_name
+      having count(*) filter (where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start and v_today)
+        > count(*) filter (where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start - 7 and v_today - 7)
+      order by score desc, current_score desc, p.display_name asc
+      limit 3
+    ) as ranked;
+  end if;
+
   return jsonb_build_object(
     'generated_at', v_now,
     'timezone', 'Asia/Riyadh',
@@ -208,7 +250,8 @@ begin
     'today_leaders', v_today_leaders,
     'week_leaders', v_week_leaders,
     'mastery_leaders', v_mastery_leaders,
-    'consistency_leaders', v_consistency_leaders
+    'consistency_leaders', v_consistency_leaders,
+    'improvement_leaders', v_improvement_leaders
   );
 end;
 $$;
