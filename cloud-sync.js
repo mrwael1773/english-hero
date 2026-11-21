@@ -454,6 +454,13 @@
       const allowed = ['lesson_started','lesson_progress','lesson_training_completed','lesson_assessment_attempted','lesson_mastered','quiz_completed'];
       if(!allowed.includes(action) || !client || !user || !ready || progressOwnerUserId!==user.id) return false;
       if(action.startsWith('lesson_') && !Number.isInteger(lessonIndex)) return false;
+      // Mastery is recorded only after the current account's progress snapshot is
+      // successfully synced, so the database can verify the lesson is mastered.
+      if(action === 'lesson_mastered') {
+        clearTimeout(timer);
+        const synced = await uploadProgress();
+        if(!synced || !user || progressOwnerUserId!==user.id) return false;
+      }
       const {error}=await client.rpc('record_student_learning_activity',{
         p_action:action,
         p_lesson_index:Number.isInteger(lessonIndex)?lessonIndex:null,
@@ -464,6 +471,12 @@
         return false;
       }
       return true;
+    },
+    async getStudentChampions() {
+      if(!client || !user || !ready || progressOwnerUserId!==user.id) return null;
+      const {data,error}=await client.rpc('get_student_champions');
+      if(error) throw error;
+      return data || null;
     },
     async signInWithUsername(username,password) {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
