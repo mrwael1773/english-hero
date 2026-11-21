@@ -110,7 +110,110 @@
     }
   }
 
+  function renderChallenge(data) {
+    const host = $('championChallengeQuestions');
+    if (!host || !Array.isArray(data?.questions) || data.questions.length !== 10 ||
+        !data.questions.every(question => question && typeof question.prompt === 'string' &&
+          Array.isArray(question.options) && question.options.length === 4 &&
+          question.options.every(option => typeof option === 'string'))) {
+      throw new Error('تعذر التحقق من أسئلة التحدي.');
+    }
+    const form = document.createElement('form');
+    form.id = 'championChallengeForm';
+    data.questions.forEach((question, index) => {
+      const fieldset = document.createElement('fieldset');
+      fieldset.className = 'champion-challenge-question';
+      const legend = document.createElement('legend');
+      legend.textContent = (index + 1) + '. ' + question.prompt;
+      fieldset.append(legend);
+      question.options.forEach((option, optionIndex) => {
+        const label = document.createElement('label');
+        label.className = 'champion-challenge-option';
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'champion-question-' + index;
+        radio.value = String(optionIndex);
+        radio.required = true;
+        const text = document.createElement('span');
+        text.textContent = option;
+        label.append(radio, text);
+        fieldset.append(label);
+      });
+      form.append(fieldset);
+    });
+    const submit = document.createElement('button');
+    submit.type = 'submit';
+    submit.className = 'btn primary full champion-challenge-submit';
+    submit.textContent = 'إرسال الإجابات وتصحيحها';
+    form.append(submit);
+    host.replaceChildren(form);
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const answers = data.questions.map((_, index) => {
+        const selected = form.querySelector('input[name="champion-question-' + index + '"]:checked');
+        return selected ? Number(selected.value) : null;
+      });
+      if (answers.some(answer => !Number.isInteger(answer))) {
+        if ($('championChallengeStatus')) $('championChallengeStatus').textContent = 'أجب عن الأسئلة العشرة قبل الإرسال.';
+        return;
+      }
+      submit.disabled = true;
+      const status = $('championChallengeStatus');
+      if (status) status.textContent = 'جارٍ تصحيح الإجابات على الخادم...';
+      try {
+        const result = await window.EnglishHeroCloud.submitChampionChallenge(data.attempt_id, answers);
+        if (result?.expired) {
+          if (status) status.textContent = 'انتهت مدة المحاولة. ابدأ تحديًا جديدًا.';
+          host.replaceChildren();
+          return;
+        }
+        if (!result || !Number.isInteger(result.score) || result.total !== 10 || typeof result.passed !== 'boolean') {
+          throw new Error('استجابة التصحيح غير صالحة.');
+        }
+        if (status) status.textContent = result.passed
+          ? '🏆 نتيجة ' + result.score + '/10 — اجتزت التحدي. ' + (result.recorded ? 'سُجّل إتقان الدرس في البطولة.' : 'سبق تسجيل إتقان هذا الدرس.')
+          : 'نتيجتك ' + result.score + '/10. تحتاج إلى ٨/١٠ على الأقل لتسجيل الإتقان. يمكنك التدريب والمحاولة لاحقًا.';
+        host.replaceChildren();
+        if (result.passed) load(true);
+      } catch (error) {
+        submit.disabled = false;
+        if (status) status.textContent = error?.message || 'تعذر تصحيح التحدي. حاول مجددًا.';
+      }
+    });
+  }
+
+  async function startChampionChallenge() {
+    const button = $('championChallengeStart');
+    const status = $('championChallengeStatus');
+    const host = $('championChallengeQuestions');
+    if (!button || !status || !host) return;
+    const lessonNumber = Number($('championChallengeLesson')?.value);
+    if (!Number.isInteger(lessonNumber) || lessonNumber < 1 || lessonNumber > 84) {
+      status.textContent = 'أدخل رقم درس من ١ إلى ٨٤.';
+      return;
+    }
+    const cloud = window.EnglishHeroCloud;
+    if (!cloud?.startChampionChallenge || !cloud?.submitChampionChallenge || !cloud.getUser?.()) {
+      status.textContent = 'سجّل الدخول أولًا لبدء تحدي الأبطال.';
+      return;
+    }
+    button.disabled = true;
+    host.replaceChildren();
+    status.textContent = 'جارٍ تجهيز أسئلة التحدي...';
+    try {
+      const data = await cloud.startChampionChallenge(lessonNumber - 1);
+      if (typeof data?.attempt_id !== 'string') throw new Error('لم تصل بيانات المحاولة بصورة صحيحة.');
+      renderChallenge(data);
+      status.textContent = 'لديك ١٥ دقيقة للإجابة عن الأسئلة العشرة.';
+    } catch (error) {
+      status.textContent = error?.message || 'تعذر بدء التحدي. قد لا يكون بنك هذا الدرس جاهزًا بعد.';
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   $('championsRefresh')?.addEventListener('click', () => load(true));
+  $('championChallengeStart')?.addEventListener('click', startChampionChallenge);
   const observer = new MutationObserver(() => {
     if (root.classList.contains('active')) load();
   });
