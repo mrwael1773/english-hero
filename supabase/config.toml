@@ -1,3 +1,5 @@
+project_id = "english-hero-local-test"
+
 [functions.student-username-login]
 verify_jwt = false
 
