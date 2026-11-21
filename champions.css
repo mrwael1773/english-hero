@@ -1,0 +1,31 @@
+/* Student champions: premium, responsive leaderboard. */
+.champions-shell{display:grid;gap:18px}
+.champions-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.champions-heading h2{margin:5px 0 7px;font-size:clamp(24px,4vw,34px)}
+.champions-heading p{margin:0;line-height:1.8;max-width:620px}
+.champions-refresh{border:1px solid #59678a;background:linear-gradient(135deg,#263858,#202b49);color:#f3f6ff;border-radius:13px;padding:11px 15px;font-weight:800}
+.champions-hero-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.champion-feature{position:relative;isolation:isolate;overflow:hidden;min-width:0;min-height:250px;padding:22px;border:1px solid #5b568e;border-radius:25px;background:radial-gradient(circle at 12% 8%,#8d79ff38,transparent 36%),linear-gradient(145deg,#202b4a,#121d32 72%);box-shadow:0 18px 44px #0003}
+.champion-feature.week{border-color:#486d83;background:radial-gradient(circle at 90% 4%,#6de6c32a,transparent 35%),linear-gradient(145deg,#183b4b,#142238 72%)}
+.champion-feature:after{content:"";position:absolute;z-index:-1;inset:auto -30px -80px auto;width:220px;height:220px;border-radius:50%;border:1px solid #ffffff12;box-shadow:0 0 0 24px #ffffff05,0 0 0 48px #ffffff03}
+.champion-kicker{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#c3cbea;font-size:12px;font-weight:800}
+.champion-kicker span:last-child{border:1px solid #ffffff20;border-radius:99px;padding:5px 9px;color:#dce5ff}
+.champion-crown{font-size:34px;margin:15px 0 2px;filter:drop-shadow(0 6px 14px #f8c65a55)}
+.champion-winner{font-size:clamp(20px,3vw,27px);font-weight:950;color:#fff;overflow-wrap:anywhere;margin:4px 0}
+.champion-score{font-size:13px;color:#c2d0e8}
+.champion-empty{display:grid;place-items:center;text-align:center;min-height:110px;padding:14px;border:1px dashed #66718d66;border-radius:16px;color:#b5c3dc;line-height:1.8}
+.champion-podium{display:grid;gap:7px;margin-top:17px}
+.champion-podium-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:12px;background:#ffffff0a;border:1px solid #ffffff0c;min-width:0}
+.champion-podium-rank{font-size:17px;flex:0 0 24px}
+.champion-podium-name{font-size:13px;font-weight:800;color:#eaf0ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.champion-podium-score{margin-right:auto;font-size:12px;color:#c3d0e7;white-space:nowrap}
+.champions-secondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.champion-secondary-card{padding:18px;border:1px solid var(--stroke);border-radius:20px;background:linear-gradient(145deg,var(--surface2),var(--surface));min-width:0}
+.champion-secondary-card h3{margin:0 0 5px;font-size:16px}
+.champion-secondary-card>p{margin:0;color:var(--muted);font-size:12px;line-height:1.7}
+.champion-secondary-card .champion-podium{margin-top:12px}
+.champion-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:11px}
+.champion-note{padding:13px 15px;border-radius:14px;background:var(--surface2);border:1px solid var(--stroke);color:var(--muted);font-size:12px;line-height:1.8}
+.champions-loading{display:flex;align-items:center;gap:10px;color:var(--muted);padding:18px}
+@media(max-width:620px){.champions-hero-grid,.champions-secondary{grid-template-columns:1fr}.champion-feature{min-height:220px;padding:19px}.champions-heading{align-items:stretch}.champions-refresh{width:100%}}
+@media(prefers-reduced-motion:no-preference){.champion-feature{transition:transform .2s ease,border-color .2s ease}.champion-feature:hover{transform:translateY(-3px);border-color:#a797ff}}
