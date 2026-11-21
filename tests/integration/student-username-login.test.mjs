@@ -80,10 +80,13 @@ async function callLogin(username, suppliedPassword = password, options = {}) {
     'Content-Type': 'application/json',
   };
   if (options.ip) headers['cf-connecting-ip'] = options.ip;
+  const method = options.method || 'POST';
   return fetch(endpoint, {
-    method: options.method || 'POST',
+    method,
     headers,
-    body: options.rawBody ?? JSON.stringify({ username, password: suppliedPassword }),
+    ...(method === 'GET' || method === 'HEAD' ? {} : {
+      body: options.rawBody ?? JSON.stringify({ username, password: suppliedPassword }),
+    }),
   });
 }
 
@@ -212,7 +215,7 @@ assert.equal(restoredRows[0]?.progress?.rewardClaims?.length, 19);
 // The per-username bucket must throttle repeated guesses after five attempts.
 const throttleUsername = `limit_${suffix}`;
 for (let attempt = 1; attempt <= 6; attempt++) {
-  const response = await callLogin(throttleUsername);
+  const response = await callLogin(throttleUsername, password, { ip: `198.51.100.${attempt}` });
   assert.equal(response.status, attempt <= 5 ? 401 : 429, `Unexpected throttle response on attempt ${attempt}`);
 }
 
