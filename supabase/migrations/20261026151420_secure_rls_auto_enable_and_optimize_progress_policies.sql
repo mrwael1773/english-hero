@@ -1,5 +1,13 @@
 -- Keep the database event-trigger helper private to database administration.
-REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated;
+-- Some installations do not define this optional helper; in that case there is
+-- nothing to revoke. If present, remove API-role execution explicitly.
+DO $$
+BEGIN
+  IF to_regprocedure('public.rls_auto_enable()') IS NOT NULL THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.rls_auto_enable() FROM PUBLIC, anon, authenticated';
+  END IF;
+END
+$$;
 
 -- Cache auth.uid() per statement rather than reevaluating it for every row.
 DROP POLICY IF EXISTS "Learners can insert their own progress" ON public.learning_progress;
