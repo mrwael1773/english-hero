@@ -211,7 +211,7 @@ input,select,textarea,button{max-width:100%;min-width:0}
 
   <link rel="stylesheet" href="./site-quick-nav.css?v=1">
   <link rel="stylesheet" href="./auth-gateway.css?v=1">
-  <link rel="stylesheet" href="./champions.css?v=2">
+  <link rel="stylesheet" href="./champions.css?v=3">
 </head><body><script>document.body.classList.add('auth-gateway-pending');</script><div class="app"><section id="authGateway" class="auth-gateway" aria-label="بوابة الدخول إلى بطل الإنجليزي">
 <div class="auth-gateway-shell">
 <div class="auth-gateway-intro">
@@ -430,6 +430,19 @@ input,select,textarea,button{max-width:100%;min-width:0}
       </article>
 
     </div>
+    <section class="champion-challenge-card" aria-labelledby="championChallengeTitle">
+      <div class="champion-challenge-intro">
+        <h3 id="championChallengeTitle">🎯 تحدي الإتقان للأبطال</h3>
+        <p>أجب عن ١٠ أسئلة يصدرها الخادم ويصححها. لا يُسجّل إتقان البطولة إلا بعد تحقيق ٨٠٪ على الأقل.</p>
+      </div>
+      <div class="champion-challenge-controls">
+        <label for="championChallengeLesson">رقم الدرس (١–٨٤)</label>
+        <input id="championChallengeLesson" type="number" min="1" max="84" step="1" value="1" inputmode="numeric">
+        <button id="championChallengeStart" type="button" class="btn primary">ابدأ التحدي ←</button>
+      </div>
+      <p id="championChallengeStatus" class="champion-challenge-status" role="status" aria-live="polite">اختر درسًا لبدء تحدي الإتقان المعتمد.</p>
+      <div id="championChallengeQuestions"></div>
+    </section>
     <div class="champion-note">تُحتسب بطولة اليوم والأسبوع من الدروس الجديدة التي تم إتقانها بعد تفعيل سجل البطولة. يبدأ الأسبوع يوم الأحد وفق توقيت السعودية. لا تظهر هنا أسماء المستخدمين أو البريد الإلكتروني أو تفاصيل تقدم الطلاب. النتائج تحفيزية وليست تقييمًا مدرسيًا رسميًا.</div>
     <div class="champion-meta"><span id="championsStatus" role="status" aria-live="polite">بانتظار تسجيل الدخول…</span><span>جميع الطلاب · توقيت السعودية</span></div>
   </div>
@@ -2059,8 +2072,8 @@ theme();renderStats();renderCourses();renderHome();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="config.js" defer></script>
-<script src="cloud-sync.js?v=8" defer></script>
-<script src="champions.js?v=3" defer></script>
+<script src="cloud-sync.js?v=9" defer></script>
+<script src="champions.js?v=4" defer></script>
 <script src="auth-gateway.js?v=7" defer></script>
 <script src="pro-dashboard.js?v=4" defer></script>
 <script src="learning-expansion.js?v=63" defer></script>
