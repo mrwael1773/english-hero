@@ -64,7 +64,7 @@ begin
   ) then
     raise exception 'Invalid learning activity' using errcode = '22023';
   end if;
-  if p_lesson_index is not null and p_lesson_index not between 0 and 99 then
+  if p_lesson_index is not null and p_lesson_index not between 0 and 83 then
     raise exception 'Invalid lesson index' using errcode = '22023';
   end if;
   if p_word_index is not null and p_word_index not between 0 and 99 then
