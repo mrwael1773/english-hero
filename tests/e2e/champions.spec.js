@@ -28,3 +28,13 @@ test('champions view never renders account identifiers from the aggregate respon
   expect(content).not.toContain('e2e-student');
   expect(content).not.toContain('@');
 });
+
+test('champion challenge validates the lesson range before making a server request', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-page="champions"]').click();
+
+  await expect(page.locator('#championChallengeStart')).toBeVisible();
+  await page.locator('#championChallengeLesson').fill('85');
+  await page.locator('#championChallengeStart').click();
+  await expect(page.locator('#championChallengeStatus')).toContainText('أدخل رقم درس من ١ إلى ٨٤');
+});
