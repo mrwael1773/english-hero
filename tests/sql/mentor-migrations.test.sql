@@ -158,12 +158,11 @@ insert into public.student_champion_attempts (
   now() + interval '15 minutes'
 );
 insert into public.student_champion_attempts (
-  id, user_id, lesson_index, question_snapshot, answer_key, question_count, expires_at
+  id, user_id, lesson_index, answer_key, question_count, expires_at
 ) values (
   '55555555-5555-4555-8555-555555555555',
   '11111111-1111-4111-8111-111111111111',
   7,
-  '[{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]'::jsonb,
   '[0,0,0,0,0,0,0,0,0,0]'::jsonb,
   10,
   now() + interval '15 minutes'
