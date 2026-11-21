@@ -235,3 +235,8 @@ comment on table public.student_activity is
   'Minimal latest activity marker and last-seen timestamp; no answer content, IP address, or device fingerprint is stored.';
 comment on function public.record_student_learning_activity(text, integer, integer) is
   'Stores only the latest allowlisted learning action and numeric lesson position for the authenticated student.';
+
+-- Retire the earlier authenticated mentor RPC. The passwordless bearer-link
+-- Edge Function is now the only supported mentor overview entry point.
+-- Keep the function definition for rollback compatibility, but remove client execution.
+revoke all on function public.get_mentor_student_overview() from public, anon, authenticated;
