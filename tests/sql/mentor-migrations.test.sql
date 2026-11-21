@@ -115,7 +115,72 @@ end;
 $block$;
 
 -- A mastered lesson clears the active lesson pointer without deleting the last action.
+-- The new mastery-event recorder requires the synced progress snapshot to contain the lesson.
+update public.learning_progress
+set progress = jsonb_set(progress, '{masteredLessons}', '[0,3,3,100,"bad"]'::jsonb)
+where user_id = '11111111-1111-4111-8111-111111111111';
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
+-- Replaying the same mastery event must not create a second leaderboard entry.
+select public.record_student_learning_activity('lesson_mastered', 3, 2);
+
+-- A second synthetic learner has two new masteries this week versus one
+-- in the matching elapsed period last week, so improvement is +1.
+-- No improvement ranking is shown until a full post-activation comparison window exists.
+do $baseline$
+declare
+  v_result jsonb;
+begin
+  v_result := public.get_student_champions();
+  if jsonb_array_length(v_result->'improvement_leaders') <> 0 then
+    raise exception 'Improvement leaderboard appeared before a full baseline existed';
+  end if;
+end;
+$baseline$;
+-- Simulate a deployment old enough to have a complete comparison baseline.
+update public.student_champions_config set activated_at = now() - interval '15 days' where singleton = true;
+insert into auth.users (id)
+values ('33333333-3333-4333-8333-333333333333');
+insert into public.student_profiles (user_id, username, display_name)
+values ('33333333-3333-4333-8333-333333333333', 'synthetic-improver', 'Improved Learner');
+insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
+values
+  ('33333333-3333-4333-8333-333333333333', 4, now()),
+  ('33333333-3333-4333-8333-333333333333', 5, now());
+insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
+values ('33333333-3333-4333-8333-333333333333', 6, now() - interval '7 days');
+
+do $champions$
+declare
+  v_result jsonb;
+begin
+  if (select count(*) from public.student_mastery_events
+      where user_id = '11111111-1111-4111-8111-111111111111' and lesson_index = 3) <> 1 then
+    raise exception 'Repeated lesson mastery created duplicate champion events';
+  end if;
+  if (select count(*) from public.student_learning_days
+      where user_id = '11111111-1111-4111-8111-111111111111') <> 1 then
+    raise exception 'Learning-day tracking did not deduplicate the current Saudi day';
+  end if;
+
+  v_result := public.get_student_champions();
+  if v_result->>'timezone' <> 'Asia/Riyadh'
+     or not exists (
+       select 1 from jsonb_array_elements(v_result->'today_leaders') as today_row
+       where today_row->>'display_name' = 'Synthetic Learner' and today_row->>'score' = '1'
+     )
+     or v_result->'week_leaders'->0->>'display_name' <> 'Improved Learner'
+     or v_result->'week_leaders'->0->>'score' <> '2'
+     or v_result->'mastery_leaders'->0->>'score' <> '2'
+     or v_result->'consistency_leaders'->0->>'score' <> '1'
+     or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
+     or v_result->'improvement_leaders'->0->>'score' <> '1' then
+    raise exception 'Student champions aggregates were not calculated as expected';
+  end if;
+  if (v_result::text like '%user_id%' or v_result::text like '%username%' or v_result::text like '%email%') then
+    raise exception 'Student champions RPC leaked private identity fields';
+  end if;
+end;
+$champions$;
 
 do $$
 begin
@@ -166,8 +231,11 @@ begin
   v_result := public.mentor_get_student_overview(
     encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex')
   );
-  v_student := v_result->'students'->0;
-  if v_student->>'display_name' <> 'Synthetic Learner' then
+  select item into v_student
+  from jsonb_array_elements(v_result->'students') as item
+  where item->>'display_name' = 'Synthetic Learner'
+  limit 1;
+  if v_student is null or v_student->>'display_name' <> 'Synthetic Learner' then
     raise exception 'Overview did not return the synthetic student';
   end if;
   if v_student->'progress'->'xp' <> 'null'::jsonb then
@@ -249,6 +317,33 @@ begin
   end if;
   if not has_function_privilege('authenticated', 'public.record_student_learning_activity(text,integer,integer)', 'EXECUTE') then
     raise exception 'Authenticated students cannot record learning activity';
+  end if;
+  if not has_function_privilege('authenticated', 'public.get_student_champions()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.get_student_champions()', 'EXECUTE') then
+    raise exception 'Student champions RPC grants are incorrect';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_learning_days', 'INSERT')
+     or has_table_privilege('anon', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'INSERT')
+     or has_table_privilege('anon', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'INSERT')
+     or has_table_privilege('anon', 'public.student_champions_config', 'SELECT') then
+    raise exception 'Client roles can directly access private champion event tables';
+  end if;
+  if not exists (
+    select 1 from pg_class
+    where oid = 'public.student_learning_days'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_mastery_events'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champions_config'::regclass and relrowsecurity and relforcerowsecurity
+  ) then
+    raise exception 'Champion event and configuration tables must enforce row-level security';
   end if;
   if has_function_privilege('anon', 'public.record_student_activity()', 'EXECUTE') then
     raise exception 'Anonymous users can record student activity';
