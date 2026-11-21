@@ -15,9 +15,9 @@
     host.replaceChildren(node);
   }
 
-  function podium(host, rows, unit) {
+  function podium(host, rows, unit, emptyMessage) {
     if (!Array.isArray(rows) || !rows.length) {
-      empty(host, 'لم تُسجّل نتائج لهذه البطولة بعد. ابدأ بالتعلّم وقد تكون أول الأبطال!');
+      empty(host, emptyMessage || 'لم تُسجّل نتائج لهذه البطولة بعد. ابدأ بالتعلّم وقد تكون أول الأبطال!');
       return;
     }
     const list = document.createElement('div');
@@ -92,7 +92,7 @@
         'بطولة الأسبوع بدأت للتو. الفرصة متاحة للجميع!');
       podium($('championsMastery'), data.mastery_leaders, 'درسًا متقنًا');
       podium($('championsConsistency'), data.consistency_leaders, 'أيام نشاط');
-      podium($('championsImprovement'), data.improvement_leaders, 'درسًا زيادة عن الفترة السابقة');
+      podium($('championsImprovement'), data.improvement_leaders, 'درسًا زيادة عن الفترة السابقة', 'تبدأ هذه الفئة بعد اكتمال أول 14 يومًا من سجل البطولة لضمان مقارنة عادلة.');
       if (status) {
         const stamp = data.generated_at ? new Date(data.generated_at) : new Date();
         status.textContent = 'آخر تحديث: ' + stamp.toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }) + ' · الأسبوع من الأحد إلى السبت';
