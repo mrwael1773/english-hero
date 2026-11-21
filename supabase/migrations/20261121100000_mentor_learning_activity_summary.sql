@@ -145,7 +145,6 @@ begin
   select coalesce(
     jsonb_agg(
       jsonb_build_object(
-        'username', p.username,
         'display_name', p.display_name,
         'last_seen_at', a.last_seen_at,
         'progress', jsonb_build_object(
