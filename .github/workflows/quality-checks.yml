@@ -59,6 +59,7 @@ jobs:
           node --check champions.js
           node --check english-hero-plus.js
           node --check grammar-lessons.js
+          node --check tests/integration/student-username-login.test.mjs
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
@@ -66,7 +67,7 @@ jobs:
           deno-version: v2.x
 
       - name: Type-check username login Edge Function
-        run: deno check --no-lock supabase/functions/student-username-login/index.ts
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/student-username-login/index.ts
 
       - name: Type-check mentor overview Edge Function
         run: deno check --no-lock supabase/functions/mentor-overview/index.ts
