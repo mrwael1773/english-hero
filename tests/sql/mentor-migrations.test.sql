@@ -158,7 +158,33 @@ insert into public.student_champion_attempts (
   10,
   now() + interval '15 minutes'
 );
+insert into public.student_champion_attempts (
+  id, user_id, lesson_index, question_snapshot, answer_key, question_count, expires_at
+) values (
+  '55555555-5555-4555-8555-555555555555',
+  '11111111-1111-4111-8111-111111111111',
+  7,
+  '[{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]'::jsonb,
+  '[0,0,0,0,0,0,0,0,0,0]'::jsonb,
+  10,
+  now() + interval '15 minutes'
+);
 select set_config('request.jwt.claim.role', 'service_role', false);
+select public.complete_student_champion_attempt(
+  '55555555-5555-4555-8555-555555555555',
+  '11111111-1111-4111-8111-111111111111',
+  '[0,0,0,0,0,0,0,1,1,1]'::jsonb
+);
+do $failed_attempt$
+begin
+  if exists (
+    select 1 from public.student_mastery_events
+    where user_id = '11111111-1111-4111-8111-111111111111' and lesson_index = 7
+  ) then
+    raise exception 'A score below 80 percent created a mastery event';
+  end if;
+end;
+$failed_attempt$;
 select public.complete_student_champion_attempt(
   '44444444-4444-4444-8444-444444444444',
   '11111111-1111-4111-8111-111111111111',
@@ -433,6 +459,12 @@ begin
   ) or not exists (
     select 1 from pg_class
     where oid = 'public.student_champions_config'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champion_question_bank'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champion_attempts'::regclass and relrowsecurity and relforcerowsecurity
   ) then
     raise exception 'Champion event and configuration tables must enforce row-level security';
   end if;
