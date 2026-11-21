@@ -239,7 +239,7 @@ const ownUpdate = await restRequest(
   },
 );
 assert.equal(ownUpdate.status, 200, 'Learner should be able to update their own progress');
-const refreshedSession = await signIn(learners[0].username);
+const refreshedSession = await signIn(claimedUsername);
 const restoredRead = await restRequest(
   `learning_progress?select=user_id,progress&user_id=eq.${users[0].id}`,
   refreshedSession.token,
