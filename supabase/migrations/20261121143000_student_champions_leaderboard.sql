@@ -20,6 +20,18 @@ alter table public.student_mastery_events enable row level security;
 alter table public.student_mastery_events force row level security;
 revoke all on table public.student_mastery_events from public, anon, authenticated;
 
+-- Start a transparent baseline window; week-over-week improvement is hidden
+-- until the comparison period is entirely after this activation timestamp.
+create table if not exists public.student_champions_config (
+  singleton boolean primary key default true check (singleton),
+  activated_at timestamptz not null default now()
+);
+insert into public.student_champions_config(singleton) values (true)
+on conflict (singleton) do nothing;
+alter table public.student_champions_config enable row level security;
+alter table public.student_champions_config force row level security;
+revoke all on table public.student_champions_config from public, anon, authenticated;
+
 create or replace function public.record_student_learning_activity(
   p_action text,
   p_lesson_index integer default null,
