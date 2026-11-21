@@ -1,0 +1,208 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+
+const API_URL = process.env.API_URL;
+const ANON_KEY = process.env.ANON_KEY;
+const SERVICE_ROLE_KEY = process.env.SERVICE_ROLE_KEY;
+const DB_URL = process.env.DB_URL;
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
+
+for (const [name, value] of Object.entries({ API_URL, ANON_KEY, SERVICE_ROLE_KEY, DB_URL })) {
+  assert.ok(value, `Missing required test environment variable: ${name}`);
+}
+
+const endpoint = `${API_URL}/functions/v1/student-champion-challenge`;
+const suffix = Date.now().toString(36);
+const password = `Local-Champion-${suffix}-Pass!`;
+const learners = [
+  { email: `champion-a-${suffix}@example.test`, username: `champion_a_${suffix}`, displayName: 'Local Champion Learner A' },
+  { email: `champion-b-${suffix}@example.test`, username: `champion_b_${suffix}`, displayName: 'Local Champion Learner B' },
+];
+const users = [];
+
+function psql(sql, variables = []) {
+  return execFileSync('psql', [
+    DB_URL, '-X', '-A', '-t', '-v', 'ON_ERROR_STOP=1', ...variables, '-c', sql,
+  ], { encoding: 'utf8' }).trim();
+}
+
+async function createLocalAuthUser(learner) {
+  const response = await fetch(`${API_URL}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: learner.email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: learner.displayName },
+    }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 200, `Local Auth user creation failed: ${JSON.stringify(body)}`);
+  const id = body.id || body.user?.id;
+  assert.match(id || '', /^[0-9a-f-]{36}$/i, 'Local Auth did not return a user UUID');
+  return { id, email: learner.email };
+}
+
+async function signIn(learner) {
+  const response = await fetch(`${API_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: learner.email, password }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 200, `Synthetic learner sign-in failed: ${JSON.stringify(body)}`);
+  assert.ok(body.access_token, 'Local Auth must return an access token');
+  return body.access_token;
+}
+
+async function challengeRequest(token, body, origin = ALLOWED_ORIGIN) {
+  return fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      apikey: ANON_KEY,
+      Origin: origin,
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+async function deleteLocalAuthUser(user) {
+  if (!user?.id) return;
+  const response = await fetch(`${API_URL}/auth/v1/admin/users/${user.id}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+    },
+  });
+  assert.ok([200, 204].includes(response.status), `Local synthetic user cleanup failed: HTTP ${response.status}`);
+}
+
+// The local migration reset intentionally contains no private production question bank.
+// Seed a disposable, deterministic lesson bank in this ephemeral CI database only.
+const bankSql = Array.from({ length: 10 }, (_, index) => {
+  const prompt = `E2E champion ${suffix} question ${index + 1}`;
+  const options = JSON.stringify([
+    `Correct answer ${index + 1}`,
+    `Distractor A ${index + 1}`,
+    `Distractor B ${index + 1}`,
+    `Distractor C ${index + 1}`,
+  ]).replaceAll("'", "''");
+  return `(0, '${prompt}', '${options}'::jsonb, 0, true)`;
+}).join(',\n');
+
+try {
+  psql(`
+    INSERT INTO public.student_champion_question_bank
+      (lesson_index, prompt, options, correct_option, active)
+    VALUES ${bankSql};
+  `);
+
+  // Check the HTTP boundary before provisioning disposable Auth identities.
+  const preflight = await fetch(endpoint, {
+    method: 'OPTIONS',
+    headers: {
+      Origin: ALLOWED_ORIGIN,
+      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'authorization,apikey,content-type',
+    },
+  });
+  assert.equal(preflight.status, 200, 'Allowed CORS preflight must succeed');
+
+  const blockedOrigin = await challengeRequest(null, { action: 'start', lesson_index: 0 }, 'https://untrusted.example');
+  assert.equal(blockedOrigin.status, 403, 'Untrusted origins must be rejected');
+
+  const missingAuth = await challengeRequest(null, { action: 'start', lesson_index: 0 });
+  assert.equal(missingAuth.status, 401, 'Requests without a bearer token must be rejected');
+
+  for (const learner of learners) users.push(await createLocalAuthUser(learner));
+
+  const profileValues = users.flatMap((user, index) => [
+    '-v', `user${index + 1}_id=${user.id}`,
+    '-v', `user${index + 1}_username=${learners[index].username}`,
+    '-v', `user${index + 1}_display_name=${learners[index].displayName}`,
+  ]);
+  psql(`
+    INSERT INTO public.student_profiles(user_id, username, display_name)
+    VALUES
+      (:'user1_id'::uuid, :'user1_username', :'user1_display_name'),
+      (:'user2_id'::uuid, :'user2_username', :'user2_display_name');
+  `, profileValues);
+
+  const [tokenA, tokenB] = await Promise.all(learners.map(signIn));
+
+  const invalidLesson = await challengeRequest(tokenA, { action: 'start', lesson_index: 84 });
+  assert.equal(invalidLesson.status, 400, 'Out-of-range lesson indices must be rejected');
+
+  const started = await challengeRequest(tokenA, { action: 'start', lesson_index: 0 });
+  const challenge = await started.json();
+  assert.equal(started.status, 200, `A valid challenge should start: ${JSON.stringify(challenge)}`);
+  assert.equal(challenge.lesson_index, 0);
+  assert.match(challenge.attempt_id || '', /^[0-9a-f-]{36}$/i);
+  assert.equal(challenge.questions?.length, 10, 'A challenge must contain exactly ten questions');
+
+  const bankRows = JSON.parse(psql(`
+    SELECT COALESCE(json_agg(json_build_object(
+      'prompt', prompt, 'options', options, 'correct_option', correct_option
+    ) ORDER BY prompt), '[]'::json)::text
+    FROM public.student_champion_question_bank
+    WHERE lesson_index = 0 AND prompt LIKE 'E2E champion ${suffix} %';
+  `));
+  const bankByPrompt = new Map(bankRows.map((row) => [row.prompt, row]));
+
+  const answers = challenge.questions.map((question, index) => {
+    assert.deepEqual(Object.keys(question).sort(), ['options', 'prompt'], 'Question payload must expose only prompt and shuffled options');
+    const bankRow = bankByPrompt.get(question.prompt);
+    assert.ok(bankRow, 'Every returned question must originate from the seeded lesson bank');
+    const correctText = bankRow.options[bankRow.correct_option];
+    const correctIndex = question.options.indexOf(correctText);
+    assert.notEqual(correctIndex, -1, 'The correct option must be present after option shuffling');
+    return index < 8 ? correctIndex : (correctIndex + 1) % 4;
+  });
+
+  const exposed = JSON.stringify(challenge);
+  for (const forbidden of ['correct_option', 'answer_key', 'question_bank', 'question_id']) {
+    assert.ok(!exposed.includes(forbidden), `Challenge response leaked forbidden field marker: ${forbidden}`);
+  }
+
+  const crossAccountSubmit = await challengeRequest(tokenB, {
+    action: 'submit', attempt_id: challenge.attempt_id, answers,
+  });
+  assert.equal(crossAccountSubmit.status, 404, 'A different learner must not submit another learner\'s attempt');
+
+  const submitted = await challengeRequest(tokenA, {
+    action: 'submit', attempt_id: challenge.attempt_id, answers,
+  });
+  const result = await submitted.json();
+  assert.equal(submitted.status, 200, `A valid challenge submission should succeed: ${JSON.stringify(result)}`);
+  assert.equal(result.score, 8, 'The server must calculate the score from its private answer key');
+  assert.equal(result.total, 10);
+  assert.equal(result.passed, true, 'Eight of ten answers must meet the mastery threshold');
+  assert.equal(result.recorded, true, 'A passing challenge must create a mastery event');
+
+  const replay = await challengeRequest(tokenA, {
+    action: 'submit', attempt_id: challenge.attempt_id, answers,
+  });
+  assert.equal(replay.status, 409, 'A submitted challenge must not be reusable');
+
+  const masteryCount = Number(psql(`
+    SELECT count(*) FROM public.student_mastery_events
+    WHERE user_id = '${users[0].id}'::uuid AND lesson_index = 0;
+  `));
+  assert.equal(masteryCount, 1, 'A passing challenge must create exactly one mastery event');
+
+  console.log('Local champion challenge HTTP integration passed: CORS, auth, lesson validation, private answer keys, scoring, mastery recording, ownership isolation, and replay protection.');
+} finally {
+  for (const user of users) await deleteLocalAuthUser(user);
+  psql(`
+    DELETE FROM public.student_champion_question_bank
+    WHERE prompt LIKE 'E2E champion ${suffix} %';
+  `);
+}
