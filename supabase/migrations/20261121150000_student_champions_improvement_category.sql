@@ -17,7 +17,8 @@ declare
   v_week_leaders jsonb;
   v_mastery_leaders jsonb;
   v_consistency_leaders jsonb;
-  v_improvement_leaders jsonb;
+  v_improvement_leaders jsonb := '[]'::jsonb;
+  v_tracking_started_at timestamptz;
 begin
   if v_user_id is null then
     raise exception 'Authentication required' using errcode = '42501';
@@ -26,6 +27,9 @@ begin
   -- Saudi school week: Sunday through Saturday.
   v_elapsed_days := extract(dow from v_today)::integer;
   v_week_start := v_today - v_elapsed_days;
+  select activated_at into v_tracking_started_at
+  from public.student_champions_config where singleton = true;
+  if not found then v_tracking_started_at := v_now; end if;
 
   select coalesce(jsonb_agg(jsonb_build_object(
     'display_name', ranked.display_name, 'score', ranked.score
@@ -89,8 +93,8 @@ begin
     limit 3
   ) as ranked;
 
-  -- Compare this week's new mastery count with the matching elapsed days last week.
-  -- Never compare a partial current week with a full previous week.
+  -- Compare equal elapsed periods only after the full post-activation baseline exists.
+  if v_today >= (v_tracking_started_at at time zone 'Asia/Riyadh')::date + 14 then
   select coalesce(jsonb_agg(jsonb_build_object(
     'display_name', ranked.display_name, 'score', ranked.score
   ) order by ranked.score desc, ranked.current_count desc, ranked.display_name asc), '[]'::jsonb)
@@ -121,6 +125,7 @@ begin
     order by score desc, current_count desc, p.display_name asc
     limit 3
   ) as ranked;
+  end if;
 
   return jsonb_build_object(
     'generated_at', v_now,
