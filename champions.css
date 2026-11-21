@@ -31,3 +31,16 @@
 @media(max-width:900px){.champions-secondary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.champions-hero-grid,.champions-secondary{grid-template-columns:1fr}.champion-feature{min-height:220px;padding:19px}.champions-heading{align-items:stretch}.champions-refresh{width:100%}}
 @media(prefers-reduced-motion:no-preference){.champion-feature{transition:transform .2s ease,border-color .2s ease}.champion-feature:hover{transform:translateY(-3px);border-color:#a797ff}}
+
+.champion-challenge-card{margin:18px 0;padding:20px;border:1px solid var(--stroke);border-radius:20px;background:var(--surface);display:grid;gap:15px}
+.champion-challenge-intro h3{margin:0 0 7px;font-size:19px}
+.champion-challenge-intro p,.champion-challenge-status{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+.champion-challenge-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.champion-challenge-controls label{font-size:13px;font-weight:700}
+.champion-challenge-controls input{width:110px;min-height:44px;padding:8px 12px;border:1px solid var(--stroke);border-radius:11px;background:var(--surface2);color:var(--ink);font:inherit}
+.champion-challenge-question{margin:12px 0;padding:14px;border:1px solid var(--stroke);border-radius:14px;min-width:0}
+.champion-challenge-question legend{padding:0 6px;font-weight:750;line-height:1.7}
+.champion-challenge-option{display:flex;align-items:center;gap:9px;padding:9px 7px;border-radius:9px;cursor:pointer;line-height:1.6}
+.champion-challenge-option input{accent-color:var(--mint);width:18px;height:18px;flex:0 0 auto}
+.champion-challenge-submit{margin-top:10px}
+@media(max-width:620px){.champion-challenge-controls{align-items:stretch}.champion-challenge-controls label{width:100%}.champion-challenge-controls input,.champion-challenge-controls button{width:100%}}
