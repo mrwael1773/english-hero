@@ -156,12 +156,6 @@ grant execute on function public.get_student_champions() to authenticated;
 comment on function public.get_student_champions() is
   'Returns display names and aggregate scores only, including week-over-week mastery improvement; no user IDs, usernames, emails, or raw progress.';
 
-    ) as mastery
-    where mastery.score > 0
-      and p.display_name is not null and btrim(p.display_name) <> ''
-    order by mastery.score desc, p.display_name asc
-    limit 3
-  ) as ranked;
 
   select coalesce(jsonb_agg(jsonb_build_object(
     'display_name', ranked.display_name, 'score', ranked.score
