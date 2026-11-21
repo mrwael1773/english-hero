@@ -156,7 +156,8 @@ jobs:
             supabase/migrations/20261121010000_atomic_mentor_overview_access.sql \
             supabase/migrations/20261121100000_mentor_learning_activity_summary.sql \
             supabase/migrations/20261121120000_mentor_comprehensive_progress_summary.sql \
-            supabase/migrations/20261121143000_student_champions_leaderboard.sql
+            supabase/migrations/20261121143000_student_champions_leaderboard.sql \
+            supabase/migrations/20261121150000_student_champions_improvement_category.sql
           do
             echo "Applying $migration"
             psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$migration"
