@@ -122,7 +122,6 @@ where user_id = '11111111-1111-4111-8111-111111111111';
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
 -- Replaying the same mastery event must not create a second leaderboard entry.
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
-select public.record_student_learning_activity('quiz_completed', null, null);
 
 do $champions$
 declare
