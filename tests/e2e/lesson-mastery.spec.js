@@ -446,3 +446,41 @@ test('XP alone cannot unlock the mastery rank without 15 mastered lessons', asyn
   await expect(masteryStage).toContainText('✓ متاح');
   await expect(masteryStage).toBeEnabled();
 });
+
+async function reopenFirstLesson(page) {
+  await page.evaluate(() => window.page('courses'));
+  const firstLesson = page.locator('#courseGrid button').first();
+  await expect(firstLesson).toBeVisible();
+  await firstLesson.click();
+  const translations = new Map();
+  for (let i = 0; i < 6; i++) {
+    const en = (await page.locator('#wordEnglish').innerText()).trim();
+    const ar = (await page.locator('#wordArabic').innerText()).trim();
+    translations.set(en, ar);
+    translations.set(ar, en);
+    await page.locator('#nextWord').click();
+  }
+  await expect(page.locator('#quizArea')).toBeVisible();
+  return translations;
+}
+
+test('repeating an already mastered lesson does not award XP again', async ({ page }) => {
+  const firstTranslations = await openFirstLesson(page);
+  await answerAll(page, firstTranslations, true);
+  await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
+  const firstResult = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    return { xp: saved.xp, mastered: saved.masteredLessons || [] };
+  });
+  expect(firstResult.mastered).toContain(0);
+
+  const secondTranslations = await reopenFirstLesson(page);
+  await answerAll(page, secondTranslations, true);
+  await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
+  const secondResult = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    return { xp: saved.xp, mastered: saved.masteredLessons || [] };
+  });
+  expect(secondResult.xp).toBe(firstResult.xp);
+  expect(secondResult.mastered).toEqual(firstResult.mastered);
+});
