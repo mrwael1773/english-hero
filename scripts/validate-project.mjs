@@ -58,6 +58,7 @@ const championBankImporter = read('scripts/import-champion-question-bank.mjs');
 const championBankImporterTests = read('tests/integration/champion-question-bank-import.test.mjs');
 const championBankGenerator = read('scripts/build-champion-question-bank.mjs');
 const championBankGeneratorTests = read('tests/integration/champion-question-bank-generator.test.mjs');
+const championBankDocs = read('docs/champion-question-bank.md');
 const config = read('config.js');
 const privacy = read('privacy.html');
 const vocabRaw = read('vocabulary-20000.json');
@@ -318,6 +319,7 @@ check(existsSync(join(root, 'scripts/import-champion-question-bank.mjs')) && exi
 check(championBankGenerator.includes('extractLessons') && championBankGenerator.includes('buildQuestionBank') && championBankGenerator.includes('writePrivateBank') && championBankGenerator.includes('outside the repository'), 'Champion questions are generated from source lessons and written outside the public repository');
 check(championBankGeneratorTests.includes('84 current lessons') && championBankGeneratorTests.includes('six English-to-Arabic') && championBankGeneratorTests.includes('shared by multiple words'), 'Question generator tests cover lesson coverage, question balance, and ambiguous translations');
 check(existsSync(join(root, 'scripts/build-champion-question-bank.mjs')) && existsSync(join(root, 'tests/integration/champion-question-bank-generator.test.mjs')), 'Private champion bank generator and tests are tracked in the repository');
+check(championBankDocs.includes('outside this repository') && championBankDocs.includes('Production imports are blocked by default') && championBankDocs.includes('service-role key'), 'Private question bank documentation covers safe storage, server-only secrets, and production safeguards');
 check(defaultApiGrantsMigration.includes('ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public') && defaultApiGrantsMigration.includes('REVOKE ALL ON TABLES FROM anon, authenticated, service_role') && defaultApiGrantsMigration.includes('REVOKE ALL ON FUNCTIONS FROM anon, authenticated, service_role') && defaultApiGrantsMigration.includes('REVOKE ALL ON SEQUENCES FROM anon, authenticated, service_role'), 'Future public objects created by postgres do not receive broad default API grants');
 check(existsSync(join(root, defaultApiGrantsMigrationPath)), 'Public API default-grants migration is tracked in the repository');
 check(globalFunctionDefaultMigration.includes('ALTER DEFAULT PRIVILEGES FOR ROLE postgres') && globalFunctionDefaultMigration.includes('REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC'), 'Future postgres-owned functions do not receive PUBLIC execute by default');
