@@ -79,11 +79,11 @@ export async function importQuestionBank({ filePath, env = process.env, fetchImp
   }
   const projectRef = projectRefFromUrl(supabaseUrl);
   if (!projectRef) throw new Error("SUPABASE_URL must be a valid Supabase project URL.");
-  if (projectRef !== "local" && projectRef !== APPROVED_TEST_PROJECT_REF && env.ENGLISH_HERO_ALLOW_PRODUCTION_IMPORT !== "YES") {
-    throw new Error("Only local or the dedicated auth-test project is allowed. Other targets require separate explicit authorization.");
-  }
   if (projectRef === PRODUCTION_PROJECT_REF && env.ENGLISH_HERO_ALLOW_PRODUCTION_IMPORT !== "YES") {
     throw new Error("Production import is blocked. A separate explicit authorization flag is required.");
+  }
+  if (projectRef !== "local" && projectRef !== APPROVED_TEST_PROJECT_REF && env.ENGLISH_HERO_ALLOW_PRODUCTION_IMPORT !== "YES") {
+    throw new Error("Only local or the dedicated auth-test project is allowed. Other targets require separate explicit authorization.");
   }
   if (dryRun) return { dryRun: true, questions: questions.length, lessons: LESSON_COUNT, projectRef };
 
