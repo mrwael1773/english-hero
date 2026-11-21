@@ -285,6 +285,27 @@ begin
   if not has_function_privilege('authenticated', 'public.record_student_learning_activity(text,integer,integer)', 'EXECUTE') then
     raise exception 'Authenticated students cannot record learning activity';
   end if;
+  if not has_function_privilege('authenticated', 'public.get_student_champions()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.get_student_champions()', 'EXECUTE') then
+    raise exception 'Student champions RPC grants are incorrect';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_learning_days', 'INSERT')
+     or has_table_privilege('anon', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'INSERT')
+     or has_table_privilege('anon', 'public.student_mastery_events', 'SELECT') then
+    raise exception 'Client roles can directly access private champion event tables';
+  end if;
+  if not exists (
+    select 1 from pg_class
+    where oid = 'public.student_learning_days'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_mastery_events'::regclass and relrowsecurity and relforcerowsecurity
+  ) then
+    raise exception 'Champion event tables must enforce row-level security';
+  end if;
   if has_function_privilege('anon', 'public.record_student_activity()', 'EXECUTE') then
     raise exception 'Anonymous users can record student activity';
   end if;
