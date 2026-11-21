@@ -298,35 +298,9 @@
     if(!pending.includes(lessonIndex))pending.push(lessonIndex);
     return writePendingMasteryEvents(userId,pending);
   }
-  async function flushPendingMasteryEvents(expectedUserId,expectedRevision=revision){
-    if(!client||!user||user.id!==expectedUserId||!ready||progressOwnerUserId!==expectedUserId||revision!==expectedRevision)return false;
-    const pending=readPendingMasteryEvents(expectedUserId);
-    if(!pending.length)return true;
-    for(const lessonIndex of pending){
-      if(!user||user.id!==expectedUserId||!ready||progressOwnerUserId!==expectedUserId)return false;
-      // The caller reaches this point only after the same account's current progress
-      // was uploaded successfully. Drop stale events that the verified snapshot no longer masters.
-      if(!Array.isArray(state.masteredLessons)||!state.masteredLessons.includes(lessonIndex)){
-        // Do not discard against a snapshot that became stale during the network request.
-        if(revision!==expectedRevision)return false;
-        const remaining=readPendingMasteryEvents(expectedUserId).filter(index=>index!==lessonIndex);
-        if(!writePendingMasteryEvents(expectedUserId,remaining))return false;
-        continue;
-      }
-      try{
-        const {error}=await client.rpc('record_student_learning_activity',{
-          p_action:'lesson_mastered',p_lesson_index:lessonIndex,p_word_index:null
-        });
-        if(error)throw error;
-        const remaining=readPendingMasteryEvents(expectedUserId).filter(index=>index!==lessonIndex);
-        if(!writePendingMasteryEvents(expectedUserId,remaining))return false;
-      }catch(error){
-        console.warn('English Hero pending mastery replay:',error?.message||error);
-        return false;
-      }
-    }
-    return true;
-  }
+  // Legacy client-generated mastery markers are intentionally not replayed.
+  // Only the server-verified challenge endpoint may write champion mastery events.
+  async function flushPendingMasteryEvents(){ return true; }
 
   async function recordStudentActivity(){
     if(!client || !user || !ready || progressOwnerUserId!==user.id) return;
@@ -513,18 +487,8 @@
       const allowed = ['lesson_started','lesson_progress','lesson_training_completed','lesson_assessment_attempted','lesson_mastered','quiz_completed'];
       if(!allowed.includes(action) || !client || !user || progressOwnerUserId!==user.id) return false;
       if(action.startsWith('lesson_') && !Number.isInteger(lessonIndex)) return false;
-      // Queue mastery even if the initial cloud read failed while offline.
-      // Replay waits until this account's progress is verified and uploaded.
-      if(action === 'lesson_mastered') {
-        const eventUserId=user.id;
-        if(!queuePendingMasteryEvent(eventUserId,lessonIndex))return false;
-        if(!ready)return false;
-        clearTimeout(timer);
-        const uploadedRevision=revision;
-        const synced = await uploadProgress();
-        if(!synced || revision!==uploadedRevision || !user || user.id!==eventUserId || progressOwnerUserId!==eventUserId) return false;
-        return flushPendingMasteryEvents(eventUserId,uploadedRevision);
-      }
+      // A browser-reported score is not trusted for champion ranking.
+      if(action === 'lesson_mastered') return false;
       if(!ready)return false;
       const {error}=await client.rpc('record_student_learning_activity',{
         p_action:action,
@@ -542,6 +506,32 @@
       const {data,error}=await client.rpc('get_student_champions');
       if(error) throw error;
       return data || null;
+    },
+    async startChampionChallenge(lessonIndex) {
+      if(!client || !user || !ready || progressOwnerUserId!==user.id) throw new Error('سجّل الدخول ومزامنة حسابك أولًا.');
+      if(!Number.isInteger(lessonIndex) || lessonIndex<0 || lessonIndex>83) throw new Error('رقم الدرس غير صالح.');
+      const {data,error}=await client.functions.invoke('student-champion-challenge',{
+        body:{action:'start',lesson_index:lessonIndex}
+      });
+      if(error){
+        let details=null;
+        try{details=await error.context?.json();}catch{}
+        throw new Error(details?.error||'تعذر بدء تحدي الأبطال. حاول لاحقًا.');
+      }
+      return data;
+    },
+    async submitChampionChallenge(attemptId,answers) {
+      if(!client || !user || !ready || progressOwnerUserId!==user.id) throw new Error('انتهت جلسة الحساب أو لم تكتمل المزامنة.');
+      if(typeof attemptId!=='string' || !Array.isArray(answers)) throw new Error('بيانات التحدي غير صالحة.');
+      const {data,error}=await client.functions.invoke('student-champion-challenge',{
+        body:{action:'submit',attempt_id:attemptId,answers}
+      });
+      if(error){
+        let details=null;
+        try{details=await error.context?.json();}catch{}
+        throw new Error(details?.error||'تعذر تصحيح التحدي. حاول لاحقًا.');
+      }
+      return data;
     },
     async signInWithUsername(username,password) {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
