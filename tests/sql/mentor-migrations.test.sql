@@ -178,6 +178,51 @@ insert into public.student_champion_attempts (
   now() + interval '15 minutes'
 );
 select set_config('request.jwt.claim.role', 'service_role', false);
+
+do $question_bank_import$
+declare
+  v_questions jsonb;
+  v_inserted integer;
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.import_student_champion_question_bank('[]'::jsonb);
+    raise exception 'A partial champion question bank was accepted';
+  exception when sqlstate '22023' then
+    null;
+  end;
+
+  select jsonb_agg(
+    jsonb_build_object(
+      'lesson_index', lesson_no,
+      'prompt', format('Synthetic lesson %s question %s', lesson_no + 1, question_no),
+      'options', jsonb_build_array(
+        format('Correct %s %s', lesson_no, question_no),
+        format('Option A %s %s', lesson_no, question_no),
+        format('Option B %s %s', lesson_no, question_no),
+        format('Option C %s %s', lesson_no, question_no)
+      ),
+      'correct_option', 0
+    ) order by lesson_no, question_no
+  ) into v_questions
+  from generate_series(0, 83) as lessons(lesson_no)
+  cross join generate_series(1, 10) as questions(question_no);
+
+  v_inserted := public.import_student_champion_question_bank(v_questions);
+  if v_inserted <> 840 or (select count(*) from public.student_champion_question_bank) <> 840 then
+    raise exception 'The complete champion bank was not imported atomically';
+  end if;
+
+  begin
+    perform public.import_student_champion_question_bank(v_questions);
+  exception when sqlstate '55000' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'The one-time champion bank import accepted a duplicate import';
+  end if;
+end;
+$question_bank_import$;
 select public.complete_student_champion_attempt(
   '55555555-5555-4555-8555-555555555555',
   '11111111-1111-4111-8111-111111111111',
@@ -435,6 +480,11 @@ begin
   if not has_function_privilege('authenticated', 'public.get_student_champions()', 'EXECUTE')
      or has_function_privilege('anon', 'public.get_student_champions()', 'EXECUTE') then
     raise exception 'Student champions RPC grants are incorrect';
+  end if;
+  if has_function_privilege('authenticated', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE')
+     or not has_function_privilege('service_role', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE') then
+    raise exception 'Only the trusted service role may import the private champion question bank';
   end if;
   if has_function_privilege('authenticated', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE')
      or not has_function_privilege('service_role', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE') then
