@@ -32,7 +32,7 @@ set search_path = ''
 as $$
 declare
   v_user_id uuid := auth.uid();
-  v_now timestamptz := clock_timestamp();
+  v_now timestamptz := now();
   v_day date := (v_now at time zone 'Asia/Riyadh')::date;
 begin
   if v_user_id is null then
@@ -123,8 +123,8 @@ set search_path = ''
 as $$
 declare
   v_user_id uuid := auth.uid();
-  v_now timestamptz := clock_timestamp();
-  v_today date := (clock_timestamp() at time zone 'Asia/Riyadh')::date;
+  v_now timestamptz := now();
+  v_today date := (now() at time zone 'Asia/Riyadh')::date;
   v_week_start date;
   v_today_leaders jsonb;
   v_week_leaders jsonb;
