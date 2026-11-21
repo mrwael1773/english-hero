@@ -69,7 +69,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <div class="stat"><span class="stat-label">لم يسجلوا اتصالًا</span><b id="notSeen">—</b></div>
 </div>
 <div class="table-wrap"><table><caption class="sr-only">ملخص تقدم الطلاب في بطل الإنجليزي</caption><thead><tr><th scope="col">الطالب</th><th scope="col">آخر اتصال</th><th scope="col">نقاط الخبرة (XP)</th><th scope="col">آخر نشاط</th><th scope="col">تفاصيل التقدم الدراسي</th></tr></thead><tbody id="students"></tbody></table></div>
-<aside class="guide" aria-label="شرح بيانات لوحة المتابعة"><h3>كيف تقرأ بيانات الطالب؟</h3><ul><li><strong>نقاط الخبرة (XP):</strong> رصيد يجمعه الطالب من الإجابات الصحيحة والمكافآت؛ لا يعني وحده عدد الدروس التي أتقنها، ويمكن أن يزيد عن طريق أنشطة متكررة.</li><li><strong>أتقن:</strong> عدد الدروس التي اجتاز الطالب تقييمها بنسبة ٨٠٪ أو أكثر، من أصل ١٢ درسًا.</li><li><strong>أكمل التدريب:</strong> أنهى محتوى الدرس لكنه لم يثبت إتقانه بعد.</li><li><strong>بدأ:</strong> عدد الدروس التي فتحها وبدأ التعلم فيها، وقد يشمل دروسًا أتقنها لاحقًا.</li><li><strong>موضع التعلم الحالي:</strong> مثل «الكلمة رقم ٦» تعني موضع الطالب داخل الدرس، ولا تعني أنه أتقن ٦ كلمات.</li><li><strong>آخر نشاط:</strong> آخر إجراء تعليمي وصل إلى النظام، وليس سجلًا كاملًا لكل ما فعله الطالب.</li></ul></aside><p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو تفاصيل الجلسات.</p>
+<aside class="guide" aria-label="شرح بيانات لوحة المتابعة"><h3>كيف تقرأ بيانات الطالب؟</h3><ul><li><strong>نقاط الخبرة (XP):</strong> رصيد يجمعه الطالب من الإجابات الصحيحة والمكافآت؛ لا يعني وحده عدد الدروس التي أتقنها، ويمكن أن يزيد عن طريق أنشطة متكررة.</li><li><strong>أتقن:</strong> عدد الدروس التي اجتاز الطالب تقييمها بنسبة ٨٠٪ أو أكثر، يُعرض عدد الدروس وأسماؤها بحسب البيانات المسجلة، وقد تشمل حزم المفردات.</li><li><strong>أكمل التدريب:</strong> أنهى محتوى الدرس لكنه لم يثبت إتقانه بعد.</li><li><strong>بدأ:</strong> عدد الدروس التي فتحها وبدأ التعلم فيها، وقد يشمل دروسًا أتقنها لاحقًا.</li><li><strong>موضع التعلم الحالي:</strong> مثل «الكلمة رقم ٦» تعني موضع الطالب داخل الدرس، ولا تعني أنه أتقن ٦ كلمات.</li><li><strong>المفردات والمراجعة والاختبارات:</strong> أعداد وملخصات مجمعة؛ لا تُعرض إجابات الطالب أو نصوصه.</li><li><strong>القراءة:</strong> تقدمها محفوظ محليًا حاليًا، لذلك لا يمكن للموجّه رؤيته من هذه اللوحة حتى تضاف مزامنة آمنة.</li><li><strong>آخر نشاط:</strong> آخر إجراء تعليمي وصل إلى النظام، وليس سجلًا كاملًا لكل ما فعله الطالب.</li></ul></aside><p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو نصوص المراجعة أو المحادثات أو تفاصيل الجلسات.</p>
 </section>
 <p class="status small" id="status" role="status" aria-live="polite">لا يتم عرض بيانات الطلاب قبل التحقق من صلاحية الرابط.</p>
 </main>
@@ -89,10 +89,11 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    if(Number.isNaN(date.getTime()))return 'غير متاح';
    return new Intl.DateTimeFormat('ar-SA',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Riyadh'}).format(date);
  };
- const cell=(row,label,value)=>{
+ const cell=(row,label,value,className='')=>{
    const td=document.createElement('td');
    td.dataset.label=label;
    td.textContent=value;
+   if(className)td.className=className;
    row.appendChild(td);
  };
  const lessonTitles=[
@@ -118,7 +119,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
  }
  function lessonName(index){
    if(!Number.isInteger(index)||index<0||index>99)return null;
-   return index<lessonTitles.length?lessonTitles[index]:'الدرس رقم '+(index+1);
+   return index<lessonTitles.length?lessonTitles[index]:'حزمة المفردات رقم '+(index+1);
  }
  function describeActivity(progress){
    const action=progress.last_action;
@@ -136,29 +137,37 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    if(count(progress.started_count)>0)return 'بدأ '+count(progress.started_count)+' درسًا';
    return 'لم يسجل نشاط تعليمي بعد';
  }
+ function safeIndices(value){
+   return Array.isArray(value)?[...new Set(value.filter(x=>Number.isInteger(x)&&x>=0&&x<=99))]:[];
+ }
+ function describeLessonGroup(label,indices){
+   const names=indices.map(lessonName).filter(Boolean);
+   return label+': '+(names.length?names.join('، '):'لا يوجد');
+ }
  function describeProgress(progress){
    const mastered=count(progress.mastered_count);
    const trained=count(progress.trained_count);
    const started=count(progress.started_count);
+   const masteredIndices=safeIndices(progress.mastered_indices);
+   const trainedIndices=safeIndices(progress.trained_indices);
+   const startedIndices=safeIndices(progress.started_indices);
    const current=lessonName(progress.current_lesson_index);
-   const level='المستوى '+levelFromXp(progress.xp);
    const lines=[
-     level+' (بحسب نقاط الخبرة)',
-     'أتقن: '+mastered+' من '+lessonTitles.length+' درسًا',
-     'أكمل التدريب ولم يثبت الإتقان بعد: '+trained+' درسًا',
-     'بدأ التعلّم في: '+started+' درسًا'
+     'المستوى '+levelFromXp(progress.xp)+' • '+(progress.xp===null?'النقاط غير متاحة':count(progress.xp)+' XP'),
+     'الدروس: '+mastered+' أتقنها الطالب، '+trained+' أكمل تدريبها، '+started+' بدأها',
+     describeLessonGroup('الدروس المتقنة',masteredIndices),
+     describeLessonGroup('تدريب مكتمل دون إتقان',trainedIndices),
+     describeLessonGroup('دروس بدأها',startedIndices),
+     'المفردات: '+count(progress.saved_words_count)+' كلمة أضافها للمراجعة، '+count(progress.foundation_saved_count)+' كلمة من القاموس العام، المستوى '+(progress.vocab_level??'غير محدد'),
+     'المراجعة: '+count(progress.review_words_count)+' كلمة لها سجل مراجعة، منها '+count(progress.review_due_count)+' مستحقة، و'+count(progress.missed_words_count)+' ضمن قائمة الأخطاء',
+     'الاختبارات: '+count(progress.quiz_attempts)+' محاولة مسجلة، أفضل نتيجة '+(progress.best_quiz_score===null?'غير متاحة':count(progress.best_quiz_score)+'%'),
+     'الإجابات: '+count(progress.correct_answers_count)+' صحيحة من '+count(progress.answers_count)+' إجابة مسجلة',
+     'النشاط اليومي: '+count(progress.active_days_count)+' أيام نشطة مسجلة، وسلسلة حالية '+count(progress.learning_streak)+' يومًا',
+     'القراءة: تقدم المراحل محفوظ على جهاز الطالب حاليًا ولا تتم مزامنته مع المدرسة بعد'
    ];
    if(current){
-     const word=Number.isInteger(progress.current_word_index)
-       ?'، الكلمة رقم '+(progress.current_word_index+1)
-       :'';
-     lines.push('موضعه الحالي: '+current+word);
-   }else if(mastered>=lessonTitles.length){
-     lines.push('أكمل إتقان جميع الدروس الأساسية');
-   }else if(mastered>0){
-     lines.push('الدرس التالي المقترح: '+(lessonName(mastered)||'—'));
-   }else if(started===0){
-     lines.push('لم يبدأ الدروس الأساسية بعد');
+     const word=Number.isInteger(progress.current_word_index)?'، الكلمة رقم '+(progress.current_word_index+1):'';
+     lines.push('موضع التعلّم الحالي: '+current+word);
    }
    return lines.join('\\n');
  }
@@ -246,7 +255,11 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
        const p=student.progress;
        const validCount=value=>Number.isSafeInteger(value)&&value>=0;
        return (p.xp===null||validCount(p.xp))&&validCount(p.completed_count)&&validCount(p.mastered_count)&&
-         validCount(p.started_count)&&validCount(p.trained_count)&&optionalIndex(p.current_lesson_index)&&
+         validCount(p.started_count)&&validCount(p.trained_count)&&
+         [p.mastered_indices,p.trained_indices,p.started_indices].every(a=>Array.isArray(a)&&a.length<=100&&a.every(i=>validCount(i)&&i<=99))&&
+         ['saved_words_count','foundation_saved_count','review_words_count','review_due_count','missed_words_count','quiz_attempts','answers_count','correct_answers_count','active_days_count','learning_streak'].every(k=>validCount(p[k]))&&
+         (p.best_quiz_score===null||(validCount(p.best_quiz_score)&&p.best_quiz_score<=100))&&
+         (p.vocab_level===null||(typeof p.vocab_level==='string'&&p.vocab_level.length<=24))&&optionalIndex(p.current_lesson_index)&&
          optionalIndex(p.current_word_index)&&optionalIndex(p.last_action_lesson_index)&&
          optionalIndex(p.last_action_word_index)&&
          (p.last_action===null||allowedActions.has(p.last_action))&&
