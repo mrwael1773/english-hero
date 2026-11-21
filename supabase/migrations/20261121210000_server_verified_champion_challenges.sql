@@ -17,7 +17,6 @@ create table if not exists public.student_champion_attempts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   lesson_index integer not null check (lesson_index between 0 and 83),
-  question_snapshot jsonb not null check (jsonb_typeof(question_snapshot) = 'array'),
   answer_key jsonb not null check (jsonb_typeof(answer_key) = 'array'),
   question_count smallint not null check (question_count = 10),
   created_at timestamptz not null default now(),
@@ -161,7 +160,7 @@ begin
   end if;
   if jsonb_array_length(p_answers) <> v_attempt.question_count
      or jsonb_array_length(v_attempt.answer_key) <> v_attempt.question_count
-     or jsonb_array_length(v_attempt.question_snapshot) <> v_attempt.question_count then
+     then
     raise exception 'Invalid answer count' using errcode = '22023';
   end if;
 
