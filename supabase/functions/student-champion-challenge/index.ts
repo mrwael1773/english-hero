@@ -6,7 +6,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "
 const ALLOWED_ORIGIN = Deno.env.get("ENGLISH_HERO_ALLOWED_ORIGIN") ?? "https://mrwael1773.github.io";
 const QUESTION_COUNT = 10;
 const ATTEMPT_MINUTES = 15;
-const MAX_STARTS_PER_WINDOW = 5;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
@@ -148,7 +147,7 @@ export async function handleChampionChallenge(request: Request): Promise<Respons
     if (typeof attemptId !== "string") return json({ error: "تعذر بدء التحدي. حاول مجددًا." }, 503);
 
     return json({
-      attempt_id: attempt.id,
+      attempt_id: attemptId,
       lesson_index: lessonIndex,
       expires_at: expiresAt,
       questions: prepared.questions,
