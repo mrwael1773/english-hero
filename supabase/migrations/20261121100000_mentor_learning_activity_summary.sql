@@ -38,7 +38,7 @@ begin
     raise exception 'Authentication required' using errcode = '42501';
   end if;
 
-  if p_action not in (
+  if p_action is null or p_action not in (
     'lesson_started',
     'lesson_progress',
     'lesson_training_completed',
