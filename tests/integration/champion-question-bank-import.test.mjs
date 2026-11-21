@@ -92,3 +92,23 @@ test("posts the private payload once and never prints the service key", async t 
   assert.equal(JSON.parse(request.options.body).p_questions.length, 840);
   assert.deepEqual(result, { imported: 840, lessons: 84, projectRef: "knjcyuvhaoievxkzcdog" });
 });
+
+test("rejects every unapproved remote project even when production override is set", async () => {
+  const file = temporaryBankFile();
+  try {
+    await assert.rejects(
+      importQuestionBank({
+        filePath: file,
+        env: {
+          SUPABASE_URL: "https://unapproved-project.supabase.co",
+          SUPABASE_SERVICE_ROLE_KEY: "test-only",
+          ENGLISH_HERO_ALLOW_PRODUCTION_IMPORT: "YES",
+        },
+        fetchImpl: async () => { throw new Error("must not send request"); },
+      }),
+      /Import target is not allowlisted/,
+    );
+  } finally {
+    rmSync(file, { force: true });
+  }
+});
