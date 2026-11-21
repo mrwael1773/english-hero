@@ -1,5 +1,16 @@
 -- Adds a fair, time-aligned week-over-week improvement category.
 -- The comparison uses the same number of elapsed Saudi calendar days in each week.
+-- The comparison baseline starts when this migration is applied.
+create table if not exists public.student_champions_config (
+  singleton boolean primary key default true check (singleton),
+  activated_at timestamptz not null default now()
+);
+insert into public.student_champions_config(singleton) values (true)
+on conflict (singleton) do nothing;
+alter table public.student_champions_config enable row level security;
+alter table public.student_champions_config force row level security;
+revoke all on table public.student_champions_config from public, anon, authenticated;
+
 create or replace function public.get_student_champions()
 returns jsonb
 language plpgsql
