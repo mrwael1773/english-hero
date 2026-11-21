@@ -84,7 +84,8 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
     assertEquals(JSON.stringify(body).includes(token), false);
     assertEquals((capturedInit?.headers as Record<string, string>).Authorization, "Bearer server-only-test-secret");
     const output = await response.json();
-    assertEquals(output.students[0].username, "learner");
+    assertEquals(output.students[0].display_name, "Learner");
+    assertEquals("username" in output.students[0], false);
     assertEquals("email" in output.students[0], false);
     assertEquals("internal_debug" in output, false);
     assertEquals("raw_answers" in output.students[0].progress, false);
