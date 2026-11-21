@@ -31,7 +31,7 @@ h1{margin:2px 0;font-size:clamp(25px,4vw,34px);line-height:1.35;letter-spacing:-
 table{width:100%;border-collapse:collapse;min-width:820px}th,td{text-align:right;padding:13px 12px;border-bottom:1px solid rgba(54,77,106,.72);font-size:13px;vertical-align:top}td{max-width:260px;overflow-wrap:anywhere}td:nth-child(4),td:nth-child(5){line-height:1.65}
 th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:rgba(145,186,255,.045)}
 .empty-row td{text-align:center!important;padding:28px 16px!important;color:var(--muted)}
-.footer-note{margin:14px 2px 0;color:var(--muted);font-size:12px}.guide{margin:18px 0 4px;padding:16px 18px;border:1px solid rgba(145,186,255,.24);border-radius:15px;background:rgba(145,186,255,.06)}.guide h3{margin:0 0 8px;font-size:15px}.guide ul{margin:6px 0 0;padding-right:20px;color:var(--muted);font-size:13px}.guide li{margin:5px 0}.progress-cell{white-space:pre-line;line-height:1.9;min-width:230px}.xp-cell{font-weight:850;font-variant-numeric:tabular-nums}
+.footer-note{margin:14px 2px 0;color:var(--muted);font-size:12px}.guide{margin:18px 0 4px;padding:16px 18px;border:1px solid rgba(145,186,255,.24);border-radius:15px;background:rgba(145,186,255,.06)}.guide h3{margin:0 0 8px;font-size:15px}.guide ul{margin:6px 0 0;padding-right:20px;color:var(--muted);font-size:13px}.guide li{margin:5px 0}.progress-cell{line-height:1.7;min-width:260px;white-space:normal}.progress-disclosure summary{cursor:pointer;color:var(--mint);font-weight:800;line-height:1.6;list-style-position:inside}.progress-disclosure summary:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:5px}.progress-disclosure[open] summary{margin-bottom:8px}.progress-details{padding:2px 0}.progress-group{padding:7px 0;border-top:1px solid rgba(54,77,106,.65)}.progress-group h4{margin:0 0 3px;color:var(--blue);font-size:12px}.progress-group ul{margin:0;padding-right:18px}.progress-group li{margin:2px 0;overflow-wrap:anywhere}.xp-cell{font-weight:850;font-variant-numeric:tabular-nums}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .hidden{display:none!important}
 @media(max-width:680px){
@@ -44,6 +44,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
  tbody td{display:flex;flex-direction:column;gap:2px;min-width:0;padding:8px 2px;border:0!important;overflow-wrap:anywhere}
  tbody td:before{content:attr(data-label);color:var(--muted);font-size:11px}
  tbody td:first-child{grid-column:1/-1;font-size:15px;font-weight:800;color:var(--text);padding-bottom:9px;border-bottom:1px solid var(--line)!important;margin-bottom:4px}
+ tbody td:last-child{grid-column:1/-1}
  tbody tr.empty-row{display:block;margin:0;padding:0;border:1px solid var(--line);border-radius:14px;background:#172941}
  tbody tr.empty-row td{display:block;padding:24px 14px!important}
 }
@@ -158,25 +159,66 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    const trainedIndices=safeIndices(progress.trained_indices);
    const startedIndices=safeIndices(progress.started_indices);
    const current=lessonName(progress.current_lesson_index);
-   const lines=[
-     (progress.xp===null?'المستوى غير متاح':'المستوى '+levelFromXp(progress.xp)+' • '+count(progress.xp)+' XP'),
-     'الدروس: '+mastered+' أتقنها الطالب، '+trained+' أكمل تدريبها، '+started+' بدأها',
-     describeLessonGroup('الدروس المتقنة',masteredIndices),
-     describeLessonGroup('تدريب مكتمل دون إتقان',trainedIndices),
-     describeLessonGroup('دروس بدأها',startedIndices),
-     'المفردات: '+count(progress.saved_words_count)+' كلمة أضافها للمراجعة، '+count(progress.foundation_saved_count)+' كلمة من القاموس العام، المستوى '+(progress.vocab_level??'غير محدد'),
-     'المراجعة: '+count(progress.review_words_count)+' كلمة لها سجل مراجعة، منها '+count(progress.review_due_count)+' مستحقة، و'+count(progress.missed_words_count)+' ضمن قائمة الأخطاء',
-     'الاختبارات: '+count(progress.quiz_attempts)+' محاولة مسجلة، أفضل نتيجة '+(progress.best_quiz_score===null?'غير متاحة':count(progress.best_quiz_score)+'%'),
-     'الإجابات: '+count(progress.correct_answers_count)+' صحيحة من '+count(progress.answers_count)+' إجابة مسجلة',
-     'النشاط اليومي: '+count(progress.active_days_count)+' أيام نشطة مسجلة، وسلسلة حالية '+count(progress.learning_streak)+' يومًا',
-     'القراءة: '+(Array.isArray(progress.reading_completed)?progress.reading_completed.length:0)+' من 11 مرحلة مجتازة',
-     'مراحل القراءة: '+(Array.isArray(progress.reading_completed)&&progress.reading_completed.length?progress.reading_completed.map(id=>readingStageTitles[id]).filter(Boolean).join('، '):'لم يجتز مراحل بعد')
+   const currentWord=Number.isInteger(progress.current_word_index)?'، الكلمة رقم '+(progress.current_word_index+1):'';
+   const reading=Array.isArray(progress.reading_completed)?progress.reading_completed:[];
+   return [
+     {title:'الدروس',items:[
+       'أتقن '+mastered+' درسًا، وأكمل تدريب '+trained+'، وبدأ '+started,
+       describeLessonGroup('الدروس المتقنة',masteredIndices),
+       describeLessonGroup('تدريب مكتمل دون إتقان',trainedIndices),
+       describeLessonGroup('دروس بدأها',startedIndices),
+       current?'موضع التعلّم الحالي: '+current+currentWord:'لا يوجد موضع تعلّم حالي مسجل'
+     ]},
+     {title:'المفردات والمراجعة',items:[
+       'أضاف للمراجعة: '+count(progress.saved_words_count)+' كلمة',
+       'كلمات القاموس العام: '+count(progress.foundation_saved_count),
+       'مستوى مكتبة المفردات: '+(progress.vocab_level??'غير محدد'),
+       'سجل المراجعة: '+count(progress.review_words_count)+' كلمة، المستحق منها '+count(progress.review_due_count),
+       'قائمة الأخطاء: '+count(progress.missed_words_count)+' كلمة'
+     ]},
+     {title:'الاختبارات',items:[
+       'المحاولات المسجلة: '+count(progress.quiz_attempts),
+       'أفضل نتيجة: '+(progress.best_quiz_score===null?'غير متاحة':count(progress.best_quiz_score)+'%'),
+       'الإجابات الصحيحة: '+count(progress.correct_answers_count)+' من '+count(progress.answers_count)
+     ]},
+     {title:'النشاط اليومي',items:[
+       'أيام التعلم النشطة: '+count(progress.active_days_count),
+       'سلسلة التعلم الحالية: '+count(progress.learning_streak)+' يومًا'
+     ]},
+     {title:'القراءة',items:[
+       'اجتاز '+reading.length+' من 11 مرحلة',
+       'المراحل المجتازة: '+(reading.length?reading.map(id=>readingStageTitles[id]).filter(Boolean).join('، '):'لم يجتز مراحل بعد')
+     ]}
    ];
-   if(current){
-     const word=Number.isInteger(progress.current_word_index)?'، الكلمة رقم '+(progress.current_word_index+1):'';
-     lines.push('موضع التعلّم الحالي: '+current+word);
+ }
+ function appendProgressCell(row,progress){
+   const td=document.createElement('td');
+   td.dataset.label='تفاصيل التقدم الدراسي';
+   td.className='progress-cell';
+   const details=document.createElement('details');
+   details.className='progress-disclosure';
+   const summary=document.createElement('summary');
+   summary.textContent='عرض التفاصيل • أتقن '+count(progress.mastered_count)+' • تدريب '+count(progress.trained_count)+' • بدأ '+count(progress.started_count)+' • قراءة '+(Array.isArray(progress.reading_completed)?progress.reading_completed.length:0)+'/11';
+   details.appendChild(summary);
+   const content=document.createElement('div');
+   content.className='progress-details';
+   for(const group of describeProgress(progress)){
+     const section=document.createElement('section');
+     section.className='progress-group';
+     const heading=document.createElement('h4');
+     heading.textContent=group.title;
+     const list=document.createElement('ul');
+     for(const item of group.items){
+       const li=document.createElement('li');
+       li.textContent=item;
+       list.appendChild(li);
+     }
+     section.append(heading,list);
+     content.appendChild(section);
    }
-   return lines.join('\\n');
+   details.appendChild(content);
+   td.appendChild(details);
+   row.appendChild(td);
  }
  function render(rows,generatedAt){
    const tbody=$('students');
@@ -197,7 +239,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
      cell(tr,'آخر اتصال',formatDate(student.last_seen_at));
      cell(tr,'نقاط الخبرة (XP)',progress.xp===null?'غير متاحة':count(progress.xp)+' نقطة','xp-cell');
      cell(tr,'آخر نشاط',describeActivity(progress));
-     cell(tr,'تفاصيل التقدم الدراسي',describeProgress(progress),'progress-cell');
+     appendProgressCell(tr,progress);
      tbody.appendChild(tr);
    }
    $('total').textContent=String(rows.length);
