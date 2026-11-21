@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { validateQuestionBank, importQuestionBank } from "../../scripts/import-champion-question-bank.mjs";
 
 function validBank() {
@@ -13,6 +16,14 @@ function validBank() {
       correct_option: 0,
     };
   });
+}
+
+function withBankFile(t, bank = validBank()) {
+  const dir = mkdtempSync(join(tmpdir(), "english-hero-champions-"));
+  const filePath = join(dir, "private-question-bank.json");
+  writeFileSync(filePath, JSON.stringify(bank), { mode: 0o600 });
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  return filePath;
 }
 
 test("accepts exactly ten unique four-option questions for each lesson", () => {
@@ -41,24 +52,43 @@ test("rejects a lesson with the wrong question count", () => {
   assert.ok(validateQuestionBank(bank).some(error => /Lesson 1 must have exactly 10/.test(error)));
 });
 
-test("dry-run validates without calling the network", async () => {
-  const bank = validBank();
+test("dry-run validates a complete private file without calling the network", async t => {
+  const filePath = withBankFile(t);
   const result = await importQuestionBank({
-    filePath: new URL("./fixtures/champion-bank-fixture.json", import.meta.url).pathname,
+    filePath,
     env: { SUPABASE_URL: "https://example.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "test-only" },
     fetchImpl: async () => { throw new Error("Network must not be called in dry-run."); },
     dryRun: true,
-  }).catch(error => error);
-  assert.ok(result instanceof Error); // The fixture is intentionally not committed.
-  assert.equal(bank.length, 840);
+  });
+  assert.deepEqual(result, { dryRun: true, questions: 840, lessons: 84, projectRef: "example" });
 });
 
-test("blocks the production project unless explicitly authorized", async () => {
+test("blocks the production project unless explicitly authorized", async t => {
+  const filePath = withBankFile(t);
   await assert.rejects(
     importQuestionBank({
-      filePath: "/not-read-because-production-check-is-after-parse",
+      filePath,
       env: { SUPABASE_URL: "https://cajevfsdhtbhtzcphbsz.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "test" },
       dryRun: true,
     }),
+    /Production import is blocked/,
   );
+});
+
+test("posts the private payload once and never prints the service key", async t => {
+  const filePath = withBankFile(t);
+  let request;
+  const result = await importQuestionBank({
+    filePath,
+    env: { SUPABASE_URL: "https://example.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "secret-test-value" },
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return new Response("840", { status: 200, headers: { "content-type": "application/json" } });
+    },
+  });
+  assert.equal(request.url, "https://example.supabase.co/rest/v1/rpc/import_student_champion_question_bank");
+  assert.equal(request.options.method, "POST");
+  assert.equal(request.options.headers.authorization, "Bearer secret-test-value");
+  assert.equal(JSON.parse(request.options.body).p_questions.length, 840);
+  assert.deepEqual(result, { imported: 840, lessons: 84, projectRef: "example" });
 });
