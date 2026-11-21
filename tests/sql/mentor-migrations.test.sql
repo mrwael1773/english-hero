@@ -33,6 +33,41 @@ begin
 end;
 $$;
 
+-- Reject unauthenticated writes and invalid learning-event payloads.
+do $
+begin
+  perform set_config('request.jwt.claim.sub', '', false);
+  begin
+    perform public.record_student_activity();
+    raise exception 'Unauthenticated activity write was accepted';
+  exception
+    when sqlstate '42501' then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
+  begin
+    perform public.record_student_learning_activity('unexpected_action', 3, 1);
+    raise exception 'Unknown learning action was accepted';
+  exception
+    when sqlstate '22023' then null;
+  end;
+
+  begin
+    perform public.record_student_learning_activity('lesson_progress', 100, 1);
+    raise exception 'Out-of-range lesson index was accepted';
+  exception
+    when sqlstate '22023' then null;
+  end;
+
+  begin
+    perform public.record_student_learning_activity('lesson_progress', 3, 100);
+    raise exception 'Out-of-range word index was accepted';
+  exception
+    when sqlstate '22023' then null;
+  end;
+end;
+$;
+
 -- A mastered lesson clears the active lesson pointer without deleting the last action.
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
 
