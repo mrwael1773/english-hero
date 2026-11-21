@@ -8,7 +8,8 @@ export const test = base.extend({
       contentType: 'application/javascript',
       body: `window.EnglishHeroCloudReady=Promise.resolve(true);
         window.EnglishHeroCloud={getUser:()=>({id:'e2e-student'}),isConfigured:()=>true,
-        getProfile:async()=>({username:'e2e_student',display_name:'E2E Student'}),isReady:()=>true};`
+        getProfile:async()=>({username:'e2e_student',display_name:'E2E Student'}),isReady:()=>true,
+        getStudentChampions:async()=>({generated_at:'2026-11-21T10:00:00Z',timezone:'Asia/Riyadh',today_leaders:[{display_name:'بطلة الاختبار',score:2}],week_leaders:[{display_name:'بطل الأسبوع',score:4}],mastery_leaders:[{display_name:'الأكثر إتقانًا',score:5}],consistency_leaders:[{display_name:'نجم الاستمرارية',score:6}]})};`
     }));
     await page.route('**/cdn.jsdelivr.net/npm/@supabase/supabase-js@2', route => route.fulfill({
       contentType: 'application/javascript',
