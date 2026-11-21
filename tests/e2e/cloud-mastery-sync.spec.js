@@ -166,4 +166,14 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
     };
   });
   expect(restored).toEqual(cloudSnapshot);
+
+  // A queued event absent from the successfully uploaded account snapshot is stale.
+  // It must be discarded locally, not replayed as a new mastery event.
+  await page.evaluate(key => {
+    localStorage.setItem(key, JSON.stringify([5]));
+    window.dispatchEvent(new Event('online'));
+  }, pendingKey);
+  await page.waitForFunction(key => localStorage.getItem(key) === null, pendingKey);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]')))
+    .toHaveLength(1);
 });
