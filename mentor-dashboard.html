@@ -140,6 +140,9 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    loading=true;
    $('refresh').disabled=true;
    $('openDashboard').disabled=true;
+   $('refresh').textContent='جارٍ التحديث...';
+   $('openDashboard').textContent='جارٍ التحقق...';
+   $('dashboard').setAttribute('aria-busy','true');
    say('جارٍ التحقق وتحميل ملخص الطلاب...');
    try{
      const endpoint=config.supabaseUrl.replace(/\/$/,'')+'/functions/v1/mentor-overview';
@@ -176,6 +179,9 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
      loading=false;
      $('refresh').disabled=false;
      $('openDashboard').disabled=false;
+     $('refresh').textContent='تحديث البيانات';
+     $('openDashboard').textContent='فتح لوحة المتابعة';
+     $('dashboard').setAttribute('aria-busy','false');
    }
  }
  $('openDashboard').addEventListener('click',loadOverview);
