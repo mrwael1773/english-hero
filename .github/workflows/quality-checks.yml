@@ -72,8 +72,14 @@ jobs:
       - name: Type-check mentor overview Edge Function
         run: deno check --no-lock supabase/functions/mentor-overview/index.ts
 
+      - name: Type-check champion challenge Edge Function
+        run: deno check --no-lock supabase/functions/student-champion-challenge/index.ts
+
       - name: Test mentor overview Edge Function
         run: deno test --no-lock --allow-env supabase/functions/mentor-overview/index_test.ts
+
+      - name: Test champion challenge Edge Function
+        run: deno test --no-lock supabase/functions/student-champion-challenge/index_test.ts
 
       - name: Validate JSON data and vocabulary count
         run: |
@@ -110,6 +116,7 @@ jobs:
           test -s auth-guard.js
           test -s supabase/functions/student-username-login/index.ts
           test -s supabase/functions/mentor-overview/index.ts
+          test -s supabase/functions/student-champion-challenge/index.ts
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg
@@ -160,7 +167,8 @@ jobs:
             supabase/migrations/20261121143000_student_champions_leaderboard.sql \
             supabase/migrations/20261121150000_student_champions_improvement_category.sql \
             supabase/migrations/20261121180000_harden_student_champion_lesson_indices.sql \
-            supabase/migrations/20261121193000_champions_mastery_uses_event_ledger.sql
+            supabase/migrations/20261121193000_champions_mastery_uses_event_ledger.sql \
+            supabase/migrations/20261121210000_server_verified_champion_challenges.sql
           do
             echo "Applying $migration"
             psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$migration"
