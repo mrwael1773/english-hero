@@ -87,9 +87,10 @@ end;
 $$;
 
 -- Expired and revoked bearer tokens must be rejected by the RPC.
-insert into public.mentor_link_tokens (token_hash, expires_at)
+insert into public.mentor_link_tokens (token_hash, created_at, expires_at)
 values (
   encode(extensions.digest(convert_to(repeat('b', 64), 'UTF8'), 'sha256'), 'hex'),
+  now() - interval '2 days',
   now() - interval '1 day'
 );
 insert into public.mentor_link_tokens (token_hash, expires_at, revoked_at)
