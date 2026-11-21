@@ -144,6 +144,12 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    const names=indices.map(lessonName).filter(Boolean);
    return label+': '+(names.length?names.join('، '):'لا يوجد');
  }
+ const readingStageTitles={
+   'letter-sounds':'أصوات الحروف','digraphs':'الحروف المركبة','short-vowels':'الحركات القصيرة',
+   blends:'الأصوات المدمجة',cvc:'تركيب الكلمات CVC','magic-e':'الحرف السحري E',
+   'vowel-teams':'الحركات المركبة','r-controlled':'أصوات الحركات مع R',
+   diphthongs:'الأصوات المتحركة المركبة',syllables:'المقاطع الصوتية',practice:'القراءة التطبيقية'
+ };
  function describeProgress(progress){
    const mastered=count(progress.mastered_count);
    const trained=count(progress.trained_count);
@@ -163,7 +169,8 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
      'الاختبارات: '+count(progress.quiz_attempts)+' محاولة مسجلة، أفضل نتيجة '+(progress.best_quiz_score===null?'غير متاحة':count(progress.best_quiz_score)+'%'),
      'الإجابات: '+count(progress.correct_answers_count)+' صحيحة من '+count(progress.answers_count)+' إجابة مسجلة',
      'النشاط اليومي: '+count(progress.active_days_count)+' أيام نشطة مسجلة، وسلسلة حالية '+count(progress.learning_streak)+' يومًا',
-     'القراءة: تقدم المراحل محفوظ على جهاز الطالب حاليًا ولا تتم مزامنته مع المدرسة بعد'
+     'القراءة: '+(Array.isArray(progress.reading_completed)?progress.reading_completed.length:0)+' من 11 مرحلة مجتازة',
+     'مراحل القراءة: '+(Array.isArray(progress.reading_completed)&&progress.reading_completed.length?progress.reading_completed.map(id=>readingStageTitles[id]).filter(Boolean).join('، '):'لم يجتز مراحل بعد')
    ];
    if(current){
      const word=Number.isInteger(progress.current_word_index)?'، الكلمة رقم '+(progress.current_word_index+1):'';
@@ -259,7 +266,9 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
          [p.mastered_indices,p.trained_indices,p.started_indices].every(a=>Array.isArray(a)&&a.length<=100&&a.every(i=>validCount(i)&&i<=99))&&
          ['saved_words_count','foundation_saved_count','review_words_count','review_due_count','missed_words_count','quiz_attempts','answers_count','correct_answers_count','active_days_count','learning_streak'].every(k=>validCount(p[k]))&&
          (p.best_quiz_score===null||(validCount(p.best_quiz_score)&&p.best_quiz_score<=100))&&
-         (p.vocab_level===null||(typeof p.vocab_level==='string'&&p.vocab_level.length<=24))&&optionalIndex(p.current_lesson_index)&&
+         (p.vocab_level===null||(typeof p.vocab_level==='string'&&p.vocab_level.length<=24))&&
+         Array.isArray(p.reading_completed)&&p.reading_completed.length<=11&&
+         p.reading_completed.every((id,i)=>['letter-sounds','digraphs','short-vowels','blends','cvc','magic-e','vowel-teams','r-controlled','diphthongs','syllables','practice'][i]===id)&&optionalIndex(p.current_lesson_index)&&
          optionalIndex(p.current_word_index)&&optionalIndex(p.last_action_lesson_index)&&
          optionalIndex(p.last_action_word_index)&&
          (p.last_action===null||allowedActions.has(p.last_action))&&
