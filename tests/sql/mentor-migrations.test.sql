@@ -117,7 +117,7 @@ $block$;
 -- A mastered lesson clears the active lesson pointer without deleting the last action.
 -- The new mastery-event recorder requires the synced progress snapshot to contain the lesson.
 update public.learning_progress
-set progress = jsonb_set(progress, '{masteredLessons}', '[0,3]'::jsonb)
+set progress = jsonb_set(progress, '{masteredLessons}', '[0,3,3,100,"bad"]'::jsonb)
 where user_id = '11111111-1111-4111-8111-111111111111';
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
 -- Replaying the same mastery event must not create a second leaderboard entry.
