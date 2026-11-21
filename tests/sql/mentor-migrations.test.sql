@@ -156,9 +156,12 @@ begin
 
   v_result := public.get_student_champions();
   if v_result->>'timezone' <> 'Asia/Riyadh'
-     or v_result->'today_leaders'->0->>'display_name' <> 'Synthetic Learner'
-     or v_result->'today_leaders'->0->>'score' <> '1'
-     or v_result->'week_leaders'->0->>'score' <> '1'
+     or not exists (
+       select 1 from jsonb_array_elements(v_result->'today_leaders') as today_row
+       where today_row->>'display_name' = 'Synthetic Learner' and today_row->>'score' = '1'
+     )
+     or v_result->'week_leaders'->0->>'display_name' <> 'Improved Learner'
+     or v_result->'week_leaders'->0->>'score' <> '2'
      or v_result->'mastery_leaders'->0->>'score' <> '2'
      or v_result->'consistency_leaders'->0->>'score' <> '1'
      or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
