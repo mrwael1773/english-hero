@@ -6,6 +6,12 @@ test('champions view shows daily and weekly winners plus achievement categories'
 
   await expect(page.locator('#champions')).toHaveClass(/active/);
   await expect(page.locator('#championsToday')).toContainText('بطلة الاختبار');
+  const todayRows = page.locator('#championsToday .champion-podium-row');
+  await expect(todayRows).toHaveCount(2);
+  await expect(todayRows.nth(0)).toContainText('🥈');
+  await expect(todayRows.nth(0)).toContainText('وصيفة اليوم');
+  await expect(todayRows.nth(0)).not.toContainText('بطلة الاختبار');
+  await expect(todayRows.nth(1)).toContainText('🥉');
   await expect(page.locator('#championsWeek')).toContainText('بطل الأسبوع');
   await expect(page.locator('#championsMastery')).toContainText('الأكثر إتقانًا');
   await expect(page.locator('#championsConsistency')).toContainText('نجم الاستمرارية');
