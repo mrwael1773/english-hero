@@ -144,15 +144,10 @@ insert into public.student_profiles (user_id, username, display_name)
 values ('33333333-3333-4333-8333-333333333333', 'synthetic-improver', 'Improved Learner');
 insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
 select '33333333-3333-4333-8333-333333333333', lesson_index,
-       (((now() at time zone 'Asia/Riyadh')::date
-          - extract(dow from (now() at time zone 'Asia/Riyadh')::date)::integer
-          + 1)::timestamp + make_interval(hours => lesson_index)) at time zone 'Asia/Riyadh'
+       now() + make_interval(hours => lesson_index)
 from (values (4),(5)) as lessons(lesson_index);
 insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
-select '33333333-3333-4333-8333-333333333333', 6,
-       (((now() at time zone 'Asia/Riyadh')::date
-          - extract(dow from (now() at time zone 'Asia/Riyadh')::date)::integer
-          - 6)::timestamp) at time zone 'Asia/Riyadh';
+values ('33333333-3333-4333-8333-333333333333', 6, now() - interval '7 days');
 
 do $champions$
 declare
