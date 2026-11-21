@@ -125,6 +125,8 @@ select public.record_student_learning_activity('lesson_mastered', 3, 2);
 
 -- A second synthetic learner has two new masteries this week versus one
 -- in the matching elapsed period last week, so improvement is +1.
+-- Simulate a deployment old enough to have a complete comparison baseline.
+update public.student_champions_config set activated_at = now() - interval '15 days' where singleton = true;
 insert into auth.users (id)
 values ('33333333-3333-4333-8333-333333333333');
 insert into public.student_profiles (user_id, username, display_name)
@@ -319,7 +321,10 @@ begin
      or has_table_privilege('anon', 'public.student_learning_days', 'SELECT')
      or has_table_privilege('authenticated', 'public.student_mastery_events', 'SELECT')
      or has_table_privilege('authenticated', 'public.student_mastery_events', 'INSERT')
-     or has_table_privilege('anon', 'public.student_mastery_events', 'SELECT') then
+     or has_table_privilege('anon', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'INSERT')
+     or has_table_privilege('anon', 'public.student_champions_config', 'SELECT') then
     raise exception 'Client roles can directly access private champion event tables';
   end if;
   if not exists (
@@ -328,8 +333,11 @@ begin
   ) or not exists (
     select 1 from pg_class
     where oid = 'public.student_mastery_events'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champions_config'::regclass and relrowsecurity and relforcerowsecurity
   ) then
-    raise exception 'Champion event tables must enforce row-level security';
+    raise exception 'Champion event and configuration tables must enforce row-level security';
   end if;
   if has_function_privilege('anon', 'public.record_student_activity()', 'EXECUTE') then
     raise exception 'Anonymous users can record student activity';
