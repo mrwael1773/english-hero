@@ -130,14 +130,60 @@ begin
 end;
 $lesson_bounds$;
 
--- A mastered lesson clears the active lesson pointer without deleting the last action.
--- The new mastery-event recorder requires the synced progress snapshot to contain the lesson.
-update public.learning_progress
-set progress = jsonb_set(progress, '{masteredLessons}', '[0,3,3,100,"bad"]'::jsonb)
-where user_id = '11111111-1111-4111-8111-111111111111';
-select public.record_student_learning_activity('lesson_mastered', 3, 2);
--- Replaying the same mastery event must not create a second leaderboard entry.
-select public.record_student_learning_activity('lesson_mastered', 3, 2);
+-- Client-written progress is no longer sufficient to create a mastery event.
+do $legacy_mastery$
+declare
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.record_student_learning_activity('lesson_mastered', 3, 2);
+  exception when sqlstate '42501' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'Client-side mastery claim was accepted';
+  end if;
+end;
+$legacy_mastery$;
+
+-- Only the trusted server role can complete a challenge and create a mastery event.
+insert into public.student_champion_attempts (
+  id, user_id, lesson_index, question_snapshot, answer_key, question_count, expires_at
+) values (
+  '44444444-4444-4444-8444-444444444444',
+  '11111111-1111-4111-8111-111111111111',
+  3,
+  '[{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]'::jsonb,
+  '[0,0,0,0,0,0,0,0,0,0]'::jsonb,
+  10,
+  now() + interval '15 minutes'
+);
+select set_config('request.jwt.claim.role', 'service_role', false);
+select public.complete_student_champion_attempt(
+  '44444444-4444-4444-8444-444444444444',
+  '11111111-1111-4111-8111-111111111111',
+  '[0,0,0,0,0,0,0,0,1,1]'::jsonb
+);
+select set_config('request.jwt.claim.role', 'authenticated', false);
+
+do $replay$
+declare
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.complete_student_champion_attempt(
+      '44444444-4444-4444-8444-444444444444',
+      '11111111-1111-4111-8111-111111111111',
+      '[0,0,0,0,0,0,0,0,0,0]'::jsonb
+    );
+  exception when sqlstate '22023' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'A submitted champion challenge could be replayed';
+  end if;
+end;
+$replay$;
 
 -- A second synthetic learner has two new masteries this week versus one
 -- in the matching elapsed period last week, so improvement is +1.
@@ -355,6 +401,17 @@ begin
   if not has_function_privilege('authenticated', 'public.get_student_champions()', 'EXECUTE')
      or has_function_privilege('anon', 'public.get_student_champions()', 'EXECUTE') then
     raise exception 'Student champions RPC grants are incorrect';
+  end if;
+  if has_function_privilege('authenticated', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE')
+     or not has_function_privilege('service_role', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE') then
+    raise exception 'Only the trusted service role may complete champion attempts';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_champion_question_bank', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champion_attempts', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champion_attempts', 'INSERT')
+     or has_table_privilege('anon', 'public.student_champion_question_bank', 'SELECT')
+     or has_table_privilege('anon', 'public.student_champion_attempts', 'SELECT') then
+    raise exception 'Client roles can directly access private challenge data';
   end if;
   if has_table_privilege('authenticated', 'public.student_learning_days', 'SELECT')
      or has_table_privilege('authenticated', 'public.student_learning_days', 'INSERT')
