@@ -204,6 +204,11 @@ begin
               then (lp.progress->>'streak')::integer else 0 end,
           'vocab_level', case when jsonb_typeof(lp.progress->'vocabLevel') in ('string','number')
             then left(lp.progress->>'vocabLevel',24) else null end,
+          'vocab_position', case
+            when (lp.progress->>'vocabPosition') ~ '^(0|[1-9][0-9]{0,4})$' then
+              case when (lp.progress->>'vocabPosition')::integer <= 19999
+                then (lp.progress->>'vocabPosition')::integer else null end
+            else null end,
           'reading_completed', coalesce(to_jsonb(rp.completed_stage_ids),'[]'::jsonb),
           'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
           'current_word_index', coalesce(
