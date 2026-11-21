@@ -240,7 +240,7 @@ jobs:
           cat > /tmp/english-hero-edge-test.env <<EOF
           SUPABASE_URL=${API_URL}
           SUPABASE_ANON_KEY=${ANON_KEY}
-          SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+          ENGLISH_HERO_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
           ENGLISH_HERO_ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
           EOF
 
