@@ -101,11 +101,11 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    'العائلة والأصدقاء','أفعال أساسية','الطقس والطبيعة','المستقبل والأهداف'
  ];
  const actionNames={
-   lesson_started:'بدأ درسًا',
-   lesson_progress:'تابع التعلّم في',
-   lesson_training_completed:'أكمل تدريب',
-   lesson_assessment_attempted:'أجرى تقييم',
-   lesson_mastered:'أتقن',
+   lesson_started:'بدأ درس',
+   lesson_progress:'تابع التعلّم في درس',
+   lesson_training_completed:'أكمل تدريب درس',
+   lesson_assessment_attempted:'أجرى تقييمًا لدرس',
+   lesson_mastered:'أتقن درس',
    quiz_completed:'أكمل تمرينًا'
  };
  const count=value=>Number.isSafeInteger(value)&&value>=0?value:0;
@@ -117,13 +117,14 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    return level;
  }
  function lessonName(index){
-   return Number.isInteger(index)&&index>=0&&index<lessonTitles.length?lessonTitles[index]:null;
+   if(!Number.isInteger(index)||index<0||index>99)return null;
+   return index<lessonTitles.length?lessonTitles[index]:'الدرس رقم '+(index+1);
  }
  function describeActivity(progress){
    const action=progress.last_action;
    if(action&&actionNames[action]){
      const title=lessonName(progress.last_action_lesson_index);
-     let description=actionNames[action]+(title?' درس '+title:'');
+     let description=action==='quiz_completed'?actionNames[action]:actionNames[action]+' '+(title||'');
      if(action==='lesson_progress'&&Number.isInteger(progress.last_action_word_index)){
        description+=' • الكلمة '+(progress.last_action_word_index+1);
      }
