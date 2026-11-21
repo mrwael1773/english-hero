@@ -16,7 +16,10 @@ declare
   v_attempt_id uuid;
   v_recent_starts integer;
 begin
-  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+  -- PostgREST sets the effective database role for API-key authentication.
+  -- New Supabase secret API keys do not necessarily populate the legacy JWT role claim.
+  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role'
+     and current_setting('role', true) is distinct from 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
   if p_user_id is null
