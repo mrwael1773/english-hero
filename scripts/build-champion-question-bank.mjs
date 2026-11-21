@@ -53,7 +53,13 @@ export function buildQuestionBank(lessons) {
   }
   const bank = [];
   for (const lesson of lessons) {
+    const translationCounts = new Map();
+    for (const word of lesson.words) {
+      const key = word.ar.toLocaleLowerCase();
+      translationCounts.set(key, (translationCounts.get(key) ?? 0) + 1);
+    }
     const distinctTranslations = [...new Map(lesson.words.map(word => [word.ar.toLocaleLowerCase(), word])).values()];
+    const unambiguousTranslations = lesson.words.filter(word => translationCounts.get(word.ar.toLocaleLowerCase()) === 1);
     for (const word of lesson.words) {
       const options = [word.ar, ...distinctTranslations
         .filter(candidate => candidate.ar.toLocaleLowerCase() !== word.ar.toLocaleLowerCase())
@@ -70,7 +76,7 @@ export function buildQuestionBank(lessons) {
       });
     }
 
-    for (const word of distinctTranslations.slice(0, 4)) {
+    for (const word of unambiguousTranslations.slice(0, 4)) {
       const options = [word.en, ...distinctTranslations
         .filter(candidate => candidate.ar.toLocaleLowerCase() !== word.ar.toLocaleLowerCase())
         .map(candidate => candidate.en)
