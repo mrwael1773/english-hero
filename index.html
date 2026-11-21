@@ -1595,7 +1595,7 @@ separate|يفصل
 treat|يعامل
 `.trim().split('\n').map(line=>line.split('|')).filter(p=>p.length===2);
 
-const uniqueVocabulary=[...new Map(extraVocabulary.map(p=>[p[0].toLowerCase(),p])).values()].slice(0,428);
+const uniqueVocabulary=[...new Map(extraVocabulary.map(p=>[p[0].toLowerCase(),p])).values()].slice(0,432);
 const extraLessons=[];for(let i=0;i<uniqueVocabulary.length;i+=6){const group=uniqueVocabulary.slice(i,i+6);extraLessons.push({id:lessons.length+extraLessons.length,emoji:'📚',title:'المفردات '+(lessons.length+extraLessons.length+1),desc:'كلمات مترجمة مع أمثلة تدريبية',rule:'احفظ الكلمة ثم استخدمها في جملة من إنشائك.',words:group.map((p,j)=>({id:'x'+(i+j),en:p[0],ar:p[1],ex:'I learned the word “'+p[0]+'” today.'}))})}lessons.push(...extraLessons);
 
 function normalizeMasteredLessons(value){const candidate=new Set(Array.isArray(value)?value.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length):[]);const normalized=[];for(const lesson of lessons){if(!candidate.has(lesson.id))break;normalized.push(lesson.id)}return normalized}const all=lessons.flatMap(l=>l.words),wordMap=Object.fromEntries(all.map(w=>[w.id,w]));
