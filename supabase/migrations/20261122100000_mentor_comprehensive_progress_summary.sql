@@ -1,5 +1,81 @@
 -- Expose only bounded, aggregate learning metrics to the mentor overview.
 -- Never return answer text, saved vocabulary strings, chat history, usernames, or raw progress JSON.
+-- Student reading completion is synchronized per authenticated account.
+-- Only the fixed stage IDs and completion state are stored; no answers or response text.
+create table if not exists public.reading_progress (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  completed_stage_ids text[] not null default '{}'::text[],
+  updated_at timestamptz not null default now(),
+  constraint reading_progress_stage_count check (cardinality(completed_stage_ids) between 0 and 11)
+);
+alter table public.reading_progress enable row level security;
+revoke all on table public.reading_progress from public, anon, authenticated;
+
+create or replace function public.get_my_reading_progress()
+returns text[]
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_user_id uuid := auth.uid();
+  v_completed text[] := '{}'::text[];
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+  select rp.completed_stage_ids into v_completed
+  from public.reading_progress as rp where rp.user_id = v_user_id;
+  return coalesce(v_completed, '{}'::text[]);
+end;
+$;
+
+create or replace function public.save_my_reading_progress(p_completed text[])
+returns text[]
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_user_id uuid := auth.uid();
+  v_allowed constant text[] := array[
+    'letter-sounds','digraphs','short-vowels','blends','cvc','magic-e',
+    'vowel-teams','r-controlled','diphthongs','syllables','practice'
+  ]::text[];
+  v_existing text[] := '{}'::text[];
+  v_result text[] := '{}'::text[];
+  v_count integer;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+  if p_completed is null or cardinality(p_completed) > cardinality(v_allowed) then
+    raise exception 'Invalid reading progress' using errcode = '22023';
+  end if;
+  v_count := cardinality(p_completed);
+  if v_count > 0 and p_completed is distinct from v_allowed[1:v_count] then
+    raise exception 'Reading stages must be completed in order' using errcode = '22023';
+  end if;
+
+  insert into public.reading_progress(user_id, completed_stage_ids, updated_at)
+  values (v_user_id, p_completed, now())
+  on conflict (user_id) do update
+    set completed_stage_ids = case
+      when cardinality(public.reading_progress.completed_stage_ids) >= cardinality(excluded.completed_stage_ids)
+      then public.reading_progress.completed_stage_ids
+      else excluded.completed_stage_ids
+    end,
+    updated_at = now()
+  returning completed_stage_ids into v_result;
+  return v_result;
+end;
+$;
+
+revoke all on function public.get_my_reading_progress() from public, anon;
+grant execute on function public.get_my_reading_progress() to authenticated;
+revoke all on function public.save_my_reading_progress(text[]) from public, anon;
+grant execute on function public.save_my_reading_progress(text[]) to authenticated;
+
 create or replace function public.mentor_get_student_overview(p_token_hash text)
 returns jsonb
 language plpgsql
@@ -94,6 +170,7 @@ begin
   from public.student_profiles as p
   left join public.student_activity as a on a.user_id = p.user_id
   left join public.learning_progress as lp on lp.user_id = p.user_id
+  left join public.reading_progress as rp on rp.user_id = p.user_id
   left join lateral (
     select started.lesson_index
     from (
@@ -667,6 +744,7 @@ $$;
           'vocab_level', case
             when jsonb_typeof(lp.progress->'vocabLevel') in ('string','number')
             then left(lp.progress->>'vocabLevel', 24) else null end,
+          'reading_completed', coalesce(to_jsonb(rp.completed_stage_ids), '[]'::jsonb),
           'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
           'current_word_index', coalesce(
             a.current_word_index,
