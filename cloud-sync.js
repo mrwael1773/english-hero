@@ -450,6 +450,21 @@
       if(error) throw error;
       return data || null;
     },
+    async recordLearningActivity(action, lessonIndex=null, wordIndex=null) {
+      const allowed = ['lesson_started','lesson_progress','lesson_training_completed','lesson_assessment_attempted','lesson_mastered','quiz_completed'];
+      if(!allowed.includes(action) || !client || !user || !ready || progressOwnerUserId!==user.id) return false;
+      if(action.startsWith('lesson_') && !Number.isInteger(lessonIndex)) return false;
+      const {error}=await client.rpc('record_student_learning_activity',{
+        p_action:action,
+        p_lesson_index:Number.isInteger(lessonIndex)?lessonIndex:null,
+        p_word_index:Number.isInteger(wordIndex)?wordIndex:null
+      });
+      if(error){
+        console.warn('English Hero learning activity:',error.message||error);
+        return false;
+      }
+      return true;
+    },
     async signInWithUsername(username,password) {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
       const {data,error}=await client.functions.invoke('student-username-login',{
