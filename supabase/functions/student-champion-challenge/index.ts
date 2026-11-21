@@ -127,7 +127,10 @@ export async function handleChampionChallenge(request: Request): Promise<Respons
       .select("id,prompt,options,correct_option")
       .eq("lesson_index", lessonIndex)
       .eq("active", true);
-    if (bankError) return json({ error: "تعذر تحميل بنك التحديات." }, 503);
+    if (bankError) {
+      console.error("Champion question bank query failed", { code: bankError.code, message: bankError.message });
+      return json({ error: "تعذر تحميل بنك التحديات." }, 503);
+    }
     const prepared = prepareChallenge((bankRows ?? []) as BankRow[]);
     if (!prepared) return json({ error: "تحدي هذا الدرس غير متاح بعد. اختر درسًا آخر لاحقًا." }, 409);
 
@@ -139,6 +142,7 @@ export async function handleChampionChallenge(request: Request): Promise<Respons
       p_expires_at: expiresAt,
     });
     if (reserveError) {
+      console.error("Champion attempt reservation failed", { code: reserveError.code, message: reserveError.message });
       if (reserveError.code === "P0001" && reserveError.message?.includes("rate limit")) {
         return json({ error: "وصلت إلى حد المحاولات المؤقت. حاول بعد ساعة." }, 429);
       }
