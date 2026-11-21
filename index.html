@@ -211,6 +211,7 @@ input,select,textarea,button{max-width:100%;min-width:0}
 
   <link rel="stylesheet" href="./site-quick-nav.css?v=1">
   <link rel="stylesheet" href="./auth-gateway.css?v=1">
+  <link rel="stylesheet" href="./champions.css?v=1">
 </head><body><script>document.body.classList.add('auth-gateway-pending');</script><div class="app"><section id="authGateway" class="auth-gateway" aria-label="بوابة الدخول إلى بطل الإنجليزي">
 <div class="auth-gateway-shell">
 <div class="auth-gateway-intro">
@@ -297,6 +298,7 @@ input,select,textarea,button{max-width:100%;min-width:0}
 <button class="launch-card" data-page="learningHub"><span class="launch-icon">📘</span><span class="launch-copy"><b>القواعد والأزمنة</b><small>اختر بين تعلّم القواعد أو دراسة الأزمنة</small></span><span class="launch-arrow">←</span></button>
 <a class="launch-card" href="./reading.html"><span class="launch-icon">📖</span><span class="launch-copy"><b>رحلة تعلّم القراءة</b><small>من الحروف والأصوات إلى قراءة الكلمات والقصص مع الاستماع</small></span><span class="launch-arrow">←</span></a>
 <button class="launch-card" data-page="training"><span class="launch-icon">🎯</span><span class="launch-copy"><b>اختبر مستواك</b><small>تحديات قصيرة وتصحيح فوري لأجوبتك</small></span><span class="launch-arrow">←</span></button>
+<button class="launch-card" data-page="champions"><span class="launch-icon">🏆</span><span class="launch-copy"><b>أبطال بطل الإنجليزي</b><small>شاهد بطل اليوم وبطل الأسبوع وأبرز إنجازات الطلاب</small></span><span class="launch-arrow">←</span></button>
 
 
 </div><details class="home-details home-tools-details"><summary>🎭 أنشطة إضافية</summary><div class="home-details-body"><div class="launch-grid"><button class="launch-card" data-page="practice"><span class="launch-icon">🎭</span><span class="launch-copy"><b>محاكي المواقف اليومية</b><small>تدرّب على الردود الإنجليزية في الحياة اليومية</small></span><span class="launch-arrow">←</span></button><button class="launch-card" data-page="wordDetective"><span class="launch-icon">🕵️</span><span class="launch-copy"><b>مغامرة المحقق الإنجليزي</b><small>حل ألغاز لغوية، اكتشف الأخطاء، وتعلّم من التلميحات بلا عملات أو مشتريات</small></span><span class="launch-arrow">←</span></button></div></div></details></div>
@@ -386,6 +388,46 @@ input,select,textarea,button{max-width:100%;min-width:0}
 <h3 style="margin-top:20px">📅 نشاط آخر ٧ أيام</h3><div id="weeklyActivity" class="weekly-activity" aria-label="نشاطك خلال آخر سبعة أيام"></div>
 <h3 style="margin-top:20px">📝 سجل الاختبارات</h3><div id="quizHistoryList"><p class="empty">ستظهر نتائج اختباراتك هنا بعد إكمال اختبار.</p></div>
 </div><h3>🏅 الأوسمة</h3><div id="badges" class="badge-grid"></div><div class="divider"></div><h3>👤 اسمك في الموقع</h3><div class="panel" id="displayNamePanel" style="padding:16px;margin:12px 0;background:var(--surface2)"><div id="displayNameSavedView" class="hidden"><p class="muted small">الاسم الظاهر لك في الموقع</p><div class="row between"><strong id="profileDisplayName" dir="auto" style="font-size:20px"></strong><button class="btn ghost" id="editDisplayName" type="button">تغيير الاسم</button></div></div><div id="displayNameEditor"><label for="displayNameInput">وش تحب نناديك؟</label><p class="muted small">اكتب الاسم اللي تفضّل يظهر لك في الموقع.</p><div class="row" style="margin-top:8px"><input id="displayNameInput" class="field" maxlength="32" autocomplete="nickname" placeholder="مثال: وائل" style="flex:1;min-width:160px"><button class="btn primary" id="saveDisplayName" type="button">حفظ الاسم</button></div><p id="displayNameStatus" class="muted small" role="status" aria-live="polite"></p></div></div><div class="divider"></div><h3>☁️ الحساب والمزامنة</h3><div class="panel" style="padding:16px;margin:12px 0;background:var(--surface2)"><p id="cloudStatus" class="muted small" aria-live="polite">المزامنة السحابية غير مهيأة بعد. يمكنك الاستمرار بالحفظ المحلي.</p><p id="cloudUser" class="small" style="direction:ltr;text-align:left"></p><p class="muted small">تسجيل الدخول وإنشاء الحساب وإدارة كلمة المرور تتم من بوابة الحساب الآمنة عند فتح الموقع.</p><div class="row" style="margin-top:10px"><button class="btn ghost" id="cloudSyncNow" type="button" disabled>مزامنة الآن</button><button class="btn outline" id="cloudSignOut" type="button" disabled>تسجيل الخروج</button></div><div class="row" style="margin-top:10px"><button class="btn ghost hidden" id="cloudRestoreBackup" type="button" disabled>استعادة نسخة هذا الحساب</button></div><div class="row" style="margin-top:10px"><button class="btn outline hidden" id="cloudClearLocalData" type="button" disabled>حذف بيانات هذا الحساب من هذا الجهاز</button></div><p class="muted small">هذا الإجراء يسجّل خروجك ويحذف النسخ المحلية للحساب الحالي فقط. لا يحذف تقدمك السحابي أو بيانات الحسابات الأخرى أو النسخ المجهولة التي لا يمكن نسبتها بأمان.</p><p id="cloudBackupStatus" class="muted small" role="status" aria-live="polite"></p><p class="muted small">لأمان حسابك، استخدم كلمة مرور مستقلة عن كلمة مرور بريدك أو Apple. عند إنشاء الحساب، قد تحتاج إلى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.</p></div><div class="divider"></div><h3>⚙️ الإعدادات والبيانات</h3><div class="listrow"><label for="lightMode">الوضع الفاتح</label><input id="lightMode" type="checkbox" style="width:22px;height:22px;accent-color:#7868e8"></div><div class="listrow"><label for="speechRate">سرعة النطق</label><select id="speechRate" class="field" style="width:auto;min-width:130px"><option value="0.7">بطيء</option><option value="0.9">متوسط</option><option value="1">طبيعي</option></select></div><button class="btn ghost" id="testSpeechRate" type="button" style="margin-top:8px">🔊 تجربة سرعة النطق</button><p class="muted small" id="settingsStatus" role="status" aria-live="polite">تُحفظ إعداداتك تلقائيًا على هذا الجهاز.</p><div class="row" style="margin-top:18px"><button class="btn ghost" id="exportData">⬇️ تصدير التقدم</button><button class="btn ghost" id="importData">⬆️ استيراد التقدم</button><input type="file" id="importFile" accept="application/json,.json" hidden><button class="btn outline" id="resetData">إعادة ضبط التقدم</button></div><p class="muted small">إعادة ضبط التقدم تعيد بيانات التعلم الحالية إلى البداية، وقد تُزامن الحالة الجديدة مع حسابك. لا تحذف هذه العملية النسخ الاحتياطية المحلية الخاصة بالحساب أو الملفات التي صدّرتها سابقًا؛ احذفها بشكل منفصل إذا لم تعد تحتاج إليها. لا تتضمن النسخة المصدّرة سجل المحادثة.</p></div></section>
+<section class="view" id="champions" aria-labelledby="championsTitle">
+  <div class="champions-shell">
+    <header class="champions-heading">
+      <div>
+        <span class="eyebrow">ENGLISH HERO • STUDENT CHAMPIONS</span>
+        <h2 id="championsTitle">🏆 أبطال بطل الإنجليزي</h2>
+        <p class="muted">مساحة تنافس عادلة تحتفي بالإتقان والاستمرارية. المنافسة تشمل جميع الطلاب، وتظهر الأسماء التي اختاروها بأنفسهم.</p>
+      </div>
+      <button class="champions-refresh" id="championsRefresh" type="button">↻ تحديث النتائج</button>
+    </header>
+    <div class="champions-hero-grid">
+      <article class="champion-feature">
+        <div class="champion-kicker"><span>👑 بطولة اليوم</span><span>تتجدد يوميًا</span></div>
+        <div class="champion-crown" aria-hidden="true">🏆</div>
+        <h3>بطل اليوم</h3>
+        <div id="championsToday" aria-live="polite"><div class="champions-loading">جارٍ تجهيز البطولة…</div></div>
+      </article>
+      <article class="champion-feature week">
+        <div class="champion-kicker"><span>🌟 بطولة الأسبوع</span><span>الأحد – السبت</span></div>
+        <div class="champion-crown" aria-hidden="true">🥇</div>
+        <h3>بطل الأسبوع</h3>
+        <div id="championsWeek" aria-live="polite"><div class="champions-loading">جارٍ تجهيز البطولة…</div></div>
+      </article>
+    </div>
+    <div class="champions-secondary">
+      <article class="champion-secondary-card">
+        <h3>🎯 الأكثر إتقانًا</h3>
+        <p>أكبر عدد من الدروس المتقنة في سجل الطالب.</p>
+        <div id="championsMastery" aria-live="polite"><div class="champions-loading">جارٍ تحميل المتصدرين…</div></div>
+      </article>
+      <article class="champion-secondary-card">
+        <h3>🔥 نجم الاستمرارية</h3>
+        <p>أكثر أيام النشاط التعليمي خلال آخر سبعة أيام.</p>
+        <div id="championsConsistency" aria-live="polite"><div class="champions-loading">جارٍ تحميل المتصدرين…</div></div>
+      </article>
+    </div>
+    <div class="champion-note">تُحتسب بطولة اليوم والأسبوع من الدروس الجديدة التي تم إتقانها بعد تفعيل سجل البطولة. يبدأ الأسبوع يوم الأحد وفق توقيت السعودية. لا تظهر هنا أسماء المستخدمين أو البريد الإلكتروني أو تفاصيل تقدم الطلاب.</div>
+    <div class="champion-meta"><span id="championsStatus" role="status" aria-live="polite">بانتظار تسجيل الدخول…</span><span>جميع الطلاب · توقيت السعودية</span></div>
+  </div>
+</section>
 </main><footer class="center muted small" style="margin-top:30px">English Hero Academy 3.3 • سجّل الدخول لحفظ رحلتك التعليمية ومتابعتها</footer></div>
 <nav class="nav" aria-label="التنقل الرئيسي"><button data-nav="home" class="active" aria-label="الرئيسية"><span aria-hidden="true">⌂</span><small>الرئيسية</small></button><button data-nav="learningHub" aria-label="التعلّم"><span aria-hidden="true">📚</span><small>التعلّم</small></button><button type="button" id="readingBottomNav" aria-label="مسار القراءة" title="مسار القراءة"><span aria-hidden="true">📖</span><small>القراءة</small></button><button data-nav="training" aria-label="التحديات والاختبارات"><span aria-hidden="true">🎯</span><small>اختبر نفسك</small></button><button data-nav="practice" aria-label="المواقف اليومية"><span aria-hidden="true">🎭</span><small>مواقف يومية</small></button><button data-nav="review" aria-label="المراجعة"><span aria-hidden="true">🧠</span><small>المراجعة</small></button><button data-nav="profile" aria-label="حسابي"><span aria-hidden="true">👤</span><small>حسابي</small></button></nav><div id="toast" class="toast hidden" role="status"></div>
 <script>
@@ -2011,7 +2053,7 @@ theme();renderStats();renderCourses();renderHome();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="config.js" defer></script>
-<script src="cloud-sync.js?v=7" defer></script>
+<script src="cloud-sync.js?v=8" defer></script>
 <script src="auth-gateway.js?v=7" defer></script>
 <script src="pro-dashboard.js?v=4" defer></script>
 <script src="learning-expansion.js?v=62" defer></script>
@@ -2104,7 +2146,7 @@ theme();renderStats();renderCourses();renderHome();
   window.addEventListener('storage',event=>{if(event.key==='english-hero-academy-3')render()});
 })();
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=138').catch(()=>{}));}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=139').catch(()=>{}));}</script>
   <script src="./site-quick-nav.js?v=1"></script>
 </body>
 </html>
