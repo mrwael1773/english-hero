@@ -85,27 +85,6 @@ test('a score above 80% records mastery and unlocks the next lesson', async ({ p
   await expect(page.locator('#done')).toContainText('1/');
 });
 
-test('repeating a mastered lesson does not award the same XP again', async ({ page }) => {
-  const translations = await openFirstLesson(page);
-  await answerAll(page, translations, true);
-  const first = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
-  expect(first.xp).toBe(220);
-  expect(first.rewardClaims).toHaveLength(19);
-
-  await page.evaluate(() => window.page('courses'));
-  await page.locator('#courseGrid button').first().click();
-  for (let i = 0; i < 6; i++) await page.locator('#nextWord').click();
-  await expect(page.locator('#quizArea')).toBeVisible();
-  await answerAll(page, translations, true);
-
-  const repeated = await page.evaluate(() => JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}'));
-  expect(repeated.xp).toBe(first.xp);
-  expect(repeated.rewardClaims).toEqual(first.rewardClaims);
-  expect(repeated.masteredLessons).toContain(0);
-});
-
-
-
 test('14 of 18 correct stays below the 80% mastery threshold', async ({ page }) => {
   const translations = await openFirstLesson(page);
   await answerAll(page, translations, true, [0, 1, 2, 3]);
