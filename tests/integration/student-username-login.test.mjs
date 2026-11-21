@@ -69,7 +69,7 @@ async function seedStudentRows(users) {
     ON CONFLICT (user_id) DO UPDATE
       SET progress = EXCLUDED.progress, updated_at = now();
   `;
-  execFileSync('psql', [DB_URL, '-v', 'ON_ERROR_STOP=1', ...values, '-c', sql], { stdio: 'inherit' });
+  execFileSync('psql', [DB_URL, '-v', 'ON_ERROR_STOP=1', ...values, '-f', '-'], { input: sql, stdio: ['pipe', 'inherit', 'inherit'] });
 }
 
 async function callLogin(username, suppliedPassword = password, options = {}) {
