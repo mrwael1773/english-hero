@@ -221,10 +221,13 @@ declare
   v_student jsonb;
 begin
   v_result := public.mentor_get_student_overview(
-    encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex')
+    encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'sha256'), 'hex')
   );
-  v_student := v_result->'students'->0;
-  if v_student->>'display_name' <> 'Synthetic Learner' then
+  select item into v_student
+  from jsonb_array_elements(v_result->'students') as item
+  where item->>'display_name' = 'Synthetic Learner'
+  limit 1;
+  if v_student is null or v_student->>'display_name' <> 'Synthetic Learner' then
     raise exception 'Overview did not return the synthetic student';
   end if;
   if v_student->'progress'->'xp' <> 'null'::jsonb then
