@@ -147,6 +147,7 @@ begin
     from public.student_mastery_events as e
     join public.student_profiles as p on p.user_id = e.user_id
     where (e.mastered_at at time zone 'Asia/Riyadh')::date = v_today
+      and p.display_name is not null and btrim(p.display_name) <> ''
     group by p.user_id, p.display_name
     order by score desc, first_at asc, p.display_name asc
     limit 3
@@ -161,6 +162,7 @@ begin
     from public.student_mastery_events as e
     join public.student_profiles as p on p.user_id = e.user_id
     where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start and v_today
+      and p.display_name is not null and btrim(p.display_name) <> ''
     group by p.user_id, p.display_name
     order by score desc, first_at asc, p.display_name asc
     limit 3
@@ -178,6 +180,7 @@ begin
     left join public.learning_progress as lp on lp.user_id = p.user_id
     where case when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
       then jsonb_array_length(lp.progress->'masteredLessons') else 0 end > 0
+      and p.display_name is not null and btrim(p.display_name) <> ''
     order by score desc, p.display_name asc
     limit 3
   ) as ranked;
@@ -191,6 +194,7 @@ begin
     from public.student_learning_days as d
     join public.student_profiles as p on p.user_id = d.user_id
     where d.activity_day between v_today - 6 and v_today
+      and p.display_name is not null and btrim(p.display_name) <> ''
     group by p.user_id, p.display_name
     order by score desc, p.display_name asc
     limit 3
