@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'english-hero-shell-v143';
+const CACHE_NAME = 'english-hero-shell-v144';
 const APP_SHELL = ['./', './index.html', './english-basics.html', './english-tenses-guide.html', './privacy.html', './contact.html', './teacher-pilot.html', './grammar-lesson.html', './grammar-library.html', './grammar-category.html', './grammar-lessons.js?v=4', './manifest.webmanifest', './icon.svg', './config.js', './cloud-sync.js?v=8', './pro-dashboard.js?v=4', './learning-expansion.js?v=63', './english-hero-plus.js?v=70', './vocabulary-20000.json', './site-quick-nav.css?v=1', './site-quick-nav.js?v=1', './auth-gateway.css?v=1', './auth-gateway.js?v=7', './auth-guard.js?v=1', './champions.css?v=2', './champions.js?v=2', './reading.html', './reading-letters.html', './reading-letter-sounds.html', './reading-digraphs.html', './reading-short-vowels.html', './reading-blends.html', './reading-cvc.html', './reading-magic-e.html', './reading-vowel-teams.html', './reading-r-controlled.html', './reading-diphthongs.html', './reading-syllables.html', './reading-practice.html', './reading-course.css?v=3', './reading-course.js?v=10'];
 
 self.addEventListener('install', event => {
