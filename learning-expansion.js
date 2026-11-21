@@ -252,10 +252,11 @@
     if (typeof window[name] === 'function') window[name] = wrapper(window[name]);
   };
   const installHooks = () => {
-    wrap('gain', original => function (amount) {
+    wrap('gain', original => function (amount, rewardKey) {
       ensureState();
       const before = levelInfo(state.xp).level;
-      const result = original(amount);
+      // Preserve the idempotency key; dropping it lets a mastered lesson pay XP again.
+      const result = original(amount, rewardKey);
       const after = levelInfo(state.xp).level;
       if (after > before && typeof toast === 'function') {
         const prize = [...rewards].reverse().find(item => item.level <= after && item.level > before);
