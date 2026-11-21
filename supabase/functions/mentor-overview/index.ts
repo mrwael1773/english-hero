@@ -24,6 +24,14 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
   if (!Array.isArray(source.students) || typeof source.generated_at !== "string" ||
       !Number.isFinite(Date.parse(source.generated_at))) return null;
 
+  const allowedActions = new Set([
+    "lesson_started",
+    "lesson_progress",
+    "lesson_training_completed",
+    "lesson_assessment_attempted",
+    "lesson_mastered",
+    "quiz_completed",
+  ]);
   const students: Record<string, unknown>[] = [];
   for (const value of source.students) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -36,8 +44,16 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
 
     const stats = progress as Record<string, unknown>;
     const validCount = (number: unknown) => Number.isSafeInteger(number) && (number as number) >= 0;
+    const optionalIndex = (number: unknown) => number === null || (validCount(number) && (number as number) <= 99);
     if (!validCount(stats.completed_count) || !validCount(stats.mastered_count) ||
-        !(stats.xp === null || validCount(stats.xp))) return null;
+        !validCount(stats.started_count) || !validCount(stats.trained_count) ||
+        !(stats.xp === null || validCount(stats.xp)) ||
+        !optionalIndex(stats.current_lesson_index) ||
+        !optionalIndex(stats.current_word_index) ||
+        !optionalIndex(stats.last_action_lesson_index) ||
+        !optionalIndex(stats.last_action_word_index) ||
+        !(stats.last_action === null || (typeof stats.last_action === "string" && allowedActions.has(stats.last_action))) ||
+        !(stats.last_action_at === null || (typeof stats.last_action_at === "string" && Number.isFinite(Date.parse(stats.last_action_at))))) return null;
 
     // Explicit allowlist: unexpected database fields never leave this function.
     students.push({
@@ -48,6 +64,14 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
         xp: stats.xp,
         completed_count: stats.completed_count,
         mastered_count: stats.mastered_count,
+        started_count: stats.started_count,
+        trained_count: stats.trained_count,
+        current_lesson_index: stats.current_lesson_index,
+        current_word_index: stats.current_word_index,
+        last_action: stats.last_action,
+        last_action_at: stats.last_action_at,
+        last_action_lesson_index: stats.last_action_lesson_index,
+        last_action_word_index: stats.last_action_word_index,
       },
     });
   }
