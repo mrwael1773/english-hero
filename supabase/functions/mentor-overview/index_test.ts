@@ -98,7 +98,12 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
     assertEquals(output.students[0].progress.current_lesson_index, 3);
     assertEquals(output.students[0].progress.last_action, "lesson_progress");
     assertEquals(output.students[0].progress.saved_words_count, 5);
+    assertEquals(output.students[0].progress.review_due_count, 1);
+    assertEquals(output.students[0].progress.quiz_attempts, 3);
+    assertEquals(output.students[0].progress.active_days_count, 5);
+    assertEquals(output.students[0].progress.mastered_indices.length, 2);
     assertEquals(output.students[0].progress.reading_completed.length, 2);
+    assertEquals(output.students[0].progress.reading_completed[1], "digraphs");
     assertEquals("raw_answers" in output.students[0].progress, false);
     assertEquals("email" in output.students[0].progress, false);
   } finally {
