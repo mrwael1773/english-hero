@@ -33,8 +33,8 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
     "quiz_completed",
   ]);
   const readingStageIds = ["letter-sounds","digraphs","short-vowels","blends","cvc","magic-e","vowel-teams","r-controlled","diphthongs","syllables","practice"];
-  const validReading = value => Array.isArray(value) && value.length <= readingStageIds.length &&
-    value.every((id, index) => id === readingStageIds[index]);
+  const validReading = (value: unknown): value is string[] => Array.isArray(value) && value.length <= readingStageIds.length &&
+    value.every((id: unknown, index: number) => id === readingStageIds[index]);
   const students: Record<string, unknown>[] = [];
   for (const value of source.students) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -47,8 +47,8 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
     const stats = progress as Record<string, unknown>;
     const validCount = (number: unknown) => Number.isSafeInteger(number) && (number as number) >= 0;
     const optionalIndex = (number: unknown) => number === null || (validCount(number) && (number as number) <= 99);
-    const validIndexArray = value => Array.isArray(value) && value.length <= 100 &&
-      value.every(index => validCount(index) && index <= 99);
+    const validIndexArray = (value: unknown): value is number[] => Array.isArray(value) && value.length <= 100 &&
+      value.every((index: unknown) => validCount(index) && index <= 99);
     if (!validIndexArray(stats.mastered_indices) || !validIndexArray(stats.trained_indices) ||
         !validIndexArray(stats.started_indices) ||
         !validReading(stats.reading_completed) ||
