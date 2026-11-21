@@ -124,17 +124,13 @@ try {
 
   for (const learner of learners) users.push(await createLocalAuthUser(learner));
 
-  const profileValues = users.flatMap((user, index) => [
-    '-v', `user${index + 1}_id=${user.id}`,
-    '-v', `user${index + 1}_username=${learners[index].username}`,
-    '-v', `user${index + 1}_display_name=${learners[index].displayName}`,
-  ]);
+  const sqlLiteral = (value) => `'${String(value).replaceAll("'", "''")}'`;
   psql(`
     INSERT INTO public.student_profiles(user_id, username, display_name)
     VALUES
-      (:'user1_id'::uuid, :'user1_username', :'user1_display_name'),
-      (:'user2_id'::uuid, :'user2_username', :'user2_display_name');
-  `, profileValues);
+      ('${users[0].id}'::uuid, ${sqlLiteral(learners[0].username)}, ${sqlLiteral(learners[0].displayName)}),
+      ('${users[1].id}'::uuid, ${sqlLiteral(learners[1].username)}, ${sqlLiteral(learners[1].displayName)});
+  `);
 
   const [tokenA, tokenB] = await Promise.all(learners.map(signIn));
 
