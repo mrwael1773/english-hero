@@ -61,7 +61,13 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
         display_name: "Learner",
         last_seen_at: null,
         email: "private@example.test",
-        progress: { xp: 12, completed_count: 3, mastered_count: 2, raw_answers: ["private"] },
+        progress: {
+          xp: 12, completed_count: 3, mastered_count: 2, started_count: 4, trained_count: 3,
+          current_lesson_index: 3, current_word_index: 2,
+          last_action: "lesson_progress", last_action_at: "2026-11-21T00:00:00Z",
+          last_action_lesson_index: 3, last_action_word_index: 2,
+          raw_answers: ["private"]
+        },
       }],
     });
   }) as typeof fetch);
@@ -82,6 +88,9 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
     assertEquals("email" in output.students[0], false);
     assertEquals("internal_debug" in output, false);
     assertEquals("raw_answers" in output.students[0].progress, false);
+    assertEquals(output.students[0].progress.current_lesson_index, 3);
+    assertEquals(output.students[0].progress.last_action, "lesson_progress");
+    assertEquals("email" in output.students[0].progress, false);
   } finally {
     restore();
   }
@@ -139,6 +148,27 @@ Deno.test("returns unavailable when the RPC response is malformed", async () => 
     assertEquals(response.status, 503);
     const body = await response.text();
     assertEquals(body.includes("Student overview unavailable"), true);
+  } finally {
+    restore();
+  }
+});
+
+Deno.test("rejects an unknown learning activity action in the overview payload", async () => {
+  const restore = withSupabaseMock((async () => Response.json({
+    generated_at: "2026-11-21T00:00:00Z",
+    students: [{
+      username: "learner", display_name: "Learner", last_seen_at: null,
+      progress: {
+        xp: 4, completed_count: 1, mastered_count: 1, started_count: 1, trained_count: 0,
+        current_lesson_index: null, current_word_index: null,
+        last_action: "raw_answers_requested", last_action_at: "2026-11-21T00:00:00Z",
+        last_action_lesson_index: null, last_action_word_index: null
+      }
+    }]
+  })) as typeof fetch);
+  try {
+    const response = await handleMentorOverview(request());
+    assertEquals(response.status, 503);
   } finally {
     restore();
   }
