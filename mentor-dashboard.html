@@ -31,7 +31,9 @@ h1{margin:2px 0;font-size:clamp(25px,4vw,34px);line-height:1.35;letter-spacing:-
 table{width:100%;border-collapse:collapse;min-width:690px}th,td{text-align:right;padding:13px 12px;border-bottom:1px solid rgba(54,77,106,.72);font-size:13px}
 th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:rgba(145,186,255,.045)}
 .empty-row td{text-align:center!important;padding:28px 16px!important;color:var(--muted)}
-.footer-note{margin:14px 2px 0;color:var(--muted);font-size:12px}.hidden{display:none!important}
+.footer-note{margin:14px 2px 0;color:var(--muted);font-size:12px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.hidden{display:none!important}
 @media(max-width:680px){
  main{padding:20px 13px 42px}header{margin:3px 0 20px}.panel{padding:17px;border-radius:17px}
  .panel-heading{align-items:stretch;flex-direction:column}.panel-heading .btn{width:100%}
@@ -66,7 +68,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <div class="stat"><span class="stat-label">اتصلوا سابقًا</span><b id="seen">—</b></div>
 <div class="stat"><span class="stat-label">لم يسجلوا اتصالًا</span><b id="notSeen">—</b></div>
 </div>
-<div class="table-wrap"><table><thead><tr><th>الطالب</th><th>اسم المستخدم</th><th>آخر اتصال</th><th>الدروس المكتملة</th><th>دروس الإتقان</th><th>النقاط</th></tr></thead><tbody id="students"></tbody></table></div>
+<div class="table-wrap"><table><caption class="sr-only">ملخص تقدم الطلاب في بطل الإنجليزي</caption><thead><tr><th scope="col">الطالب</th><th scope="col">اسم المستخدم</th><th scope="col">آخر اتصال</th><th scope="col">الدروس المكتملة</th><th scope="col">دروس الإتقان</th><th scope="col">النقاط</th></tr></thead><tbody id="students"></tbody></table></div>
 <p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو تفاصيل الجلسات.</p>
 </section>
 <p class="status small" id="status" role="status" aria-live="polite">لا يتم عرض بيانات الطلاب قبل التحقق من صلاحية الرابط.</p>
@@ -124,9 +126,14 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    $('dashboard').classList.remove('hidden');
    $('accessPanel').classList.add('hidden');
  }
+ function showAccessPanel(){
+   $('dashboard').classList.add('hidden');
+   $('accessPanel').classList.remove('hidden');
+ }
  async function loadOverview(){
    if(!token||loading)return;
    if(!config?.supabaseUrl||!config?.supabaseAnonKey){
+     showAccessPanel();
      say('إعدادات الاتصال غير مكتملة. لم يتم عرض بيانات.',true);
      return;
    }
@@ -152,19 +159,19 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
        if(response.status===401){
          say('الرابط غير صالح أو انتهت صلاحيته أو تم إبطاله. اطلب رابطًا جديدًا من مسؤول الموقع.',true);
        }else say('تعذر تحميل البيانات حاليًا. لم يتم عرض أي بيانات.',true);
-       $('dashboard').classList.add('hidden');
+       showAccessPanel();
        return;
      }
      if(!Array.isArray(payload.students)||typeof payload.generated_at!=='string'){
        say('استجابة الخدمة غير مكتملة؛ لم يتم عرض بيانات الطلاب.',true);
-       $('dashboard').classList.add('hidden');
+       showAccessPanel();
        return;
      }
      render(payload.students,payload.generated_at);
      say('تم التحقق من الرابط وتحميل الملخص.');
    }catch{
      say('تعذر الاتصال بالخدمة. حاول التحديث عند توفر الاتصال.',true);
-     $('dashboard').classList.add('hidden');
+     showAccessPanel();
    }finally{
      loading=false;
      $('refresh').disabled=false;
