@@ -179,6 +179,52 @@ insert into public.student_champion_attempts (
 );
 select set_config('request.jwt.claim.role', 'service_role', false);
 
+-- The atomic reservation RPC allows five starts in a rolling hour and rejects the sixth.
+do $atomic_challenge_limit$
+declare
+  v_attempt_id uuid;
+  v_rejected boolean := false;
+  v_index integer;
+begin
+  for v_index in 1..3 loop
+    v_attempt_id := public.start_student_champion_attempt(
+      '11111111-1111-4111-8111-111111111111',
+      8,
+      '[0,1,2,3,0,1,2,3,0,1]'::jsonb,
+      now() + interval '15 minutes'
+    );
+    if v_attempt_id is null then
+      raise exception 'Atomic challenge reservation returned no attempt ID';
+    end if;
+  end loop;
+
+  if (select count(*) from public.student_champion_attempts
+      where user_id = '11111111-1111-4111-8111-111111111111'
+        and created_at >= now() - interval '1 hour') <> 5 then
+    raise exception 'The fifth challenge reservation was not persisted';
+  end if;
+
+  begin
+    perform public.start_student_champion_attempt(
+      '11111111-1111-4111-8111-111111111111',
+      8,
+      '[0,1,2,3,0,1,2,3,0,1]'::jsonb,
+      now() + interval '15 minutes'
+    );
+  exception when sqlstate 'P0001' then
+    if sqlerrm = 'Champion challenge rate limit exceeded' then
+      v_rejected := true;
+    else
+      raise;
+    end if;
+  end;
+
+  if not v_rejected then
+    raise exception 'The sixth challenge reservation bypassed the hourly limit';
+  end if;
+end;
+$atomic_challenge_limit$;
+
 do $question_bank_import$
 declare
   v_questions jsonb;
