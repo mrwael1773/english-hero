@@ -67,7 +67,7 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
           saved_words_count: 5, foundation_saved_count: 2, review_words_count: 4,
           review_due_count: 1, missed_words_count: 1, quiz_attempts: 3,
           best_quiz_score: 90, answers_count: 10, correct_answers_count: 8,
-          active_days_count: 5, learning_streak: 2, vocab_level: "all",
+          active_days_count: 5, learning_streak: 2, vocab_level: "all", vocab_position: 5,
           reading_completed: ["letter-sounds", "digraphs"],
           current_lesson_index: 3, current_word_index: 2,
           last_action: "lesson_progress", last_action_at: "2026-11-21T00:00:00Z",
@@ -101,6 +101,7 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
     assertEquals(output.students[0].progress.review_due_count, 1);
     assertEquals(output.students[0].progress.quiz_attempts, 3);
     assertEquals(output.students[0].progress.active_days_count, 5);
+    assertEquals(output.students[0].progress.vocab_position, 5);
     assertEquals(output.students[0].progress.mastered_indices.length, 2);
     assertEquals(output.students[0].progress.reading_completed.length, 2);
     assertEquals(output.students[0].progress.reading_completed[1], "digraphs");
