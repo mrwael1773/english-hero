@@ -37,8 +37,7 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
     const student = value as Record<string, unknown>;
     const progress = student.progress;
-    if ((student.username !== null && typeof student.username !== "string") ||
-        (student.display_name !== null && typeof student.display_name !== "string") ||
+    if ((student.display_name !== null && typeof student.display_name !== "string") ||
         (student.last_seen_at !== null && typeof student.last_seen_at !== "string") ||
         !progress || typeof progress !== "object" || Array.isArray(progress)) return null;
 
@@ -57,7 +56,6 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
 
     // Explicit allowlist: unexpected database fields never leave this function.
     students.push({
-      username: student.username,
       display_name: student.display_name,
       last_seen_at: student.last_seen_at,
       progress: {
