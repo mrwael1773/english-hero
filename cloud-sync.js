@@ -255,9 +255,10 @@
         ready=true;setSignedInUI();
         renderStats();renderCourses();renderHome();renderProfile();renderReview();
         revision++;
+        const uploadedRevision=revision;
         const saved=await uploadProgress();
-        if(saved){
-          await flushPendingMasteryEvents(syncUserId);
+        if(saved && revision===uploadedRevision){
+          await flushPendingMasteryEvents(syncUserId,uploadedRevision);
           status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
         }
       } catch(e) {
@@ -297,8 +298,8 @@
     if(!pending.includes(lessonIndex))pending.push(lessonIndex);
     return writePendingMasteryEvents(userId,pending);
   }
-  async function flushPendingMasteryEvents(expectedUserId){
-    if(!client||!user||user.id!==expectedUserId||!ready||progressOwnerUserId!==expectedUserId)return false;
+  async function flushPendingMasteryEvents(expectedUserId,expectedRevision=revision){
+    if(!client||!user||user.id!==expectedUserId||!ready||progressOwnerUserId!==expectedUserId||revision!==expectedRevision)return false;
     const pending=readPendingMasteryEvents(expectedUserId);
     if(!pending.length)return true;
     for(const lessonIndex of pending){
@@ -306,6 +307,8 @@
       // The caller reaches this point only after the same account's current progress
       // was uploaded successfully. Drop stale events that the verified snapshot no longer masters.
       if(!Array.isArray(state.masteredLessons)||!state.masteredLessons.includes(lessonIndex)){
+        // Do not discard against a snapshot that became stale during the network request.
+        if(revision!==expectedRevision)return false;
         const remaining=readPendingMasteryEvents(expectedUserId).filter(index=>index!==lessonIndex);
         if(!writePendingMasteryEvents(expectedUserId,remaining))return false;
         continue;
@@ -517,9 +520,10 @@
         if(!queuePendingMasteryEvent(eventUserId,lessonIndex))return false;
         if(!ready)return false;
         clearTimeout(timer);
+        const uploadedRevision=revision;
         const synced = await uploadProgress();
-        if(!synced || !user || user.id!==eventUserId || progressOwnerUserId!==eventUserId) return false;
-        return flushPendingMasteryEvents(eventUserId);
+        if(!synced || revision!==uploadedRevision || !user || user.id!==eventUserId || progressOwnerUserId!==eventUserId) return false;
+        return flushPendingMasteryEvents(eventUserId,uploadedRevision);
       }
       if(!ready)return false;
       const {error}=await client.rpc('record_student_learning_activity',{
