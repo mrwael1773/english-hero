@@ -131,6 +131,7 @@ declare
   v_index integer;
   v_passed boolean;
   v_recorded boolean := false;
+  v_inserted integer := 0;
   v_now timestamptz := now();
 begin
   if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
@@ -190,7 +191,8 @@ begin
     insert into public.student_mastery_events(user_id, lesson_index, mastered_at)
     values (p_user_id, v_attempt.lesson_index, v_now)
     on conflict (user_id, lesson_index) do nothing;
-    get diagnostics v_recorded = row_count;
+    get diagnostics v_inserted = row_count;
+    v_recorded := v_inserted > 0;
   end if;
 
   insert into public.student_activity (
