@@ -156,6 +156,8 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
       && Array.isArray(saved.masteredLessons)
       && saved.masteredLessons.includes(0);
   });
+  // Wait until the initial cloud read, progress upload, and pending-event flush finish.
+  await expect(page.locator('#cloudStatus')).toContainText('تمت مزامنة التقدم');
 
   const restored = await page.evaluate(() => {
     const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
