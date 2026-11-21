@@ -18,7 +18,7 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function sanitizeOverview(payload: unknown): { students: Record<string, unknown>[]; generated_at: string } | null {
+export function sanitizeOverview(payload: unknown): { students: Record<string, unknown>[]; generated_at: string } | null {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
   const source = payload as Record<string, unknown>;
   if (!Array.isArray(source.students) || typeof source.generated_at !== "string" ||
