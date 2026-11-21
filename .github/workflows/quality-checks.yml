@@ -159,7 +159,7 @@ jobs:
             supabase/migrations/20261121120000_mentor_comprehensive_progress_summary.sql \
             supabase/migrations/20261121143000_student_champions_leaderboard.sql \
             supabase/migrations/20261121150000_student_champions_improvement_category.sql \
-            supabase/migrations/20261121180000_harden_student_champion_lesson_indices.sql
+            supabase/migrations/20261121180000_harden_student_champion_lesson_indices.sql \
             supabase/migrations/20261121193000_champions_mastery_uses_event_ledger.sql
           do
             echo "Applying $migration"
