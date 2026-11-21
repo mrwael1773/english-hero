@@ -211,7 +211,7 @@ input,select,textarea,button{max-width:100%;min-width:0}
 
   <link rel="stylesheet" href="./site-quick-nav.css?v=1">
   <link rel="stylesheet" href="./auth-gateway.css?v=1">
-  <link rel="stylesheet" href="./champions.css?v=1">
+  <link rel="stylesheet" href="./champions.css?v=2">
 </head><body><script>document.body.classList.add('auth-gateway-pending');</script><div class="app"><section id="authGateway" class="auth-gateway" aria-label="بوابة الدخول إلى بطل الإنجليزي">
 <div class="auth-gateway-shell">
 <div class="auth-gateway-intro">
@@ -422,6 +422,11 @@ input,select,textarea,button{max-width:100%;min-width:0}
         <h3>🔥 نجم الاستمرارية</h3>
         <p>أكثر أيام النشاط التعليمي خلال آخر سبعة أيام.</p>
         <div id="championsConsistency" aria-live="polite"><div class="champions-loading">جارٍ تحميل المتصدرين…</div></div>
+      </article>
+      <article class="champion-secondary-card">
+        <h3>📈 الأكثر تطورًا</h3>
+        <p>أكبر زيادة في الدروس الجديدة المتقنة مقارنة بالفترة نفسها من الأسبوع الماضي.</p>
+        <div id="championsImprovement" aria-live="polite"><div class="champions-loading">جارٍ تحميل المتصدرين…</div></div>
       </article>
     </div>
     <div class="champion-note">تُحتسب بطولة اليوم والأسبوع من الدروس الجديدة التي تم إتقانها بعد تفعيل سجل البطولة. يبدأ الأسبوع يوم الأحد وفق توقيت السعودية. لا تظهر هنا أسماء المستخدمين أو البريد الإلكتروني أو تفاصيل تقدم الطلاب.</div>
@@ -2054,7 +2059,7 @@ theme();renderStats();renderCourses();renderHome();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="config.js" defer></script>
 <script src="cloud-sync.js?v=8" defer></script>
-<script src="champions.js?v=1" defer></script>
+<script src="champions.js?v=2" defer></script>
 <script src="auth-gateway.js?v=7" defer></script>
 <script src="pro-dashboard.js?v=4" defer></script>
 <script src="learning-expansion.js?v=63" defer></script>
