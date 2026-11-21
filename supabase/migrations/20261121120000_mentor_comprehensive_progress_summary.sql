@@ -1,7 +1,3 @@
--- Expose only bounded, aggregate learning metrics to the mentor overview.
--- Never return answer text, saved vocabulary strings, chat history, usernames, or raw progress JSON.
--- Student reading completion is synchronized per authenticated account.
--- Only the fixed stage IDs and completion state are stored; no answers or response text.
 create table if not exists public.reading_progress (
   user_id uuid primary key references auth.users(id) on delete cascade,
   completed_stage_ids text[] not null default '{}'::text[],
@@ -12,42 +8,28 @@ alter table public.reading_progress enable row level security;
 revoke all on table public.reading_progress from public, anon, authenticated;
 
 create or replace function public.get_my_reading_progress()
-returns text[]
-language plpgsql
-security definer
-set search_path = ''
-as $
+returns text[] language plpgsql security definer set search_path = ''
+as $$
 declare
   v_user_id uuid := auth.uid();
   v_completed text[] := '{}'::text[];
 begin
-  if v_user_id is null then
-    raise exception 'Authentication required' using errcode = '42501';
-  end if;
-  select rp.completed_stage_ids into v_completed
-  from public.reading_progress as rp where rp.user_id = v_user_id;
+  if v_user_id is null then raise exception 'Authentication required' using errcode = '42501'; end if;
+  select rp.completed_stage_ids into v_completed from public.reading_progress as rp where rp.user_id = v_user_id;
   return coalesce(v_completed, '{}'::text[]);
 end;
-$;
+$$;
 
 create or replace function public.save_my_reading_progress(p_completed text[])
-returns text[]
-language plpgsql
-security definer
-set search_path = ''
-as $
+returns text[] language plpgsql security definer set search_path = ''
+as $$
 declare
   v_user_id uuid := auth.uid();
-  v_allowed constant text[] := array[
-    'letter-sounds','digraphs','short-vowels','blends','cvc','magic-e',
-    'vowel-teams','r-controlled','diphthongs','syllables','practice'
-  ]::text[];
+  v_allowed constant text[] := array['letter-sounds','digraphs','short-vowels','blends','cvc','magic-e','vowel-teams','r-controlled','diphthongs','syllables','practice']::text[];
   v_result text[] := '{}'::text[];
   v_count integer;
 begin
-  if v_user_id is null then
-    raise exception 'Authentication required' using errcode = '42501';
-  end if;
+  if v_user_id is null then raise exception 'Authentication required' using errcode = '42501'; end if;
   if p_completed is null or cardinality(p_completed) > cardinality(v_allowed) then
     raise exception 'Invalid reading progress' using errcode = '22023';
   end if;
@@ -55,20 +37,17 @@ begin
   if v_count > 0 and p_completed is distinct from v_allowed[1:v_count] then
     raise exception 'Reading stages must be completed in order' using errcode = '22023';
   end if;
-
   insert into public.reading_progress(user_id, completed_stage_ids, updated_at)
   values (v_user_id, p_completed, now())
   on conflict (user_id) do update
     set completed_stage_ids = case
       when cardinality(public.reading_progress.completed_stage_ids) >= cardinality(excluded.completed_stage_ids)
-      then public.reading_progress.completed_stage_ids
-      else excluded.completed_stage_ids
-    end,
+      then public.reading_progress.completed_stage_ids else excluded.completed_stage_ids end,
     updated_at = now()
   returning completed_stage_ids into v_result;
   return v_result;
 end;
-$;
+$$;
 
 revoke all on function public.get_my_reading_progress() from public, anon;
 grant execute on function public.get_my_reading_progress() to authenticated;
@@ -140,12 +119,44 @@ begin
             when jsonb_typeof(lp.progress->'lessonTrained') = 'array'
             then jsonb_array_length(lp.progress->'lessonTrained') else 0 end,
           'mastered_indices', (
-            select coalesce(jsonb_agg(e.value::integer order by e.ordinality), '[]'::jsonb)
-            from jsonb_array_elements_text(
-              case when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-                then lp.progress->'masteredLessons' else '[]'::jsonb end
-            ) with ordinality as e(value, ordinality)
-            where e.value ~ '^(0|[1-9][0-9]?)
+            select coalesce(jsonb_agg(distinct e.value::integer order by e.value::integer), '[]'::jsonb)
+            from jsonb_array_elements_text(case when jsonb_typeof(lp.progress->'masteredLessons') = 'array' then lp.progress->'masteredLessons' else '[]'::jsonb end) as e(value)
+            where e.value ~ '^(0|[1-9][0-9]?)$' and e.value::integer between 0 and 99
+          ),
+          'trained_indices', (
+            select coalesce(jsonb_agg(distinct e.value::integer order by e.value::integer), '[]'::jsonb)
+            from jsonb_array_elements_text(case when jsonb_typeof(lp.progress->'lessonTrained') = 'array' then lp.progress->'lessonTrained' else '[]'::jsonb end) as e(value)
+            where e.value ~ '^(0|[1-9][0-9]?)$' and e.value::integer between 0 and 99
+          ),
+          'started_indices', (
+            select coalesce(jsonb_agg(distinct e.value::integer order by e.value::integer), '[]'::jsonb)
+            from jsonb_array_elements_text(case when jsonb_typeof(lp.progress->'lessonStarted') = 'array' then lp.progress->'lessonStarted' else '[]'::jsonb end) as e(value)
+            where e.value ~ '^(0|[1-9][0-9]?)$' and e.value::integer between 0 and 99
+          ),
+          'saved_words_count', case when jsonb_typeof(lp.progress->'saved') = 'array' then jsonb_array_length(lp.progress->'saved') else 0 end,
+          'foundation_saved_count', case when jsonb_typeof(lp.progress->'foundationSaved') = 'array' then jsonb_array_length(lp.progress->'foundationSaved') else 0 end,
+          'review_words_count', (select count(*) from jsonb_each(case when jsonb_typeof(lp.progress->'review') = 'object' then lp.progress->'review' else '{}'::jsonb end)),
+          'review_due_count', (
+            select count(*) from jsonb_each(case when jsonb_typeof(lp.progress->'review') = 'object' then lp.progress->'review' else '{}'::jsonb end) as r(key, value)
+            where jsonb_typeof(r.value) = 'object'
+              and coalesce(r.value->>'due', '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+              and (r.value->>'due') <= to_char((now() at time zone 'Asia/Riyadh')::date, 'YYYY-MM-DD')
+              and coalesce(r.value->>'stage', '') <> 'retained'
+          ),
+          'missed_words_count', (select count(*) from jsonb_each(case when jsonb_typeof(lp.progress->'misses') = 'object' then lp.progress->'misses' else '{}'::jsonb end) as m(key, value) where value = 'true'::jsonb),
+          'quiz_attempts', case when jsonb_typeof(lp.progress->'quizHistory') = 'array' then jsonb_array_length(lp.progress->'quizHistory') else 0 end,
+          'best_quiz_score', case when (lp.progress->>'best') ~ '^(0|[1-9][0-9]?)$' and (lp.progress->>'best')::integer <= 100 then (lp.progress->>'best')::integer else null end,
+          'answers_count', case when (lp.progress->'answerStats'->>'answered') ~ '^(0|[1-9][0-9]{0,8})$' then (lp.progress->'answerStats'->>'answered')::integer else 0 end,
+          'correct_answers_count', case when (lp.progress->'answerStats'->>'correct') ~ '^(0|[1-9][0-9]{0,8})$' then (lp.progress->'answerStats'->>'correct')::integer else 0 end,
+          'active_days_count', (
+            select count(*) from jsonb_each(case when jsonb_typeof(lp.progress->'daily') = 'object' then lp.progress->'daily' else '{}'::jsonb end) as d(day_key, tasks)
+            where d.day_key ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+              and jsonb_typeof(d.tasks) = 'object'
+              and exists (select 1 from jsonb_each(d.tasks) as t(task_key, task_value) where t.task_value = 'true'::jsonb)
+          ),
+          'learning_streak', case when (lp.progress->>'streak') ~ '^(0|[1-9][0-9]{0,5})$' then (lp.progress->>'streak')::integer else 0 end,
+          'vocab_level', case when jsonb_typeof(lp.progress->'vocabLevel') in ('string','number') then left(lp.progress->>'vocabLevel', 24) else null end,
+          'reading_completed', coalesce(to_jsonb(rp.completed_stage_ids), '[]'::jsonb),
           'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
           'current_word_index', coalesce(
             a.current_word_index,
@@ -204,601 +215,7 @@ begin
     'generated_at', v_now
   );
 end;
-$$; and e.value::integer between 0 and 99
-          ),
-          'trained_indices', (
-            select coalesce(jsonb_agg(e.value::integer order by e.ordinality), '[]'::jsonb)
-            from jsonb_array_elements_text(
-              case when jsonb_typeof(lp.progress->'lessonTrained') = 'array'
-                then lp.progress->'lessonTrained' else '[]'::jsonb end
-            ) with ordinality as e(value, ordinality)
-            where e.value ~ '^(0|[1-9][0-9]?)
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$; and e.value::integer between 0 and 99
-          ),
-          'started_indices', (
-            select coalesce(jsonb_agg(e.value::integer order by e.ordinality), '[]'::jsonb)
-            from jsonb_array_elements_text(
-              case when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-                then lp.progress->'lessonStarted' else '[]'::jsonb end
-            ) with ordinality as e(value, ordinality)
-            where e.value ~ '^(0|[1-9][0-9]?)
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$; and e.value::integer between 0 and 99
-          ),
-          'saved_words_count', case when jsonb_typeof(lp.progress->'saved') = 'array'
-            then jsonb_array_length(lp.progress->'saved') else 0 end,
-          'foundation_saved_count', case when jsonb_typeof(lp.progress->'foundationSaved') = 'array'
-            then jsonb_array_length(lp.progress->'foundationSaved') else 0 end,
-          'review_words_count', (
-            select count(*) from jsonb_each(
-              case when jsonb_typeof(lp.progress->'review') = 'object'
-                then lp.progress->'review' else '{}'::jsonb end
-            )
-          ),
-          'review_due_count', (
-            select count(*) from jsonb_each(
-              case when jsonb_typeof(lp.progress->'review') = 'object'
-                then lp.progress->'review' else '{}'::jsonb end
-            ) as r(key, value)
-            where jsonb_typeof(r.value) = 'object'
-              and coalesce(r.value->>'due', '') ~ '^\\d{4}-\\d{2}-\\d{2}
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
 $$;
-              and (r.value->>'due') <= to_char((now() at time zone 'Asia/Riyadh')::date, 'YYYY-MM-DD')
-              and coalesce(r.value->>'stage', '') <> 'retained'
-          ),
-          'missed_words_count', (
-            select count(*) from jsonb_each(
-              case when jsonb_typeof(lp.progress->'misses') = 'object'
-                then lp.progress->'misses' else '{}'::jsonb end
-            ) as m(key, value)
-            where value = 'true'::jsonb
-          ),
-          'quiz_attempts', case when jsonb_typeof(lp.progress->'quizHistory') = 'array'
-            then jsonb_array_length(lp.progress->'quizHistory') else 0 end,
-          'best_quiz_score', case
-            when (lp.progress->>'best') ~ '^(0|[1-9][0-9]?)
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
 
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$;
-              and (lp.progress->>'best')::integer <= 100
-            then (lp.progress->>'best')::integer else null end,
-          'answers_count', case
-            when (lp.progress->'answerStats'->>'answered') ~ '^(0|[1-9][0-9]{0,8})
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$;
-            then (lp.progress->'answerStats'->>'answered')::integer else 0 end,
-          'correct_answers_count', case
-            when (lp.progress->'answerStats'->>'correct') ~ '^(0|[1-9][0-9]{0,8})
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$;
-            then (lp.progress->'answerStats'->>'correct')::integer else 0 end,
-          'active_days_count', (
-            select count(*) from jsonb_each(
-              case when jsonb_typeof(lp.progress->'daily') = 'object'
-                then lp.progress->'daily' else '{}'::jsonb end
-            ) as d(day_key, tasks)
-            where d.day_key ~ '^\\d{4}-\\d{2}-\\d{2}
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$;
-              and jsonb_typeof(d.tasks) = 'object'
-              and exists (
-                select 1 from jsonb_each(d.tasks) as t(task_key, task_value)
-                where t.task_value = 'true'::jsonb
-              )
-          ),
-          'learning_streak', case
-            when (lp.progress->>'streak') ~ '^(0|[1-9][0-9]{0,5})
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$;
-            then (lp.progress->>'streak')::integer else 0 end,
-          'vocab_level', case
-            when jsonb_typeof(lp.progress->'vocabLevel') in ('string','number')
-            then left(lp.progress->>'vocabLevel', 24) else null end,
-          'reading_completed', coalesce(to_jsonb(rp.completed_stage_ids), '[]'::jsonb),
-          'current_lesson_index', coalesce(a.current_lesson_index, active_lesson.lesson_index),
-          'current_word_index', coalesce(
-            a.current_word_index,
-            case
-              when (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text)) ~ '^[0-9]{1,2}$'
-              then (lp.progress->'lessonPositions'->>(coalesce(a.current_lesson_index, active_lesson.lesson_index)::text))::integer
-              else null
-            end
-          ),
-          'last_action', a.last_learning_action,
-          'last_action_at', a.last_learning_activity_at,
-          'last_action_lesson_index', a.last_learning_lesson_index,
-          'last_action_word_index', a.last_learning_word_index
-        )
-      )
-      order by p.display_name, p.username
-    ),
-    '[]'::jsonb
-  )
-  into v_students
-  from public.student_profiles as p
-  left join public.student_activity as a on a.user_id = p.user_id
-  left join public.learning_progress as lp on lp.user_id = p.user_id
-  left join lateral (
-    select started.lesson_index
-    from (
-      select
-        case
-          when lesson_index_text ~ '^[0-9]{1,2}$' then lesson_index_text::integer
-          else null
-        end as lesson_index,
-        ordinal
-      from jsonb_array_elements_text(
-        case
-          when jsonb_typeof(lp.progress->'lessonStarted') = 'array'
-          then lp.progress->'lessonStarted'
-          else '[]'::jsonb
-        end
-      ) with ordinality as raw_started(lesson_index_text, ordinal)
-    ) as started
-    where started.lesson_index between 0 and 99
-      and not (
-        case
-          when jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-          then lp.progress->'masteredLessons'
-          else '[]'::jsonb
-        end @> jsonb_build_array(started.lesson_index)
-      )
-    order by started.ordinal desc
-    limit 1
-  ) as active_lesson on true;
-
-  return jsonb_build_object(
-    'students', v_students,
-    'generated_at', v_now
-  );
-end;
-$$;
+revoke all on function public.mentor_get_student_overview(text) from public, anon, authenticated;
+grant execute on function public.mentor_get_student_overview(text) to service_role;
