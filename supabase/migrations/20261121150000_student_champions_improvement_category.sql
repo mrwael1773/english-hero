@@ -100,7 +100,7 @@ begin
           else '[]'::jsonb
         end
       ) as item(value)
-      where item.value ~ '^(0|[1-9]|[1-9][0-9])$'
+      where item.value ~ '^(0|[1-9]|[1-9][0-9])$'$'
     ) as mastery
     where mastery.score > 0
       and p.display_name is not null
@@ -155,31 +155,3 @@ begin
       group by p.user_id, p.display_name
       having count(*) filter (
         where (e.mastered_at at time zone 'Asia/Riyadh')::date between v_week_start and v_today
-      ) > count(*) filter (
-        where (e.mastered_at at time zone 'Asia/Riyadh')::date
-          between v_week_start - 7 and v_week_start - 7 + v_elapsed_days
-      )
-      order by score desc, current_count desc, p.display_name asc
-      limit 3
-    ) as ranked;
-  end if;
-
-  return jsonb_build_object(
-    'generated_at', v_now,
-    'timezone', 'Asia/Riyadh',
-    'week_start', v_week_start,
-    'today', v_today,
-    'today_leaders', v_today_leaders,
-    'week_leaders', v_week_leaders,
-    'mastery_leaders', v_mastery_leaders,
-    'consistency_leaders', v_consistency_leaders,
-    'improvement_leaders', v_improvement_leaders
-  );
-end;
-$$;
-
-revoke all on function public.get_student_champions() from public, anon;
-grant execute on function public.get_student_champions() to authenticated;
-
-comment on function public.get_student_champions() is
-  'Returns display names and aggregate scores only, including week-over-week mastery improvement; no user IDs, usernames, emails, or raw progress.';
