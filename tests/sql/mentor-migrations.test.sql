@@ -18,6 +18,16 @@ values (
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
 select public.record_student_activity();
 select public.record_student_learning_activity('lesson_started', 3, 2);
+do $unverified_activity$
+begin
+  if exists (
+    select 1 from public.student_learning_days
+    where user_id = '11111111-1111-4111-8111-111111111111'
+  ) then
+    raise exception 'A client-reported activity created a consistency day';
+  end if;
+end;
+$unverified_activity$;
 
 -- Reading completion is isolated by authenticated account and ordered stage ID.
 insert into auth.users (id)
