@@ -15,7 +15,7 @@
     host.replaceChildren(node);
   }
 
-  function podium(host, rows, unit, emptyMessage) {
+  function podium(host, rows, unit, emptyMessage, rankOffset = 0) {
     if (!Array.isArray(rows) || !rows.length) {
       empty(host, emptyMessage || 'لم تُسجّل نتائج لهذه البطولة بعد. ابدأ بالتعلّم وقد تكون أول الأبطال!');
       return;
@@ -27,7 +27,7 @@
       line.className = 'champion-podium-row';
       const rank = document.createElement('span');
       rank.className = 'champion-podium-rank';
-      rank.textContent = rankIcons[index] || String(index + 1);
+      rank.textContent = rankIcons[index + rankOffset] || String(index + rankOffset + 1);
       const name = document.createElement('strong');
       name.className = 'champion-podium-name';
       name.dir = 'auto';
@@ -54,9 +54,13 @@
     const score = document.createElement('div');
     score.className = 'champion-score';
     score.textContent = String(Number(winner.score) || 0) + ' ' + unit;
-    const list = document.createElement('div');
-    podium(list, rows, unit);
-    host.replaceChildren(name, score, list);
+    const children = [name, score];
+    if (rows.length > 1) {
+      const list = document.createElement('div');
+      podium(list, rows.slice(1), unit, undefined, 1);
+      children.push(list);
+    }
+    host.replaceChildren(...children);
   }
 
   function validPayload(data) {
