@@ -58,6 +58,7 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
           stats.learning_streak].every(validCount) ||
         !(stats.best_quiz_score === null || (validCount(stats.best_quiz_score) && (stats.best_quiz_score as number) <= 100)) ||
         !(stats.vocab_level === null || (typeof stats.vocab_level === "string" && stats.vocab_level.length <= 24)) ||
+        !(stats.vocab_position === null || (validCount(stats.vocab_position) && stats.vocab_position <= 19999)) ||
         !validCount(stats.completed_count) || !validCount(stats.mastered_count) ||
         !validCount(stats.started_count) || !validCount(stats.trained_count) ||
         !(stats.xp === null || validCount(stats.xp)) ||
@@ -93,6 +94,7 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
         active_days_count: stats.active_days_count,
         learning_streak: stats.learning_streak,
         vocab_level: stats.vocab_level,
+        vocab_position: stats.vocab_position,
         reading_completed: stats.reading_completed,
         current_lesson_index: stats.current_lesson_index,
         current_word_index: stats.current_word_index,
