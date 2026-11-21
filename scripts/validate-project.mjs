@@ -277,6 +277,7 @@ check(progressDashboard.includes('state.masteredLessons.includes(l.id)?l.words.l
 check(html.includes("age>=0&&age<7") && html.includes("x.mode==='mistakes'"), 'Weekly and review achievements enforce their actual conditions');
 try { new Function(progressDashboard); check(true, 'Professional dashboard JavaScript syntax is valid'); } catch (error) { fail.push(`pro-dashboard.js has a syntax error: ${error.message}`); }
 try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript syntax is valid'); } catch (error) { fail.push(`english-hero-plus.js has a syntax error: ${error.message}`); }
+check(englishHeroPlus.includes('rewardClaims') && englishHeroPlus.includes('plus:quiz:') && englishHeroPlus.includes('plus:grammar:') && englishHeroPlus.includes('plus:scenario:') && englishHeroPlus.includes('plus:game:'), 'Development-center XP rewards use stable one-time claim keys');
 check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./english-hero-plus.js?v="), 'English Hero Plus is linked and cached offline');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
