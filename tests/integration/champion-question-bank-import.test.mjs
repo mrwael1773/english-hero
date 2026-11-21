@@ -56,11 +56,11 @@ test("dry-run validates a complete private file without calling the network", as
   const filePath = withBankFile(t);
   const result = await importQuestionBank({
     filePath,
-    env: { SUPABASE_URL: "https://example.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "test-only" },
+    env: { SUPABASE_URL: "http://127.0.0.1:54321", SUPABASE_SERVICE_ROLE_KEY: "test-only" },
     fetchImpl: async () => { throw new Error("Network must not be called in dry-run."); },
     dryRun: true,
   });
-  assert.deepEqual(result, { dryRun: true, questions: 840, lessons: 84, projectRef: "example" });
+  assert.deepEqual(result, { dryRun: true, questions: 840, lessons: 84, projectRef: "local" });
 });
 
 test("blocks the production project unless explicitly authorized", async t => {
@@ -80,15 +80,15 @@ test("posts the private payload once and never prints the service key", async t 
   let request;
   const result = await importQuestionBank({
     filePath,
-    env: { SUPABASE_URL: "https://example.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "secret-test-value" },
+    env: { SUPABASE_URL: "https://knjcyuvhaoievxkzcdog.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "secret-test-value" },
     fetchImpl: async (url, options) => {
       request = { url, options };
       return new Response("840", { status: 200, headers: { "content-type": "application/json" } });
     },
   });
-  assert.equal(request.url, "https://example.supabase.co/rest/v1/rpc/import_student_champion_question_bank");
+  assert.equal(request.url, "https://knjcyuvhaoievxkzcdog.supabase.co/rest/v1/rpc/import_student_champion_question_bank");
   assert.equal(request.options.method, "POST");
   assert.equal(request.options.headers.authorization, "Bearer secret-test-value");
   assert.equal(JSON.parse(request.options.body).p_questions.length, 840);
-  assert.deepEqual(result, { imported: 840, lessons: 84, projectRef: "example" });
+  assert.deepEqual(result, { imported: 840, lessons: 84, projectRef: "knjcyuvhaoievxkzcdog" });
 });
