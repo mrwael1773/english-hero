@@ -102,7 +102,7 @@ Deno.serve(async (request: Request) => {
   }
 
   // Keep the response generic so callers cannot distinguish unknown usernames from bad passwords.
-  const loginEmail = userResult.data.user?.email ?? `unregistered-${attemptKey.slice(0, 16)}@invalid.example`;
+  const loginEmail = userResult.data?.user?.email ?? `unregistered-${attemptKey.slice(0, 16)}@invalid.example`;
   const { data, error } = await auth.auth.signInWithPassword({ email: loginEmail, password });
   if (error || !data.session) {
     return json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة." }, 401);
