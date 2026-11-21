@@ -44,7 +44,17 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
     const stats = progress as Record<string, unknown>;
     const validCount = (number: unknown) => Number.isSafeInteger(number) && (number as number) >= 0;
     const optionalIndex = (number: unknown) => number === null || (validCount(number) && (number as number) <= 99);
-    if (!validCount(stats.completed_count) || !validCount(stats.mastered_count) ||
+    const validIndexArray = value => Array.isArray(value) && value.length <= 100 &&
+      value.every(index => validCount(index) && index <= 99);
+    if (!validIndexArray(stats.mastered_indices) || !validIndexArray(stats.trained_indices) ||
+        !validIndexArray(stats.started_indices) ||
+        ![stats.saved_words_count, stats.foundation_saved_count, stats.review_words_count,
+          stats.review_due_count, stats.missed_words_count, stats.quiz_attempts,
+          stats.answers_count, stats.correct_answers_count, stats.active_days_count,
+          stats.learning_streak].every(validCount) ||
+        !(stats.best_quiz_score === null || (validCount(stats.best_quiz_score) && stats.best_quiz_score <= 100)) ||
+        !(stats.vocab_level === null || (typeof stats.vocab_level === "string" && stats.vocab_level.length <= 24)) ||
+        !validCount(stats.completed_count) || !validCount(stats.mastered_count) ||
         !validCount(stats.started_count) || !validCount(stats.trained_count) ||
         !(stats.xp === null || validCount(stats.xp)) ||
         !optionalIndex(stats.current_lesson_index) ||
@@ -64,6 +74,21 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
         mastered_count: stats.mastered_count,
         started_count: stats.started_count,
         trained_count: stats.trained_count,
+        mastered_indices: stats.mastered_indices,
+        trained_indices: stats.trained_indices,
+        started_indices: stats.started_indices,
+        saved_words_count: stats.saved_words_count,
+        foundation_saved_count: stats.foundation_saved_count,
+        review_words_count: stats.review_words_count,
+        review_due_count: stats.review_due_count,
+        missed_words_count: stats.missed_words_count,
+        quiz_attempts: stats.quiz_attempts,
+        best_quiz_score: stats.best_quiz_score,
+        answers_count: stats.answers_count,
+        correct_answers_count: stats.correct_answers_count,
+        active_days_count: stats.active_days_count,
+        learning_streak: stats.learning_streak,
+        vocab_level: stats.vocab_level,
         current_lesson_index: stats.current_lesson_index,
         current_word_index: stats.current_word_index,
         last_action: stats.last_action,
