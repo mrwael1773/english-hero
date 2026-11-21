@@ -177,7 +177,9 @@ begin
             select count(*) from jsonb_each(case when jsonb_typeof(lp.progress->'misses')='object' then lp.progress->'misses' else '{}'::jsonb end) as m(word_id, missed)
             where m.missed = 'true'::jsonb
           ),
-          'quiz_attempts', case when jsonb_typeof(lp.progress->'quizHistory')='array' then jsonb_array_length(lp.progress->'quizHistory') else 0 end,
+          'quiz_attempts', case
+            when (lp.progress->>'quizzes') ~ '^(0|[1-9][0-9]{0,8})$'
+              then (lp.progress->>'quizzes')::integer else 0 end,
           'best_quiz_score', case
             when (lp.progress->>'best') ~ '^(0|[1-9][0-9]?)$' then
               case when (lp.progress->>'best')::integer <= 100 then (lp.progress->>'best')::integer else null end
