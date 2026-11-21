@@ -192,7 +192,10 @@ begin
             select count(*) from jsonb_each(case when jsonb_typeof(lp.progress->'daily')='object' then lp.progress->'daily' else '{}'::jsonb end) as d(day_key,tasks)
             where d.day_key ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
               and jsonb_typeof(d.tasks)='object'
-              and exists(select 1 from jsonb_each(d.tasks) as t(task_key,task_value) where t.task_value='true'::jsonb)
+              and exists(
+                select 1 from jsonb_each(case when jsonb_typeof(d.tasks)='object' then d.tasks else '{}'::jsonb end) as t(task_key,task_value)
+                where t.task_value='true'::jsonb
+              )
           ),
           'learning_streak', case
             when (lp.progress->>'streak') ~ '^(0|[1-9][0-9]{0,5})$'
