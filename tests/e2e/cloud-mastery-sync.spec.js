@@ -127,24 +127,16 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
     };
   });
 
-  const pendingKey = 'english-hero-pending-mastery-events-cloud-e2e-student';
-  await page.waitForFunction(key => {
-    const pending = JSON.parse(localStorage.getItem(key) || '[]');
-    return pending.includes(0);
-  }, pendingKey);
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]'))).toHaveLength(0);
+  // Ordinary browser quiz completion may update local learning progress and XP,
+  // but it must never submit a trusted mastery event for the champions leaderboard.
+  await expect(page.locator('#cloudStatus')).toContainText('تمت مزامنة التقدم');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]')))
+    .toHaveLength(0);
+  expect(await page.evaluate(() => localStorage.getItem(
+    'english-hero-pending-mastery-events-cloud-e2e-student'
+  ))).toBeNull();
 
-  // Restore connectivity: the queued event is replayed only after cloud progress is saved.
-  await page.evaluate(() => {
-    localStorage.setItem('__e2e_fail_mastery_rpc', '0');
-    window.dispatchEvent(new Event('online'));
-  });
-  await page.waitForFunction(key => localStorage.getItem(key) === null, pendingKey);
-  await page.waitForFunction(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]').length === 1);
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]')[0]))
-    .toMatchObject({ p_action: 'lesson_mastered', p_lesson_index: 0 });
-
-  // Simulate a fresh device/page state while retaining only the mocked cloud row.
+  // Simulate a fresh page state while retaining only the mocked cloud row.
   await page.evaluate(() => localStorage.removeItem('english-hero-academy-3'));
   await page.reload();
 
@@ -156,7 +148,6 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
       && Array.isArray(saved.masteredLessons)
       && saved.masteredLessons.includes(0);
   });
-  // Wait until the initial cloud read, progress upload, and pending-event flush finish.
   await expect(page.locator('#cloudStatus')).toContainText('تمت مزامنة التقدم');
 
   const restored = await page.evaluate(() => {
@@ -168,14 +159,4 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
     };
   });
   expect(restored).toEqual(cloudSnapshot);
-
-  // A queued event absent from the successfully uploaded account snapshot is stale.
-  // It must be discarded locally, not replayed as a new mastery event.
-  await page.evaluate(key => {
-    localStorage.setItem(key, JSON.stringify([5]));
-    window.dispatchEvent(new Event('online'));
-  }, pendingKey);
-  await page.waitForFunction(key => localStorage.getItem(key) === null, pendingKey);
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]')))
-    .toHaveLength(1);
 });
