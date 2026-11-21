@@ -92,6 +92,7 @@
         'بطولة الأسبوع بدأت للتو. الفرصة متاحة للجميع!');
       podium($('championsMastery'), data.mastery_leaders, 'درسًا متقنًا');
       podium($('championsConsistency'), data.consistency_leaders, 'أيام نشاط');
+      podium($('championsImprovement'), data.improvement_leaders, 'درسًا صافيًا فوق الفترة السابقة');
       podium($('championsImprovement'), data.improvement_leaders, 'درسًا إضافيًا');
       if (status) {
         const stamp = data.generated_at ? new Date(data.generated_at) : new Date();
