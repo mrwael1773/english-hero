@@ -137,7 +137,6 @@ export async function handleChampionChallenge(request: Request): Promise<Respons
       .insert({
         user_id: authData.user.id,
         lesson_index: lessonIndex,
-        question_snapshot: prepared.questions,
         answer_key: prepared.answerKey,
         question_count: QUESTION_COUNT,
         expires_at: expiresAt,
