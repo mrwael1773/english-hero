@@ -173,6 +173,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
        'أضاف للمراجعة: '+count(progress.saved_words_count)+' كلمة',
        'كلمات القاموس العام: '+count(progress.foundation_saved_count),
        'مستوى مكتبة المفردات: '+(progress.vocab_level??'غير محدد'),
+       'موضع التصفح في القاموس: '+(progress.vocab_position===null?'غير متاح':'الكلمة رقم '+(progress.vocab_position+1)+' (موضع تصفح وليس إتقانًا)'),
        'سجل المراجعة: '+count(progress.review_words_count)+' كلمة، المستحق منها '+count(progress.review_due_count),
        'قائمة الأخطاء: '+count(progress.missed_words_count)+' كلمة'
      ]},
@@ -309,6 +310,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
          ['saved_words_count','foundation_saved_count','review_words_count','review_due_count','missed_words_count','quiz_attempts','answers_count','correct_answers_count','active_days_count','learning_streak'].every(k=>validCount(p[k]))&&
          (p.best_quiz_score===null||(validCount(p.best_quiz_score)&&p.best_quiz_score<=100))&&
          (p.vocab_level===null||(typeof p.vocab_level==='string'&&p.vocab_level.length<=24))&&
+         (p.vocab_position===null||(validCount(p.vocab_position)&&p.vocab_position<=19999))&&
          Array.isArray(p.reading_completed)&&p.reading_completed.length<=11&&
          p.reading_completed.every((id,i)=>['letter-sounds','digraphs','short-vowels','blends','cvc','magic-e','vowel-teams','r-controlled','diphthongs','syllables','practice'][i]===id)&&optionalIndex(p.current_lesson_index)&&
          optionalIndex(p.current_word_index)&&optionalIndex(p.last_action_lesson_index)&&
