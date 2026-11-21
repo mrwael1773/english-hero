@@ -198,7 +198,31 @@ try {
   `));
   assert.equal(masteryCount, 1, 'A passing challenge must create exactly one mastery event');
 
-  console.log('Local champion challenge HTTP integration passed: CORS, auth, lesson validation, private answer keys, scoring, mastery recording, ownership isolation, and replay protection.');
+  const leaderboardResponse = await fetch(`${API_URL}/rest/v1/rpc/get_student_champions`, {
+    method: 'POST',
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${tokenA}`,
+      'Content-Type': 'application/json',
+    },
+    body: '{}',
+  });
+  assert.equal(leaderboardResponse.status, 200, 'An authenticated learner must be able to read champion aggregates');
+  const leaderboard = await leaderboardResponse.json();
+  const leaderboardText = JSON.stringify(leaderboard);
+  assert.ok(leaderboardText.includes(learners[0].displayName), 'The leaderboard must show the student-selected display name');
+  for (const privateField of ['user_id', 'username', 'email']) {
+    assert.ok(!leaderboardText.includes(privateField), `Leaderboard response leaked private identity field: ${privateField}`);
+  }
+
+  const anonymousLeaderboard = await fetch(`${API_URL}/rest/v1/rpc/get_student_champions`, {
+    method: 'POST',
+    headers: { apikey: ANON_KEY, 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  assert.ok([401, 403].includes(anonymousLeaderboard.status), 'Anonymous clients must not read the champion leaderboard');
+
+  console.log('Local champion challenge HTTP integration passed: CORS, auth, lesson validation, private answer keys, scoring, mastery recording, ownership isolation, replay protection, and aggregate-only leaderboard access.');
 } finally {
   for (const user of users) await deleteLocalAuthUser(user);
   psql(`
