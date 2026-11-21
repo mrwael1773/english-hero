@@ -46,6 +46,12 @@ test('mentor dashboard sends the token only in Authorization and renders a minim
           last_seen_at: '2026-11-18T03:55:00Z',
           progress: {
             xp: 120, completed_count: 2, mastered_count: 1, started_count: 2, trained_count: 1,
+            mastered_indices: [1], trained_indices: [0], started_indices: [0, 1],
+            saved_words_count: 5, foundation_saved_count: 2, review_words_count: 4,
+            review_due_count: 1, missed_words_count: 1, quiz_attempts: 3,
+            best_quiz_score: 90, answers_count: 10, correct_answers_count: 8,
+            active_days_count: 4, learning_streak: 2, vocab_level: 'all', vocab_position: 5,
+            reading_completed: ['letter-sounds', 'digraphs'],
             current_lesson_index: 1, current_word_index: 2,
             last_action: 'lesson_progress', last_action_at: '2026-11-18T03:54:00Z',
             last_action_lesson_index: 1, last_action_word_index: 2
@@ -66,9 +72,18 @@ test('mentor dashboard sends the token only in Authorization and renders a minim
   await expect(page.locator('#students')).toContainText('<img src=x onerror=alert(1)>');
   await expect(page.locator('#students img')).toHaveCount(0);
   await expect(page.locator('#students tr td')).toHaveCount(5);
-  await expect(page.locator('#students tr td').nth(2)).toHaveText('120');
+  await expect(page.locator('#students tr td').nth(2)).toHaveText('120 نقطة');
   await expect(page.locator('#students tr td').nth(3)).toContainText('تابع التعلّم في درس روتيني اليوم');
   await expect(page.locator('#students tr td').nth(4)).toContainText('روتيني اليوم');
+  await page.locator('#students .progress-disclosure summary').click();
+  const details = page.locator('#students .progress-details');
+  await expect(details).toContainText('المفردات والمراجعة');
+  await expect(details).toContainText('أضاف للمراجعة: 5 كلمة');
+  await expect(details).toContainText('المحاولات المسجلة: 3');
+  await expect(details).toContainText('اجتاز 2 من 11 مرحلة');
+  await expect(details).toContainText('أصوات الحروف');
+  await expect(details).toContainText('الحروف المركبة');
+  await expect(details).not.toContainText('القواعد والأزمنة');
   await expect(page.locator('#students')).not.toContainText('student_one');
 
   expect(capturedRequest.method).toBe('POST');

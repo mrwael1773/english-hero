@@ -19,6 +19,52 @@ select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111
 select public.record_student_activity();
 select public.record_student_learning_activity('lesson_started', 3, 2);
 
+-- Reading completion is isolated by authenticated account and ordered stage ID.
+insert into auth.users (id)
+values ('22222222-2222-4222-8222-222222222222');
+
+select public.save_my_reading_progress(array['letter-sounds','digraphs']::text[]);
+
+do $reading$
+declare
+  v_completed text[];
+begin
+  v_completed := public.get_my_reading_progress();
+  if v_completed <> array['letter-sounds','digraphs']::text[] then
+    raise exception 'Reading progress did not round-trip for the authenticated student';
+  end if;
+
+  perform public.save_my_reading_progress(array['letter-sounds']::text[]);
+  if public.get_my_reading_progress() <> array['letter-sounds','digraphs']::text[] then
+    raise exception 'Reading progress update unexpectedly regressed completed stages';
+  end if;
+
+  begin
+    perform public.save_my_reading_progress(array['letter-sounds','blends']::text[]);
+    raise exception 'Out-of-order reading stages were accepted';
+  exception
+    when sqlstate '22023' then null;
+  end;
+
+  begin
+    perform public.save_my_reading_progress(array['unknown-stage']::text[]);
+    raise exception 'Unknown reading stage was accepted';
+  exception
+    when sqlstate '22023' then null;
+  end;
+end;
+$reading$;
+
+select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', false);
+do $isolation$
+begin
+  if public.get_my_reading_progress() <> '{}'::text[] then
+    raise exception 'Reading progress leaked across student accounts';
+  end if;
+end;
+$isolation$;
+select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
+
 do $$
 declare
   v_row public.student_activity%rowtype;
@@ -87,7 +133,22 @@ $$;
 
 -- Malformed or out-of-range JSON progress must not break the overview RPC.
 update public.learning_progress
-set progress = '{"xp":999999999999999999999999999,"completed":[],"masteredLessons":[],"lessonStarted":["99999999999999999999","3"],"lessonTrained":[],"lessonPositions":{"3":"99999999999999999999"}}'::jsonb
+set progress = '{
+  "xp":999999999999999999999999999,"completed":[0,1],"masteredLessons":[0],
+  "lessonStarted":["99999999999999999999","3"],"lessonTrained":[0],
+  "lessonPositions":{"3":"99999999999999999999"},
+  "saved":["word-1","word-2"],"foundationSaved":["hello"],
+  "review":{
+    "word-1":{"due":"1900-01-01","stage":"practice"},
+    "word-2":{"due":"9999-12-31","stage":"retention"},
+    "word-3":{"due":"1900-01-01","stage":"retained"}
+  },
+  "misses":{"word-1":true,"word-2":false},
+  "quizHistory":[{}, {}, {}],"quizzes":7,"best":90,
+  "answerStats":{"answered":10,"correct":8},
+  "daily":{"1900-01-01":{"quiz":true},"1900-01-02":{"review":true},"1900-01-03":{"other":false}},
+  "streak":4,"vocabLevel":"all","vocabPosition":5
+}'::jsonb
 where user_id = '11111111-1111-4111-8111-111111111111';
 
 -- Use a known synthetic bearer token and store only its SHA-256 hash.
@@ -117,6 +178,33 @@ begin
   end if;
   if v_student->'progress'->'current_word_index' <> 'null'::jsonb then
     raise exception 'Out-of-range word index was not rejected';
+  end if;
+  if v_student->'progress'->'mastered_indices' <> '[0]'::jsonb
+     or v_student->'progress'->'trained_indices' <> '[0]'::jsonb
+     or v_student->'progress'->'started_indices' <> '[3]'::jsonb then
+    raise exception 'Per-lesson progress indices were not safely summarized';
+  end if;
+  if v_student->'progress'->'saved_words_count' <> '2'::jsonb
+     or v_student->'progress'->'foundation_saved_count' <> '1'::jsonb
+     or v_student->'progress'->'review_words_count' <> '3'::jsonb
+     or v_student->'progress'->'review_due_count' <> '1'::jsonb
+     or v_student->'progress'->'missed_words_count' <> '1'::jsonb then
+    raise exception 'Vocabulary or review aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'quiz_attempts' <> '7'::jsonb
+     or v_student->'progress'->'best_quiz_score' <> '90'::jsonb
+     or v_student->'progress'->'answers_count' <> '10'::jsonb
+     or v_student->'progress'->'correct_answers_count' <> '8'::jsonb then
+    raise exception 'Quiz aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'active_days_count' <> '2'::jsonb
+     or v_student->'progress'->'learning_streak' <> '4'::jsonb
+     or v_student->'progress'->'vocab_level' <> '"all"'::jsonb
+     or v_student->'progress'->'vocab_position' <> '5'::jsonb then
+    raise exception 'Daily activity or vocabulary level aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
+    raise exception 'Mentor overview did not include the student reading stage summary';
   end if;
 end;
 $$;
@@ -187,6 +275,26 @@ begin
   if has_table_privilege('authenticated', 'public.mentor_link_tokens', 'SELECT')
      or has_table_privilege('anon', 'public.mentor_link_tokens', 'SELECT') then
     raise exception 'A client role can read private mentor token hashes';
+  end if;
+  if not exists (
+    select 1 from pg_class
+    where oid = 'public.reading_progress'::regclass and relrowsecurity
+  ) then
+    raise exception 'Reading progress table does not have row-level security enabled';
+  end if;
+  if has_table_privilege('authenticated', 'public.reading_progress', 'SELECT')
+     or has_table_privilege('authenticated', 'public.reading_progress', 'INSERT')
+     or has_table_privilege('authenticated', 'public.reading_progress', 'UPDATE')
+     or has_table_privilege('anon', 'public.reading_progress', 'SELECT') then
+    raise exception 'A client role can directly access private reading progress';
+  end if;
+  if not has_function_privilege('authenticated', 'public.get_my_reading_progress()', 'EXECUTE')
+     or not has_function_privilege('authenticated', 'public.save_my_reading_progress(text[])', 'EXECUTE') then
+    raise exception 'Authenticated students cannot use their reading progress RPCs';
+  end if;
+  if has_function_privilege('anon', 'public.get_my_reading_progress()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.save_my_reading_progress(text[])', 'EXECUTE') then
+    raise exception 'Anonymous users can access student reading progress RPCs';
   end if;
 end;
 $$;

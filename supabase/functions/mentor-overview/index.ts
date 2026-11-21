@@ -18,7 +18,7 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function sanitizeOverview(payload: unknown): { students: Record<string, unknown>[]; generated_at: string } | null {
+export function sanitizeOverview(payload: unknown): { students: Record<string, unknown>[]; generated_at: string } | null {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
   const source = payload as Record<string, unknown>;
   if (!Array.isArray(source.students) || typeof source.generated_at !== "string" ||
@@ -32,6 +32,9 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
     "lesson_mastered",
     "quiz_completed",
   ]);
+  const readingStageIds = ["letter-sounds","digraphs","short-vowels","blends","cvc","magic-e","vowel-teams","r-controlled","diphthongs","syllables","practice"];
+  const validReading = (value: unknown): value is string[] => Array.isArray(value) && value.length <= readingStageIds.length &&
+    value.every((id: unknown, index: number) => id === readingStageIds[index]);
   const students: Record<string, unknown>[] = [];
   for (const value of source.students) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -42,9 +45,21 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
         !progress || typeof progress !== "object" || Array.isArray(progress)) return null;
 
     const stats = progress as Record<string, unknown>;
-    const validCount = (number: unknown) => Number.isSafeInteger(number) && (number as number) >= 0;
+    const validCount = (number: unknown): number is number => Number.isSafeInteger(number) && (number as number) >= 0;
     const optionalIndex = (number: unknown) => number === null || (validCount(number) && (number as number) <= 99);
-    if (!validCount(stats.completed_count) || !validCount(stats.mastered_count) ||
+    const validIndexArray = (value: unknown): value is number[] => Array.isArray(value) && value.length <= 100 &&
+      value.every((index: unknown) => validCount(index) && (index as number) <= 99);
+    if (!validIndexArray(stats.mastered_indices) || !validIndexArray(stats.trained_indices) ||
+        !validIndexArray(stats.started_indices) ||
+        !validReading(stats.reading_completed) ||
+        ![stats.saved_words_count, stats.foundation_saved_count, stats.review_words_count,
+          stats.review_due_count, stats.missed_words_count, stats.quiz_attempts,
+          stats.answers_count, stats.correct_answers_count, stats.active_days_count,
+          stats.learning_streak].every(validCount) ||
+        !(stats.best_quiz_score === null || (validCount(stats.best_quiz_score) && (stats.best_quiz_score as number) <= 100)) ||
+        !(stats.vocab_level === null || (typeof stats.vocab_level === "string" && stats.vocab_level.length <= 24)) ||
+        !(stats.vocab_position === null || (validCount(stats.vocab_position) && stats.vocab_position <= 19999)) ||
+        !validCount(stats.completed_count) || !validCount(stats.mastered_count) ||
         !validCount(stats.started_count) || !validCount(stats.trained_count) ||
         !(stats.xp === null || validCount(stats.xp)) ||
         !optionalIndex(stats.current_lesson_index) ||
@@ -64,6 +79,23 @@ function sanitizeOverview(payload: unknown): { students: Record<string, unknown>
         mastered_count: stats.mastered_count,
         started_count: stats.started_count,
         trained_count: stats.trained_count,
+        mastered_indices: stats.mastered_indices,
+        trained_indices: stats.trained_indices,
+        started_indices: stats.started_indices,
+        saved_words_count: stats.saved_words_count,
+        foundation_saved_count: stats.foundation_saved_count,
+        review_words_count: stats.review_words_count,
+        review_due_count: stats.review_due_count,
+        missed_words_count: stats.missed_words_count,
+        quiz_attempts: stats.quiz_attempts,
+        best_quiz_score: stats.best_quiz_score,
+        answers_count: stats.answers_count,
+        correct_answers_count: stats.correct_answers_count,
+        active_days_count: stats.active_days_count,
+        learning_streak: stats.learning_streak,
+        vocab_level: stats.vocab_level,
+        vocab_position: stats.vocab_position,
+        reading_completed: stats.reading_completed,
         current_lesson_index: stats.current_lesson_index,
         current_word_index: stats.current_word_index,
         last_action: stats.last_action,

@@ -31,7 +31,7 @@ h1{margin:2px 0;font-size:clamp(25px,4vw,34px);line-height:1.35;letter-spacing:-
 table{width:100%;border-collapse:collapse;min-width:820px}th,td{text-align:right;padding:13px 12px;border-bottom:1px solid rgba(54,77,106,.72);font-size:13px;vertical-align:top}td{max-width:260px;overflow-wrap:anywhere}td:nth-child(4),td:nth-child(5){line-height:1.65}
 th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:rgba(145,186,255,.045)}
 .empty-row td{text-align:center!important;padding:28px 16px!important;color:var(--muted)}
-.footer-note{margin:14px 2px 0;color:var(--muted);font-size:12px}
+.footer-note{margin:14px 2px 0;color:var(--muted);font-size:12px}.guide{margin:18px 0 4px;padding:16px 18px;border:1px solid rgba(145,186,255,.24);border-radius:15px;background:rgba(145,186,255,.06)}.guide h3{margin:0 0 8px;font-size:15px}.guide ul{margin:6px 0 0;padding-right:20px;color:var(--muted);font-size:13px}.guide li{margin:5px 0}.progress-cell{line-height:1.7;min-width:260px;white-space:normal}.progress-disclosure summary{cursor:pointer;color:var(--mint);font-weight:800;line-height:1.6;list-style-position:inside}.progress-disclosure summary:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:5px}.progress-disclosure[open] summary{margin-bottom:8px}.progress-details{padding:2px 0}.progress-group{padding:7px 0;border-top:1px solid rgba(54,77,106,.65)}.progress-group h4{margin:0 0 3px;color:var(--blue);font-size:12px}.progress-group ul{margin:0;padding-right:18px}.progress-group li{margin:2px 0;overflow-wrap:anywhere}.xp-cell{font-weight:850;font-variant-numeric:tabular-nums}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .hidden{display:none!important}
 @media(max-width:680px){
@@ -44,6 +44,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
  tbody td{display:flex;flex-direction:column;gap:2px;min-width:0;padding:8px 2px;border:0!important;overflow-wrap:anywhere}
  tbody td:before{content:attr(data-label);color:var(--muted);font-size:11px}
  tbody td:first-child{grid-column:1/-1;font-size:15px;font-weight:800;color:var(--text);padding-bottom:9px;border-bottom:1px solid var(--line)!important;margin-bottom:4px}
+ tbody td:last-child{grid-column:1/-1}
  tbody tr.empty-row{display:block;margin:0;padding:0;border:1px solid var(--line);border-radius:14px;background:#172941}
  tbody tr.empty-row td{display:block;padding:24px 14px!important}
 }
@@ -68,8 +69,8 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <div class="stat"><span class="stat-label">اتصلوا سابقًا</span><b id="seen">—</b></div>
 <div class="stat"><span class="stat-label">لم يسجلوا اتصالًا</span><b id="notSeen">—</b></div>
 </div>
-<div class="table-wrap"><table><caption class="sr-only">ملخص تقدم الطلاب في بطل الإنجليزي</caption><thead><tr><th scope="col">الطالب</th><th scope="col">آخر اتصال</th><th scope="col">النقاط</th><th scope="col">وش سوا؟</th><th scope="col">وين وصل؟</th></tr></thead><tbody id="students"></tbody></table></div>
-<p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو تفاصيل الجلسات.</p>
+<div class="table-wrap"><table><caption class="sr-only">ملخص تقدم الطلاب في بطل الإنجليزي</caption><thead><tr><th scope="col">الطالب</th><th scope="col">آخر اتصال</th><th scope="col">نقاط الخبرة (XP)</th><th scope="col">آخر نشاط</th><th scope="col">تفاصيل التقدم الدراسي</th></tr></thead><tbody id="students"></tbody></table></div>
+<aside class="guide" aria-label="شرح بيانات لوحة المتابعة"><h3>كيف تقرأ بيانات الطالب؟</h3><ul><li><strong>نقاط الخبرة (XP):</strong> رصيد يجمعه الطالب من الإجابات الصحيحة والمكافآت؛ لا يعني وحده عدد الدروس التي أتقنها، ويمكن أن يزيد عن طريق أنشطة متكررة.</li><li><strong>أتقن:</strong> عدد الدروس التي اجتاز الطالب تقييمها بنسبة ٨٠٪ أو أكثر، يُعرض عدد الدروس وأسماؤها بحسب البيانات المسجلة، وقد تشمل حزم المفردات.</li><li><strong>أكمل التدريب:</strong> أنهى محتوى الدرس لكنه لم يثبت إتقانه بعد.</li><li><strong>بدأ:</strong> عدد الدروس التي فتحها وبدأ التعلم فيها، وقد يشمل دروسًا أتقنها لاحقًا.</li><li><strong>موضع التعلم الحالي:</strong> مثل «الكلمة رقم ٦» تعني موضع الطالب داخل الدرس، ولا تعني أنه أتقن ٦ كلمات.</li><li><strong>المفردات والمراجعة والاختبارات:</strong> أعداد وملخصات مجمعة؛ لا تُعرض إجابات الطالب أو نصوصه.</li><li><strong>القراءة:</strong> تعرض اللوحة المراحل الإحدى عشرة التي اجتازها الطالب بعد مزامنتها من جهازه؛ لا تُعرض إجابات القراءة أو تفاصيل محاولاته، وقد لا يظهر التقدم السابق حتى يفتح الطالب مسار القراءة بعد تحديث الموقع.</li><li><strong>آخر نشاط:</strong> آخر إجراء تعليمي وصل إلى النظام، وليس سجلًا كاملًا لكل ما فعله الطالب.</li></ul></aside><p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو نصوص المراجعة أو المحادثات أو تفاصيل الجلسات.</p>
 </section>
 <p class="status small" id="status" role="status" aria-live="polite">لا يتم عرض بيانات الطلاب قبل التحقق من صلاحية الرابط.</p>
 </main>
@@ -89,10 +90,11 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    if(Number.isNaN(date.getTime()))return 'غير متاح';
    return new Intl.DateTimeFormat('ar-SA',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Riyadh'}).format(date);
  };
- const cell=(row,label,value)=>{
+ const cell=(row,label,value,className='')=>{
    const td=document.createElement('td');
    td.dataset.label=label;
    td.textContent=value;
+   if(className)td.className=className;
    row.appendChild(td);
  };
  const lessonTitles=[
@@ -118,7 +120,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
  }
  function lessonName(index){
    if(!Number.isInteger(index)||index<0||index>99)return null;
-   return index<lessonTitles.length?lessonTitles[index]:'الدرس رقم '+(index+1);
+   return index<lessonTitles.length?lessonTitles[index]:'المفردات '+(index+1);
  }
  function describeActivity(progress){
    const action=progress.last_action;
@@ -136,21 +138,88 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    if(count(progress.started_count)>0)return 'بدأ '+count(progress.started_count)+' درسًا';
    return 'لم يسجل نشاط تعليمي بعد';
  }
+ function safeIndices(value){
+   return Array.isArray(value)?[...new Set(value.filter(x=>Number.isInteger(x)&&x>=0&&x<=99))]:[];
+ }
+ function describeLessonGroup(label,indices){
+   const names=indices.map(lessonName).filter(Boolean);
+   return label+': '+(names.length?names.join('، '):'لا يوجد');
+ }
+ const readingStageTitles={
+   'letter-sounds':'أصوات الحروف','digraphs':'الحروف المركبة','short-vowels':'الحركات القصيرة',
+   blends:'الأصوات المدمجة',cvc:'تركيب الكلمات CVC','magic-e':'الحرف السحري E',
+   'vowel-teams':'الحركات المركبة','r-controlled':'أصوات الحركات مع R',
+   diphthongs:'الأصوات المتحركة المركبة',syllables:'المقاطع الصوتية',practice:'القراءة التطبيقية'
+ };
  function describeProgress(progress){
-   const level='المستوى '+levelFromXp(progress.xp);
-   const current=lessonName(progress.current_lesson_index);
-   if(current){
-     const word=Number.isInteger(progress.current_word_index)?' • الكلمة '+(progress.current_word_index+1):'';
-     return level+' • '+current+word+' • أتقن '+count(progress.mastered_count)+' / '+lessonTitles.length;
-   }
    const mastered=count(progress.mastered_count);
-   if(mastered>=lessonTitles.length)return level+' • أكمل الدروس الأساسية كلها';
-   if(mastered>0){
-     const next=lessonName(mastered);
-     return level+' • أتقن '+mastered+' / '+lessonTitles.length+(next?' • التالي: '+next:'');
+   const trained=count(progress.trained_count);
+   const started=count(progress.started_count);
+   const masteredIndices=safeIndices(progress.mastered_indices);
+   const trainedIndices=safeIndices(progress.trained_indices);
+   const startedIndices=safeIndices(progress.started_indices);
+   const current=lessonName(progress.current_lesson_index);
+   const currentWord=Number.isInteger(progress.current_word_index)?'، الكلمة رقم '+(progress.current_word_index+1):'';
+   const reading=Array.isArray(progress.reading_completed)?progress.reading_completed:[];
+   return [
+     {title:'الدروس',items:[
+       'أتقن '+mastered+' درسًا، وأكمل تدريب '+trained+'، وبدأ '+started,
+       describeLessonGroup('الدروس المتقنة',masteredIndices),
+       describeLessonGroup('تدريب مكتمل دون إتقان',trainedIndices),
+       describeLessonGroup('دروس بدأها',startedIndices),
+       current?'موضع التعلّم الحالي: '+current+currentWord:'لا يوجد موضع تعلّم حالي مسجل'
+     ]},
+     {title:'المفردات والمراجعة',items:[
+       'أضاف للمراجعة: '+count(progress.saved_words_count)+' كلمة',
+       'كلمات القاموس العام: '+count(progress.foundation_saved_count),
+       'مستوى مكتبة المفردات: '+(progress.vocab_level??'غير محدد'),
+       'موضع التصفح في القاموس: '+(progress.vocab_position===null?'غير متاح':'الكلمة رقم '+(progress.vocab_position+1)+' (موضع تصفح وليس إتقانًا)'),
+       'سجل المراجعة: '+count(progress.review_words_count)+' كلمة، المستحق منها '+count(progress.review_due_count),
+       'قائمة الأخطاء: '+count(progress.missed_words_count)+' كلمة'
+     ]},
+     {title:'الاختبارات',items:[
+       'المحاولات المسجلة: '+count(progress.quiz_attempts),
+       'أفضل نتيجة: '+(progress.best_quiz_score===null?'غير متاحة':count(progress.best_quiz_score)+'%'),
+       'الإجابات الصحيحة: '+count(progress.correct_answers_count)+' من '+count(progress.answers_count)
+     ]},
+     {title:'النشاط اليومي',items:[
+       'أيام التعلم النشطة: '+count(progress.active_days_count),
+       'سلسلة التعلم الحالية: '+count(progress.learning_streak)+' يومًا'
+     ]},
+     {title:'القراءة',items:[
+       'اجتاز '+reading.length+' من 11 مرحلة',
+       'مراحل القراءة: '+(reading.length?reading.map(id=>readingStageTitles[id]).filter(Boolean).join('، '):'لم يجتز مراحل بعد')
+     ]}
+   ];
+ }
+ function appendProgressCell(row,progress){
+   const td=document.createElement('td');
+   td.dataset.label='تفاصيل التقدم الدراسي';
+   td.className='progress-cell';
+   const details=document.createElement('details');
+   details.className='progress-disclosure';
+   const summary=document.createElement('summary');
+   summary.textContent='عرض التفاصيل • أتقن '+count(progress.mastered_count)+' • تدريب '+count(progress.trained_count)+' • بدأ '+count(progress.started_count)+' • قراءة '+(Array.isArray(progress.reading_completed)?progress.reading_completed.length:0)+'/11';
+   details.appendChild(summary);
+   const content=document.createElement('div');
+   content.className='progress-details';
+   for(const group of describeProgress(progress)){
+     const section=document.createElement('section');
+     section.className='progress-group';
+     const heading=document.createElement('h4');
+     heading.textContent=group.title;
+     const list=document.createElement('ul');
+     for(const item of group.items){
+       const li=document.createElement('li');
+       li.textContent=item;
+       list.appendChild(li);
+     }
+     section.append(heading,list);
+     content.appendChild(section);
    }
-   if(count(progress.started_count)>0)return level+' • بدأ الدروس الأساسية';
-   return level+' • لم يبدأ الدروس الأساسية بعد';
+   details.appendChild(content);
+   td.appendChild(details);
+   row.appendChild(td);
  }
  function render(rows,generatedAt){
    const tbody=$('students');
@@ -169,9 +238,9 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
      const progress=student.progress;
      cell(tr,'الطالب',student.display_name||'—');
      cell(tr,'آخر اتصال',formatDate(student.last_seen_at));
-     cell(tr,'النقاط',progress.xp===null?'—':String(count(progress.xp)));
-     cell(tr,'وش سوا؟',describeActivity(progress));
-     cell(tr,'وين وصل؟',describeProgress(progress));
+     cell(tr,'نقاط الخبرة (XP)',progress.xp===null?'غير متاحة':count(progress.xp)+' نقطة','xp-cell');
+     cell(tr,'آخر نشاط',describeActivity(progress));
+     appendProgressCell(tr,progress);
      tbody.appendChild(tr);
    }
    $('total').textContent=String(rows.length);
@@ -236,7 +305,14 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
        const p=student.progress;
        const validCount=value=>Number.isSafeInteger(value)&&value>=0;
        return (p.xp===null||validCount(p.xp))&&validCount(p.completed_count)&&validCount(p.mastered_count)&&
-         validCount(p.started_count)&&validCount(p.trained_count)&&optionalIndex(p.current_lesson_index)&&
+         validCount(p.started_count)&&validCount(p.trained_count)&&
+         [p.mastered_indices,p.trained_indices,p.started_indices].every(a=>Array.isArray(a)&&a.length<=100&&a.every(i=>validCount(i)&&i<=99))&&
+         ['saved_words_count','foundation_saved_count','review_words_count','review_due_count','missed_words_count','quiz_attempts','answers_count','correct_answers_count','active_days_count','learning_streak'].every(k=>validCount(p[k]))&&
+         (p.best_quiz_score===null||(validCount(p.best_quiz_score)&&p.best_quiz_score<=100))&&
+         (p.vocab_level===null||(typeof p.vocab_level==='string'&&p.vocab_level.length<=24))&&
+         (p.vocab_position===null||(validCount(p.vocab_position)&&p.vocab_position<=19999))&&
+         Array.isArray(p.reading_completed)&&p.reading_completed.length<=11&&
+         p.reading_completed.every((id,i)=>['letter-sounds','digraphs','short-vowels','blends','cvc','magic-e','vowel-teams','r-controlled','diphthongs','syllables','practice'][i]===id)&&optionalIndex(p.current_lesson_index)&&
          optionalIndex(p.current_word_index)&&optionalIndex(p.last_action_lesson_index)&&
          optionalIndex(p.last_action_word_index)&&
          (p.last_action===null||allowedActions.has(p.last_action))&&

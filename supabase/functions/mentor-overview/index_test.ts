@@ -1,4 +1,4 @@
-import { handleMentorOverview } from "./index.ts";
+import { handleMentorOverview, sanitizeOverview } from "./index.ts";
 
 const origin = "https://mrwael1773.github.io";
 
@@ -30,6 +30,29 @@ function withSupabaseMock(mock: typeof fetch) {
     else Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", oldKey);
   };
 }
+
+
+Deno.test("sanitizes the complete mentor progress contract", () => {
+  const sanitized = sanitizeOverview({
+    generated_at: "2026-11-21T00:00:00Z",
+    students: [{
+      display_name: "Learner", last_seen_at: null,
+      progress: {
+        xp: 12, completed_count: 3, mastered_count: 2, started_count: 4, trained_count: 3,
+        mastered_indices: [0, 1], trained_indices: [2], started_indices: [0, 1, 2, 3],
+        saved_words_count: 5, foundation_saved_count: 2, review_words_count: 4,
+        review_due_count: 1, missed_words_count: 1, quiz_attempts: 3,
+        best_quiz_score: 90, answers_count: 10, correct_answers_count: 8,
+        active_days_count: 5, learning_streak: 2, vocab_level: "all", vocab_position: 5,
+        reading_completed: ["letter-sounds", "digraphs"],
+        current_lesson_index: 3, current_word_index: 2,
+        last_action: "lesson_progress", last_action_at: "2026-11-21T00:00:00Z",
+        last_action_lesson_index: 3, last_action_word_index: 2
+      }
+    }]
+  });
+  assertEquals(sanitized !== null, true);
+});
 
 Deno.test("rejects a malformed bearer token without contacting Supabase", async () => {
   const originalFetch = globalThis.fetch;
@@ -63,6 +86,12 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
         email: "private@example.test",
         progress: {
           xp: 12, completed_count: 3, mastered_count: 2, started_count: 4, trained_count: 3,
+          mastered_indices: [0, 1], trained_indices: [2], started_indices: [0, 1, 2, 3],
+          saved_words_count: 5, foundation_saved_count: 2, review_words_count: 4,
+          review_due_count: 1, missed_words_count: 1, quiz_attempts: 3,
+          best_quiz_score: 90, answers_count: 10, correct_answers_count: 8,
+          active_days_count: 5, learning_streak: 2, vocab_level: "all", vocab_position: 5,
+          reading_completed: ["letter-sounds", "digraphs"],
           current_lesson_index: 3, current_word_index: 2,
           last_action: "lesson_progress", last_action_at: "2026-11-21T00:00:00Z",
           last_action_lesson_index: 3, last_action_word_index: 2,
@@ -91,6 +120,15 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
     assertEquals("raw_answers" in output.students[0].progress, false);
     assertEquals(output.students[0].progress.current_lesson_index, 3);
     assertEquals(output.students[0].progress.last_action, "lesson_progress");
+    assertEquals(output.students[0].progress.saved_words_count, 5);
+    assertEquals(output.students[0].progress.review_due_count, 1);
+    assertEquals(output.students[0].progress.quiz_attempts, 3);
+    assertEquals(output.students[0].progress.active_days_count, 5);
+    assertEquals(output.students[0].progress.vocab_position, 5);
+    assertEquals(output.students[0].progress.mastered_indices.length, 2);
+    assertEquals(output.students[0].progress.reading_completed.length, 2);
+    assertEquals(output.students[0].progress.reading_completed[1], "digraphs");
+    assertEquals("raw_answers" in output.students[0].progress, false);
     assertEquals("email" in output.students[0].progress, false);
   } finally {
     restore();
@@ -161,6 +199,12 @@ Deno.test("rejects an unknown learning activity action in the overview payload",
       username: "learner", display_name: "Learner", last_seen_at: null,
       progress: {
         xp: 4, completed_count: 1, mastered_count: 1, started_count: 1, trained_count: 0,
+        mastered_indices: [0], trained_indices: [], started_indices: [0],
+        saved_words_count: 0, foundation_saved_count: 0, review_words_count: 0,
+        review_due_count: 0, missed_words_count: 0, quiz_attempts: 0,
+        best_quiz_score: 0, answers_count: 0, correct_answers_count: 0,
+        active_days_count: 0, learning_streak: 0, vocab_level: "all", vocab_position: null,
+        reading_completed: [],
         current_lesson_index: null, current_word_index: null,
         last_action: "raw_answers_requested", last_action_at: "2026-11-21T00:00:00Z",
         last_action_lesson_index: null, last_action_word_index: null
