@@ -129,7 +129,7 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
 
   // Ordinary browser quiz completion may update local learning progress and XP,
   // but it must never submit a trusted mastery event for the champions leaderboard.
-  await expect(page.locator('#cloudStatus')).toContainText('تمت مزامنة تقدمك مع حسابك السحابي');
+  await expect(page.locator('#cloudStatus')).toContainText('تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('__e2e_mastery_events') || '[]')))
     .toHaveLength(0);
   expect(await page.evaluate(() => localStorage.getItem(
@@ -148,7 +148,7 @@ test('mastery XP and reward claims survive cloud upload and a fresh page load', 
       && Array.isArray(saved.masteredLessons)
       && saved.masteredLessons.includes(0);
   });
-  await expect(page.locator('#cloudStatus')).toContainText('تمت مزامنة تقدمك مع حسابك السحابي');
+  await expect(page.locator('#cloudStatus')).toContainText('تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
 
   const restored = await page.evaluate(() => {
     const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
