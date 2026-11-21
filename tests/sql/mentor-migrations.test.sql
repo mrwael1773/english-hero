@@ -191,7 +191,7 @@ begin
      )
      or v_result->'week_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'week_leaders'->0->>'score' <> '2'
-     or v_result->'mastery_leaders'->0->>'score' <> '2'
+     or v_result->'mastery_leaders'->0->>'score' <> '3'
      or v_result->'consistency_leaders'->0->>'score' <> '1'
      or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'improvement_leaders'->0->>'score' <> '1' then
@@ -201,9 +201,14 @@ begin
     select 1
     from jsonb_array_elements(v_result->'mastery_leaders') as mastery_row
     where mastery_row->>'display_name' = 'Improved Learner'
-      and mastery_row->>'score' = '2'
+      and mastery_row->>'score' = '3'
+  ) or not exists (
+    select 1
+    from jsonb_array_elements(v_result->'mastery_leaders') as mastery_row
+    where mastery_row->>'display_name' = 'Synthetic Learner'
+      and mastery_row->>'score' = '1'
   ) then
-    raise exception 'Mastery leaderboard counted duplicates, strings, or out-of-range lesson indices';
+    raise exception 'Mastery leaderboard did not use the deduplicated mastery-event ledger';
   end if;
   if v_result::text like '%user_id%' or v_result::text like '%username%' or v_result::text like '%email%' then
     raise exception 'Student champions RPC leaked private identity fields';
