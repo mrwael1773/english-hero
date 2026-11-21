@@ -182,7 +182,7 @@ jobs:
             supabase/migrations/20261121150000_student_champions_improvement_category.sql \
             supabase/migrations/20261121180000_harden_student_champion_lesson_indices.sql \
             supabase/migrations/20261121193000_champions_mastery_uses_event_ledger.sql \
-            supabase/migrations/20261121210000_server_verified_champion_challenges.sql \\
+            supabase/migrations/20261121210000_server_verified_champion_challenges.sql \
             supabase/migrations/20261121220000_import_student_champion_question_bank.sql
           do
             echo "Applying $migration"
