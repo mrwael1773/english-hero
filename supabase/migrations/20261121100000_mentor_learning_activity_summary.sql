@@ -148,7 +148,15 @@ begin
         'display_name', p.display_name,
         'last_seen_at', a.last_seen_at,
         'progress', jsonb_build_object(
-          'xp', case when jsonb_typeof(lp.progress->'xp') = 'number' then lp.progress->'xp' else null end,
+          'xp', case
+            when (lp.progress->>'xp') ~ '^(0|[1-9][0-9]{0,15})$' then
+              case
+                when (lp.progress->>'xp')::numeric <= 9007199254740991
+                then to_jsonb((lp.progress->>'xp')::bigint)
+                else null
+              end
+            else null
+          end,
           'completed_count', case
             when jsonb_typeof(lp.progress->'completed') = 'array'
             then jsonb_array_length(lp.progress->'completed') else 0 end,
