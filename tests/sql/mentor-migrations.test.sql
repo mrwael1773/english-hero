@@ -147,7 +147,7 @@ set progress = '{
   "quizHistory":[{}, {}, {}],"quizzes":7,"best":90,
   "answerStats":{"answered":10,"correct":8},
   "daily":{"1900-01-01":{"quiz":true},"1900-01-02":{"review":true},"1900-01-03":{"other":false}},
-  "streak":4,"vocabLevel":"all"
+  "streak":4,"vocabLevel":"all","vocabPosition":5
 }'::jsonb
 where user_id = '11111111-1111-4111-8111-111111111111';
 
@@ -199,7 +199,8 @@ begin
   end if;
   if v_student->'progress'->'active_days_count' <> '2'::jsonb
      or v_student->'progress'->'learning_streak' <> '4'::jsonb
-     or v_student->'progress'->'vocab_level' <> '"all"'::jsonb then
+     or v_student->'progress'->'vocab_level' <> '"all"'::jsonb
+     or v_student->'progress'->'vocab_position' <> '5'::jsonb then
     raise exception 'Daily activity or vocabulary level aggregates were calculated incorrectly';
   end if;
   if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
