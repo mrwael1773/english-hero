@@ -123,6 +123,24 @@ select public.record_student_learning_activity('lesson_mastered', 3, 2);
 -- Replaying the same mastery event must not create a second leaderboard entry.
 select public.record_student_learning_activity('lesson_mastered', 3, 2);
 
+-- A second synthetic learner has two new masteries this week versus one
+-- in the matching elapsed period last week, so improvement is +1.
+insert into auth.users (id)
+values ('33333333-3333-4333-8333-333333333333');
+insert into public.student_profiles (user_id, username, display_name)
+values ('33333333-3333-4333-8333-333333333333', 'synthetic-improver', 'Improved Learner');
+insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
+select '33333333-3333-4333-8333-333333333333', lesson_index,
+       (((now() at time zone 'Asia/Riyadh')::date
+          - extract(dow from (now() at time zone 'Asia/Riyadh')::date)::integer
+          + 1)::timestamp + make_interval(hours => lesson_index)) at time zone 'Asia/Riyadh'
+from (values (4),(5)) as lessons(lesson_index);
+insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
+select '33333333-3333-4333-8333-333333333333', 6,
+       (((now() at time zone 'Asia/Riyadh')::date
+          - extract(dow from (now() at time zone 'Asia/Riyadh')::date)::integer
+          - 6)::timestamp) at time zone 'Asia/Riyadh';
+
 do $champions$
 declare
   v_result jsonb;
@@ -142,7 +160,9 @@ begin
      or v_result->'today_leaders'->0->>'score' <> '1'
      or v_result->'week_leaders'->0->>'score' <> '1'
      or v_result->'mastery_leaders'->0->>'score' <> '2'
-     or v_result->'consistency_leaders'->0->>'score' <> '1' then
+     or v_result->'consistency_leaders'->0->>'score' <> '1'
+     or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
+     or v_result->'improvement_leaders'->0->>'score' <> '1' then
     raise exception 'Student champions aggregates were not calculated as expected';
   end if;
   if (v_result::text like '%user_id%' or v_result::text like '%username%' or v_result::text like '%email%') then
