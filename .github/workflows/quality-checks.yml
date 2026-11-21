@@ -60,6 +60,7 @@ jobs:
           node --check english-hero-plus.js
           node --check grammar-lessons.js
           node --check tests/integration/student-username-login.test.mjs
+          node --check tests/integration/student-champion-challenge.test.mjs
           node --check scripts/import-champion-question-bank.mjs
           node --check scripts/build-champion-question-bank.mjs
           node --check tests/integration/champion-question-bank-import.test.mjs
@@ -131,6 +132,7 @@ jobs:
           test -s scripts/build-champion-question-bank.mjs
           test -s tests/integration/champion-question-bank-import.test.mjs
           test -s tests/integration/champion-question-bank-generator.test.mjs
+          test -s tests/integration/student-champion-challenge.test.mjs
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg
@@ -242,17 +244,20 @@ jobs:
           ENGLISH_HERO_ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
           EOF
 
-          supabase functions serve student-username-login \
+          supabase functions serve \
             --env-file /tmp/english-hero-edge-test.env \
             --no-verify-jwt > /tmp/english-hero-edge-function.log 2>&1 &
           echo $! > /tmp/english-hero-edge-function.pid
 
           ready=0
           for attempt in $(seq 1 45); do
-            status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            username_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
               --header "Origin: ${ALLOWED_ORIGIN}" \
               "${API_URL}/functions/v1/student-username-login" || true)
-            if [ "${status}" = "405" ]; then
+            champion_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              --header "Origin: ${ALLOWED_ORIGIN}" \
+              "${API_URL}/functions/v1/student-champion-challenge" || true)
+            if [ "${username_status}" = "405" ] && [ "${champion_status}" = "405" ]; then
               ready=1
               break
             fi
@@ -266,6 +271,7 @@ jobs:
 
           export API_URL ANON_KEY SERVICE_ROLE_KEY DB_URL ALLOWED_ORIGIN
           node tests/integration/student-username-login.test.mjs
+          node tests/integration/student-champion-challenge.test.mjs
 
       - name: Stop local Supabase stack
         if: always() && steps.setup_supabase_cli.outcome == 'success'
