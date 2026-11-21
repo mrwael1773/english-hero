@@ -1,0 +1,158 @@
+-- PostgreSQL integration assertions for the mentor-dashboard migrations.
+-- All identities and progress below are synthetic test fixtures.
+\set ON_ERROR_STOP on
+
+insert into auth.users (id)
+values ('11111111-1111-4111-8111-111111111111');
+
+insert into public.student_profiles (user_id, username, display_name)
+values ('11111111-1111-4111-8111-111111111111', 'synthetic-learner', 'Synthetic Learner');
+
+insert into public.learning_progress (user_id, progress)
+values (
+  '11111111-1111-4111-8111-111111111111',
+  '{"xp":120,"completed":[0,1],"masteredLessons":[0],"lessonStarted":[0,3],"lessonTrained":[0],"lessonPositions":{"3":2}}'::jsonb
+);
+
+-- The authenticated student can write only through the constrained functions.
+select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
+select public.record_student_activity();
+select public.record_student_learning_activity('lesson_started', 3, 2);
+
+do $$
+declare
+  v_row public.student_activity%rowtype;
+begin
+  select * into v_row from public.student_activity
+  where user_id = '11111111-1111-4111-8111-111111111111';
+  if v_row.last_learning_action <> 'lesson_started'
+     or v_row.current_lesson_index <> 3
+     or v_row.current_word_index <> 2 then
+    raise exception 'Student activity function did not persist the expected latest-only state';
+  end if;
+end;
+$$;
+
+-- A mastered lesson clears the active lesson pointer without deleting the last action.
+select public.record_student_learning_activity('lesson_mastered', 3, 2);
+
+do $$
+begin
+  if not exists (
+    select 1 from public.student_activity
+    where user_id = '11111111-1111-4111-8111-111111111111'
+      and last_learning_action = 'lesson_mastered'
+      and current_lesson_index is null
+      and current_word_index is null
+  ) then
+    raise exception 'Mastery did not clear the active lesson position';
+  end if;
+end;
+$$;
+
+-- Malformed or out-of-range JSON progress must not break the overview RPC.
+update public.learning_progress
+set progress = '{"xp":999999999999999999999999999,"completed":[],"masteredLessons":[],"lessonStarted":["99999999999999999999","3"],"lessonTrained":[],"lessonPositions":{"3":"99999999999999999999"}}'::jsonb
+where user_id = '11111111-1111-4111-8111-111111111111';
+
+-- Use a known synthetic bearer token and store only its SHA-256 hash.
+insert into public.mentor_link_tokens (token_hash, expires_at)
+values (
+  encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex'),
+  now() + interval '1 day'
+);
+
+do $$
+declare
+  v_result jsonb;
+  v_student jsonb;
+begin
+  v_result := public.mentor_get_student_overview(
+    encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex')
+  );
+  v_student := v_result->'students'->0;
+  if v_student->>'display_name' <> 'Synthetic Learner' then
+    raise exception 'Overview did not return the synthetic student';
+  end if;
+  if v_student->'progress'->'xp' <> 'null'::jsonb then
+    raise exception 'Unsafe oversized XP was not converted to null';
+  end if;
+  if v_student->'progress'->'current_lesson_index' <> '3'::jsonb then
+    raise exception 'Active lesson index was not safely recovered from progress JSON';
+  end if;
+  if v_student->'progress'->'current_word_index' <> 'null'::jsonb then
+    raise exception 'Out-of-range word index was not rejected';
+  end if;
+end;
+$$;
+
+-- Expired and revoked bearer tokens must be rejected by the RPC.
+insert into public.mentor_link_tokens (token_hash, expires_at)
+values (
+  encode(extensions.digest(convert_to(repeat('b', 64), 'UTF8'), 'sha256'), 'hex'),
+  now() - interval '1 day'
+);
+insert into public.mentor_link_tokens (token_hash, expires_at, revoked_at)
+values (
+  encode(extensions.digest(convert_to(repeat('c', 64), 'UTF8'), 'sha256'), 'hex'),
+  now() + interval '1 day',
+  now()
+);
+
+do $$
+declare
+  v_hash text;
+begin
+  foreach v_hash in array array[
+    encode(extensions.digest(convert_to(repeat('b', 64), 'UTF8'), 'sha256'), 'hex'),
+    encode(extensions.digest(convert_to(repeat('c', 64), 'UTF8'), 'sha256'), 'hex')
+  ] loop
+    begin
+      perform public.mentor_get_student_overview(v_hash);
+      raise exception 'Expired or revoked mentor token was accepted';
+    exception
+      when sqlstate '28000' then null;
+    end;
+  end loop;
+end;
+$$;
+
+-- Verify effective grants, including PostgreSQL's implicit PUBLIC privileges.
+do $$
+begin
+  if not has_function_privilege('authenticated', 'public.record_student_activity()', 'EXECUTE') then
+    raise exception 'Authenticated students cannot record last-seen activity';
+  end if;
+  if not has_function_privilege('authenticated', 'public.record_student_learning_activity(text,integer,integer)', 'EXECUTE') then
+    raise exception 'Authenticated students cannot record learning activity';
+  end if;
+  if has_function_privilege('anon', 'public.record_student_activity()', 'EXECUTE') then
+    raise exception 'Anonymous users can record student activity';
+  end if;
+  if has_function_privilege('authenticated', 'public.mentor_get_student_overview(text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.mentor_get_student_overview(text)', 'EXECUTE') then
+    raise exception 'A client role can call the privileged mentor overview RPC';
+  end if;
+  if not has_function_privilege('service_role', 'public.mentor_get_student_overview(text)', 'EXECUTE') then
+    raise exception 'Service role cannot call the mentor overview RPC';
+  end if;
+  if has_function_privilege('authenticated', 'public.issue_mentor_link_token(integer)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.issue_mentor_link_token(integer)', 'EXECUTE') then
+    raise exception 'A client role can issue mentor bearer tokens';
+  end if;
+  if has_function_privilege('authenticated', 'public.get_mentor_student_overview()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.get_mentor_student_overview()', 'EXECUTE') then
+    raise exception 'The retired authenticated mentor RPC remains executable';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_activity', 'SELECT')
+     or has_table_privilege('anon', 'public.student_activity', 'SELECT') then
+    raise exception 'A client role can read the private student activity table';
+  end if;
+  if has_table_privilege('authenticated', 'public.mentor_link_tokens', 'SELECT')
+     or has_table_privilege('anon', 'public.mentor_link_tokens', 'SELECT') then
+    raise exception 'A client role can read private mentor token hashes';
+  end if;
+end;
+$$;
+
+\echo 'Mentor dashboard PostgreSQL migration tests passed.'
