@@ -256,7 +256,10 @@
         renderStats();renderCourses();renderHome();renderProfile();renderReview();
         revision++;
         const saved=await uploadProgress();
-        if(saved) status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
+        if(saved){
+          await flushPendingMasteryEvents(syncUserId);
+          status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
+        }
       } catch(e) {
         // A failed initial download must not unlock uploads: the local state may
         // belong to another account, and uploading it could overwrite cloud data.
@@ -271,6 +274,52 @@
       if(user && client && user.id!==requestedUserId) queueMicrotask(()=>syncNow());
     }
   }
+  const pendingMasteryKey=userId=>'english-hero-pending-mastery-events-'+userId;
+  function readPendingMasteryEvents(userId){
+    try{
+      const value=JSON.parse(localStorage.getItem(pendingMasteryKey(userId))||'[]');
+      return Array.isArray(value)?[...new Set(value.filter(index=>Number.isInteger(index)&&index>=0&&index<lessons.length))]:[];
+    }catch{return [];}
+  }
+  function writePendingMasteryEvents(userId,events){
+    try{
+      const key=pendingMasteryKey(userId);
+      if(events.length)localStorage.setItem(key,JSON.stringify([...new Set(events)]));
+      else localStorage.removeItem(key);
+      return true;
+    }catch(error){
+      console.warn('English Hero pending mastery storage:',error?.message||error);
+      return false;
+    }
+  }
+  function queuePendingMasteryEvent(userId,lessonIndex){
+    const pending=readPendingMasteryEvents(userId);
+    if(!pending.includes(lessonIndex))pending.push(lessonIndex);
+    return writePendingMasteryEvents(userId,pending);
+  }
+  async function flushPendingMasteryEvents(expectedUserId){
+    if(!client||!user||user.id!==expectedUserId||!ready||progressOwnerUserId!==expectedUserId)return false;
+    const pending=readPendingMasteryEvents(expectedUserId);
+    if(!pending.length)return true;
+    for(const lessonIndex of pending){
+      if(!user||user.id!==expectedUserId||!ready||progressOwnerUserId!==expectedUserId)return false;
+      // Only replay events still supported by this account's verified cloud progress.
+      if(!Array.isArray(state.masteredLessons)||!state.masteredLessons.includes(lessonIndex))continue;
+      try{
+        const {error}=await client.rpc('record_student_learning_activity',{
+          p_action:'lesson_mastered',p_lesson_index:lessonIndex,p_word_index:null
+        });
+        if(error)throw error;
+        const remaining=readPendingMasteryEvents(expectedUserId).filter(index=>index!==lessonIndex);
+        if(!writePendingMasteryEvents(expectedUserId,remaining))return false;
+      }catch(error){
+        console.warn('English Hero pending mastery replay:',error?.message||error);
+        return false;
+      }
+    }
+    return true;
+  }
+
   async function recordStudentActivity(){
     if(!client || !user || !ready || progressOwnerUserId!==user.id) return;
     try {
@@ -459,9 +508,12 @@
       // Mastery is recorded only after the current account's progress snapshot is
       // successfully synced, so the database can verify the lesson is mastered.
       if(action === 'lesson_mastered') {
+        const eventUserId=user.id;
+        if(!queuePendingMasteryEvent(eventUserId,lessonIndex))return false;
         clearTimeout(timer);
         const synced = await uploadProgress();
-        if(!synced || !user || progressOwnerUserId!==user.id) return false;
+        if(!synced || !user || user.id!==eventUserId || progressOwnerUserId!==eventUserId) return false;
+        return flushPendingMasteryEvents(eventUserId);
       }
       const {error}=await client.rpc('record_student_learning_activity',{
         p_action:action,
@@ -568,6 +620,7 @@
         if(ownsActiveProgress)removeAndVerify('english-hero-academy-3');
         for(const key of [
           'english-hero-account-backup-'+targetUserId,
+          pendingMasteryKey(targetUserId),
           'ehPlusV2:'+targetUserId,
           'englishHeroStudentTasksV1:'+targetUserId,
           'eh-scenarios-done:'+targetUserId
