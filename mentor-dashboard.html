@@ -116,7 +116,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
      cell(tr,'آخر اتصال',formatDate(student.last_seen_at));
      cell(tr,'الدروس المكتملة',String(count(progress.completed_count)));
      cell(tr,'دروس الإتقان',String(count(progress.mastered_count)));
-     cell(tr,'النقاط',progress.xp==null?'—':String(progress.xp));
+     cell(tr,'النقاط',Number.isSafeInteger(progress.xp)&&progress.xp>=0?String(progress.xp):'—');
      tbody.appendChild(tr);
    }
    $('total').textContent=String(rows.length);
@@ -165,7 +165,14 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
        showAccessPanel();
        return;
      }
-     if(!Array.isArray(payload.students)||typeof payload.generated_at!=='string'){
+     const validRows=Array.isArray(payload.students)&&payload.students.every(student=>
+       student&&typeof student==='object'&&!Array.isArray(student)&&
+       (student.username==null||typeof student.username==='string')&&
+       (student.display_name==null||typeof student.display_name==='string')&&
+       (student.last_seen_at==null||typeof student.last_seen_at==='string')&&
+       student.progress&&typeof student.progress==='object'&&!Array.isArray(student.progress)
+     );
+     if(!validRows||typeof payload.generated_at!=='string'){
        say('استجابة الخدمة غير مكتملة؛ لم يتم عرض بيانات الطلاب.',true);
        showAccessPanel();
        return;
