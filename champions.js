@@ -95,7 +95,7 @@
       feature($('championsWeek'), data.week_leaders, 'درسًا جديدًا متقنًا',
         'بطولة الأسبوع بدأت للتو. الفرصة متاحة للجميع!');
       podium($('championsMastery'), data.mastery_leaders, 'درسًا متقنًا');
-      podium($('championsConsistency'), data.consistency_leaders, 'أيام نشاط');
+      podium($('championsConsistency'), data.consistency_leaders, 'أيام مشاركة');
       podium($('championsImprovement'), data.improvement_leaders, 'درسًا زيادة عن الفترة السابقة', 'تبدأ هذه الفئة بعد اكتمال أول 14 يومًا من سجل البطولة لضمان مقارنة عادلة.');
       if (status) {
         const stamp = data.generated_at ? new Date(data.generated_at) : new Date();
