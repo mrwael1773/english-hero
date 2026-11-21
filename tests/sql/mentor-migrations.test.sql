@@ -198,8 +198,6 @@ select public.complete_student_champion_attempt(
   '11111111-1111-4111-8111-111111111111',
   '[0,0,0,0,0,0,0,0,1,1]'::jsonb
 );
-select set_config('request.jwt.claim.role', 'authenticated', false);
-
 do $replay$
 declare
   v_rejected boolean := false;
@@ -218,6 +216,7 @@ begin
   end if;
 end;
 $replay$;
+select set_config('request.jwt.claim.role', 'authenticated', false);
 
 -- A second synthetic learner has two new masteries this week versus one
 -- in the matching elapsed period last week, so improvement is +1.
