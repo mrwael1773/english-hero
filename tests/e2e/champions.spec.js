@@ -121,15 +121,17 @@ test('switching accounts discards an old leaderboard response and reloads for th
 
   await page.locator('[data-page="champions"]').click();
   await page.waitForFunction(() => typeof window.__resolveOldChampions === 'function');
-  await page.evaluate(() => {
-    window.__switchE2EAccount();
-    window.__resolveOldChampions({
-      generated_at: '2026-11-22T09:00:00Z',
-      today_leaders: [{ display_name: 'طالب الحساب السابق', score: 99 }],
-      week_leaders: [{ display_name: 'بطل الحساب السابق', score: 99 }],
-      consistency_leaders: [{ display_name: 'نجم الحساب السابق', score: 99 }]
-    });
-  });
+  await page.evaluate(() => window.__switchE2EAccount());
+  await expect(page.locator('#championsToday')).toBeEmpty();
+  await expect(page.locator('#championsWeek')).toBeEmpty();
+  await expect(page.locator('#championsConsistency')).toBeEmpty();
+
+  await page.evaluate(() => window.__resolveOldChampions({
+    generated_at: '2026-11-22T09:00:00Z',
+    today_leaders: [{ display_name: 'طالب الحساب السابق', score: 99 }],
+    week_leaders: [{ display_name: 'بطل الحساب السابق', score: 99 }],
+    consistency_leaders: [{ display_name: 'نجم الحساب السابق', score: 99 }]
+  }));
 
   await expect(page.locator('#championsToday')).toContainText('طالب الحساب الجديد');
   await expect(page.locator('#championsToday')).not.toContainText('طالب الحساب السابق');
