@@ -48,10 +48,6 @@ begin
   end if;
 
 
-  insert into public.student_learning_days(user_id, activity_day, first_activity_at)
-  values (v_user_id, v_day, v_now)
-  on conflict (user_id, activity_day) do nothing;
-
   insert into public.student_activity (
     user_id, last_seen_at, last_learning_action, last_learning_activity_at,
     last_learning_lesson_index, last_learning_word_index,
