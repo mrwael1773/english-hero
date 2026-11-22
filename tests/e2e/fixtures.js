@@ -9,7 +9,7 @@ export const test = base.extend({
       body: `window.EnglishHeroCloudReady=Promise.resolve(true);
         window.EnglishHeroCloud={getUser:()=>({id:'e2e-student'}),isConfigured:()=>true,
         getProfile:async()=>({username:'e2e_student',display_name:'E2E Student'}),isReady:()=>true,
-        getStudentChampions:async()=>({generated_at:'2026-11-21T10:00:00Z',timezone:'Asia/Riyadh',today_leaders:[{display_name:'بطلة الاختبار',score:2},{display_name:'وصيفة اليوم',score:1},{display_name:'المركز الثالث',score:1}],week_leaders:[{display_name:'بطل الأسبوع',score:4},{display_name:'وصيف الأسبوع',score:3}],mastery_leaders:[{display_name:'الأكثر إتقانًا',score:5}],consistency_leaders:[{display_name:'نجم الاستمرارية',score:6}],improvement_leaders:[{display_name:'الأكثر تطورًا',score:3}]}),
+        getStudentChampions:async()=>({generated_at:'2026-11-21T10:00:00Z',timezone:'Asia/Riyadh',today_leaders:[{display_name:'بطلة الاختبار',score:2},{display_name:'وصيفة اليوم',score:1},{display_name:'المركز الثالث',score:1}],week_leaders:[{display_name:'بطل الأسبوع',score:4},{display_name:'وصيف الأسبوع',score:3}],consistency_leaders:[{display_name:'نجم الاستمرارية',score:6}]}),
         startChampionChallenge:async lessonIndex=>({attempt_id:'e2e-champion-attempt',lesson_index:lessonIndex,questions:Array.from({length:10},(_,i)=>({prompt:'Question '+(i+1),options:['Option A','Option B','Option C','Option D']}))}),
         submitChampionChallenge:async()=>({score:8,total:10,passed:true,recorded:true})};`
     }));
