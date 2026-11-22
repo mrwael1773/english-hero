@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures.js';
 
-test('champions view shows daily and weekly winners plus achievement categories', async ({ page }) => {
+test('champions view shows the four retained categories only', async ({ page }) => {
   await page.goto('/');
   await page.locator('[data-page="champions"]').click();
 
@@ -13,9 +13,11 @@ test('champions view shows daily and weekly winners plus achievement categories'
   await expect(todayRows.nth(0)).not.toContainText('بطلة الاختبار');
   await expect(todayRows.nth(1)).toContainText('🥉');
   await expect(page.locator('#championsWeek')).toContainText('بطل الأسبوع');
-  await expect(page.locator('#championsMastery')).toContainText('الأكثر إتقانًا');
   await expect(page.locator('#championsConsistency')).toContainText('نجم الاستمرارية');
-  await expect(page.locator('#championsImprovement')).toContainText('الأكثر تطورًا');
+  await expect(page.locator('#championsMastery')).toHaveCount(0);
+  await expect(page.locator('#championsImprovement')).toHaveCount(0);
+  await expect(page.locator('#champions')).not.toContainText('الأكثر إتقانًا');
+  await expect(page.locator('#champions')).not.toContainText('الأكثر تطورًا');
   await expect(page.locator('#championsStatus')).toContainText('الأسبوع من الأحد إلى السبت');
 });
 
