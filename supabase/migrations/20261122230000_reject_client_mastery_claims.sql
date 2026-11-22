@@ -20,13 +20,6 @@ begin
     raise exception 'Authentication required' using errcode = '42501';
   end if;
 
-  -- Mastery is server-verifiable only through complete_student_champion_attempt.
-  -- This RPC is callable by authenticated browsers, so never accept mastery here,
-  -- even when the learner edits their own cloud progress JSON.
-  if p_action = 'lesson_mastered' then
-    raise exception 'Mastery must be verified by a server challenge' using errcode = '42501';
-  end if;
-
   if p_action is null or p_action not in (
     'lesson_started',
     'lesson_progress',
@@ -43,6 +36,14 @@ begin
   if p_word_index is not null and p_word_index not between 0 and 99 then
     raise exception 'Invalid word index' using errcode = '22023';
   end if;
+
+  -- Mastery is server-verifiable only through complete_student_champion_attempt.
+  -- This RPC is callable by authenticated browsers, so never accept mastery here,
+  -- even when the learner edits their own cloud progress JSON.
+  if p_action = 'lesson_mastered' then
+    raise exception 'Mastery must be verified by a server challenge' using errcode = '42501';
+  end if;
+
   if p_action like 'lesson_%' and p_lesson_index is null then
     raise exception 'Lesson index required' using errcode = '22023';
   end if;
