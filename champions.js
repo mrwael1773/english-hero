@@ -6,6 +6,7 @@
   const $ = id => document.getElementById(id);
   const rankIcons = ['🥇','🥈','🥉'];
   let loading = false;
+  let reloadAfterCurrentLoad = false;
   let loadedAt = 0;
   let authEpoch = 0;
   let activeUserId = window.EnglishHeroCloud?.getUser?.()?.id || null;
@@ -88,7 +89,11 @@
   }
 
   async function load(force = false) {
-    if (loading || (!force && Date.now() - loadedAt < 45000)) return;
+    if (loading) {
+      if (force) reloadAfterCurrentLoad = true;
+      return;
+    }
+    if (!force && Date.now() - loadedAt < 45000) return;
     loading = true;
     const status = $('championsStatus');
     if (status) status.textContent = 'جارٍ تحديث البطولات...';
@@ -128,6 +133,10 @@
       if (status) status.textContent = 'تعذر تحميل النتائج الآن. حاول التحديث بعد قليل.';
     } finally {
       loading = false;
+      if (reloadAfterCurrentLoad) {
+        reloadAfterCurrentLoad = false;
+        if (root.classList.contains('active')) load(true);
+      }
     }
   }
 
