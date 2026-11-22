@@ -178,10 +178,13 @@
         return;
       }
       submit.disabled = true;
+      const submitEpoch = authEpoch;
+      const submitUserId = window.EnglishHeroCloud.getUser()?.id;
       const status = $('championChallengeStatus');
       if (status) status.textContent = 'جارٍ تصحيح الإجابات على الخادم...';
       try {
         const result = await window.EnglishHeroCloud.submitChampionChallenge(data.attempt_id, answers);
+        if (submitEpoch !== authEpoch || window.EnglishHeroCloud.getUser()?.id !== submitUserId || !window.EnglishHeroCloud.isReady()) return;
         if (result?.expired) {
           if (status) status.textContent = 'انتهت مدة المحاولة. ابدأ تحديًا جديدًا.';
           host.replaceChildren();
@@ -218,10 +221,13 @@
       return;
     }
     button.disabled = true;
+    const requestEpoch = authEpoch;
+    const requestUserId = cloud.getUser().id;
     host.replaceChildren();
     status.textContent = 'جارٍ تجهيز أسئلة التحدي...';
     try {
       const data = await cloud.startChampionChallenge(lessonNumber - 1);
+      if (requestEpoch !== authEpoch || cloud.getUser()?.id !== requestUserId || !cloud.isReady()) return;
       if (typeof data?.attempt_id !== 'string') throw new Error('لم تصل بيانات المحاولة بصورة صحيحة.');
       renderChallenge(data);
       status.textContent = 'لديك ١٥ دقيقة للإجابة عن الأسئلة العشرة.';
