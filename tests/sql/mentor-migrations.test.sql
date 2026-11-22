@@ -166,6 +166,11 @@ begin
 end;
 $legacy_mastery$;
 
+-- A legacy activity marker remains unverified until a successful challenge is submitted.
+insert into public.student_learning_days(user_id, activity_day)
+values ('11111111-1111-4111-8111-111111111111',
+        (now() at time zone 'Asia/Riyadh')::date - 2);
+
 -- Only the trusted server role can complete a challenge and create a mastery event.
 insert into public.student_champion_attempts (
   id, user_id, lesson_index, answer_key, question_count, expires_at
@@ -359,8 +364,17 @@ begin
     raise exception 'Repeated lesson mastery created duplicate champion events';
   end if;
   if (select count(*) from public.student_learning_days
-      where user_id = '11111111-1111-4111-8111-111111111111') <> 1 then
-    raise exception 'Learning-day tracking did not deduplicate the current Saudi day';
+      where user_id = '11111111-1111-4111-8111-111111111111'
+        and verification_source = 'challenge_verified') <> 1 then
+    raise exception 'A successful challenge did not create exactly one verified Saudi activity day';
+  end if;
+  if not exists (
+    select 1 from public.student_learning_days
+    where user_id = '11111111-1111-4111-8111-111111111111'
+      and activity_day = (now() at time zone 'Asia/Riyadh')::date - 2
+      and verification_source = 'legacy_unverified'
+  ) then
+    raise exception 'A legacy activity marker was incorrectly upgraded without challenge proof';
   end if;
 
   v_result := public.get_student_champions();
