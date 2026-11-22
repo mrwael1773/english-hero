@@ -168,6 +168,7 @@ export async function handleChampionChallenge(request: Request): Promise<Respons
       p_answers: payload.answers,
     });
     if (error) {
+      console.error("Champion attempt completion failed", { code: error.code, message: error.message });
       if (error.code === "22023") return json({ error: "انتهت صلاحية المحاولة أو سبق إرسالها." }, 409);
       if (error.code === "42501") return json({ error: "المحاولة غير موجودة لهذا الحساب." }, 404);
       return json({ error: "تعذر تصحيح التحدي. حاول لاحقًا." }, 503);
