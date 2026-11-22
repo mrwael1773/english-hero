@@ -65,7 +65,7 @@
 
   function validPayload(data) {
     if (!data || typeof data !== 'object') return false;
-    return ['today_leaders','week_leaders','mastery_leaders','consistency_leaders','improvement_leaders']
+    return ['today_leaders','week_leaders','consistency_leaders']
       .every(key => Array.isArray(data[key]) && data[key].every(row =>
         row && typeof row.display_name === 'string' &&
         Number.isSafeInteger(row.score) && row.score >= 0
@@ -94,9 +94,7 @@
         'لم يُتقن أي درس جديد اليوم حتى الآن. ابدأ رحلتك!');
       feature($('championsWeek'), data.week_leaders, 'درسًا جديدًا متقنًا',
         'بطولة الأسبوع بدأت للتو. الفرصة متاحة للجميع!');
-      podium($('championsMastery'), data.mastery_leaders, 'درسًا متقنًا');
       podium($('championsConsistency'), data.consistency_leaders, 'أيام مشاركة');
-      podium($('championsImprovement'), data.improvement_leaders, 'درسًا زيادة عن الفترة السابقة', 'تبدأ هذه الفئة بعد اكتمال أول 14 يومًا من سجل البطولة لضمان مقارنة عادلة.');
       if (status) {
         const stamp = data.generated_at ? new Date(data.generated_at) : new Date();
         status.textContent = 'آخر تحديث: ' + stamp.toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'medium', timeStyle: 'short' }) + ' · الأسبوع من الأحد إلى السبت';
