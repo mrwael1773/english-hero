@@ -119,7 +119,7 @@ begin
             select count(*)::integer from public.student_learning_days as d
             where d.user_id = p.user_id
           ),
-          'learning_streak', (
+          'learning_streak', coalesce((
             with activity_days as (
               select d.activity_day,
                 row_number() over (order by d.activity_day desc) - 1 as day_offset
@@ -140,7 +140,7 @@ begin
             cross join latest_day as ld
             where ad.activity_day = ld.activity_day - ad.day_offset::integer
             group by ld.activity_day
-          ),
+          ), 0),
           'vocab_level', case when jsonb_typeof(lp.progress->'vocabLevel') in ('string','number')
             then left(lp.progress->>'vocabLevel',24) else null end,
           'vocab_position', case
