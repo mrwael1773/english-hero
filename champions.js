@@ -7,6 +7,8 @@
   const rankIcons = ['🥇','🥈','🥉'];
   let loading = false;
   let loadedAt = 0;
+  let authEpoch = 0;
+  let activeUserId = window.EnglishHeroCloud?.getUser?.()?.id || null;
 
   function empty(host, message) {
     const node = document.createElement('div');
@@ -72,6 +74,19 @@
       ));
   }
 
+  function clearForAuthChange(signedIn) {
+    loadedAt = 0;
+    ['championsToday','championsWeek','championsConsistency','championChallengeQuestions'].forEach(id => $(id)?.replaceChildren());
+    const status = $('championsStatus');
+    if (status) status.textContent = signedIn
+      ? 'تم تغيير الحساب. جارٍ التحقق من الجلسة ومزامنة البيانات...'
+      : 'سجّل الدخول لعرض منافسة جميع الطلاب.';
+    const challengeStatus = $('championChallengeStatus');
+    if (challengeStatus) challengeStatus.textContent = signedIn
+      ? 'يمكنك بدء تحدٍ جديد بعد اكتمال مزامنة الحساب.'
+      : 'سجّل الدخول أولًا لبدء تحدي الأبطال.';
+  }
+
   async function load(force = false) {
     if (loading || (!force && Date.now() - loadedAt < 45000)) return;
     loading = true;
@@ -84,11 +99,18 @@
         if (status) status.textContent = 'خدمة المنافسة غير متاحة حاليًا.';
         return;
       }
-      if (!cloud.getUser() || !cloud.isReady()) {
-        if (status) status.textContent = 'سجّل الدخول لعرض منافسة جميع الطلاب.';
+      const requestUserId = cloud.getUser()?.id;
+      if (!requestUserId) {
+        clearForAuthChange(false);
         return;
       }
+      if (!cloud.isReady()) {
+        if (status) status.textContent = 'جارٍ استعادة بيانات الحساب. ستظهر البطولة بعد اكتمال المزامنة.';
+        return;
+      }
+      const requestEpoch = authEpoch;
       const data = await cloud.getStudentChampions();
+      if (requestEpoch !== authEpoch || cloud.getUser()?.id !== requestUserId || !cloud.isReady()) return;
       if (!validPayload(data)) throw new Error('Invalid champions response');
       feature($('championsToday'), data.today_leaders, 'درسًا جديدًا متقنًا',
         'لم يُتقن أي درس جديد اليوم حتى الآن. ابدأ رحلتك!');
@@ -210,6 +232,17 @@
     }
   }
 
+  window.addEventListener('englishhero:authstate', event => {
+    const nextUserId = event.detail?.user?.id || null;
+    if (nextUserId !== activeUserId) {
+      activeUserId = nextUserId;
+      authEpoch++;
+      clearForAuthChange(Boolean(nextUserId));
+    }
+  });
+  window.addEventListener('englishhero:authready', () => {
+    if (root.classList.contains('active')) load(true);
+  });
   $('championsRefresh')?.addEventListener('click', () => load(true));
   $('championChallengeStart')?.addEventListener('click', startChampionChallenge);
   const observer = new MutationObserver(() => {
