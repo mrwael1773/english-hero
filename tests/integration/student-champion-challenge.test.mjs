@@ -194,6 +194,54 @@ try {
   `));
   assert.equal(masteryCount, 1, 'A passing challenge must create exactly one mastery event');
 
+  const expiredStarted = await challengeRequest(tokenA, { action: 'start', lesson_index: 0 });
+  const expiredChallenge = await expiredStarted.json();
+  assert.equal(expiredStarted.status, 200, 'A second challenge should start for expiry testing');
+  assert.match(expiredChallenge.attempt_id || '', /^[0-9a-f-]{36}$/i);
+
+  const expiredAnswers = expiredChallenge.questions.map((question) => {
+    const bankRow = bankByPrompt.get(question.prompt);
+    assert.ok(bankRow, 'Expired challenge questions must still come from the seeded bank');
+    const correctText = bankRow.options[bankRow.correct_option];
+    const correctIndex = question.options.indexOf(correctText);
+    assert.notEqual(correctIndex, -1, 'The correct option must be present in the expired challenge');
+    return correctIndex;
+  });
+
+  const expiredRows = Number(psql(`
+    WITH updated AS (
+      UPDATE public.student_champion_attempts
+      SET expires_at = now() - interval '1 second'
+      WHERE id = '${expiredChallenge.attempt_id}'::uuid
+        AND user_id = '${users[0].id}'::uuid
+        AND submitted_at IS NULL
+      RETURNING 1
+    )
+    SELECT count(*) FROM updated;
+  `));
+  assert.equal(expiredRows, 1, 'The test must expire exactly its own unsubmitted attempt');
+
+  const expiredSubmission = await challengeRequest(tokenA, {
+    action: 'submit', attempt_id: expiredChallenge.attempt_id, answers: expiredAnswers,
+  });
+  const expiredResult = await expiredSubmission.json();
+  assert.equal(expiredSubmission.status, 200, 'An expired challenge should return a handled expiry result');
+  assert.equal(expiredResult.expired, true, 'The server must identify an expired challenge');
+  assert.equal(expiredResult.score, 0);
+  assert.equal(expiredResult.passed, false);
+  assert.equal(expiredResult.recorded, false);
+
+  const expiredReplay = await challengeRequest(tokenA, {
+    action: 'submit', attempt_id: expiredChallenge.attempt_id, answers: expiredAnswers,
+  });
+  assert.equal(expiredReplay.status, 409, 'An expired challenge must also be non-reusable');
+
+  const masteryAfterExpiry = Number(psql(`
+    SELECT count(*) FROM public.student_mastery_events
+    WHERE user_id = '${users[0].id}'::uuid AND lesson_index = 0;
+  `));
+  assert.equal(masteryAfterExpiry, 1, 'An expired challenge must not create another mastery event');
+
   const leaderboardResponse = await fetch(`${API_URL}/rest/v1/rpc/get_student_champions`, {
     method: 'POST',
     headers: {
