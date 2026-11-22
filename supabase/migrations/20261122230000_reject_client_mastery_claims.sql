@@ -1,4 +1,5 @@
 -- Prevent authenticated clients from forging mastery events through their own editable progress snapshot.
+-- Preserve the hardened 0..83 lesson-index validation from the preceding migration.
 -- Only the service-role challenge completion path may write student_mastery_events.
 
 create or replace function public.record_student_learning_activity(
@@ -30,20 +31,18 @@ begin
   ) then
     raise exception 'Invalid learning activity' using errcode = '22023';
   end if;
-  if p_lesson_index is not null and p_lesson_index not between 0 and 99 then
+  if p_lesson_index is not null and p_lesson_index not between 0 and 83 then
     raise exception 'Invalid lesson index' using errcode = '22023';
   end if;
   if p_word_index is not null and p_word_index not between 0 and 99 then
     raise exception 'Invalid word index' using errcode = '22023';
   end if;
 
-  -- Mastery is server-verifiable only through complete_student_champion_attempt.
-  -- This RPC is callable by authenticated browsers, so never accept mastery here,
-  -- even when the learner edits their own cloud progress JSON.
+  -- This browser-callable RPC must never create mastery from editable progress.
+  -- Only the server-verified challenge completion function can record mastery.
   if p_action = 'lesson_mastered' then
     raise exception 'Mastery must be verified by a server challenge' using errcode = '42501';
   end if;
-
   if p_action like 'lesson_%' and p_lesson_index is null then
     raise exception 'Lesson index required' using errcode = '22023';
   end if;
