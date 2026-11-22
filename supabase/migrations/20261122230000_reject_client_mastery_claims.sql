@@ -47,27 +47,10 @@ begin
     raise exception 'Lesson index required' using errcode = '22023';
   end if;
 
-  -- A mastery event is accepted only after the authenticated learner's
-  -- current cloud progress contains that lesson as mastered.
-  if p_action = 'lesson_mastered' and not exists (
-    select 1
-    from public.learning_progress as lp
-    where lp.user_id = v_user_id
-      and jsonb_typeof(lp.progress->'masteredLessons') = 'array'
-      and lp.progress->'masteredLessons' @> jsonb_build_array(p_lesson_index)
-  ) then
-    raise exception 'Lesson mastery must be synced before recording' using errcode = '22023';
-  end if;
 
   insert into public.student_learning_days(user_id, activity_day, first_activity_at)
   values (v_user_id, v_day, v_now)
   on conflict (user_id, activity_day) do nothing;
-
-  if p_action = 'lesson_mastered' then
-    insert into public.student_mastery_events(user_id, lesson_index, mastered_at)
-    values (v_user_id, p_lesson_index, v_now)
-    on conflict (user_id, lesson_index) do nothing;
-  end if;
 
   insert into public.student_activity (
     user_id, last_seen_at, last_learning_action, last_learning_activity_at,
