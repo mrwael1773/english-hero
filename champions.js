@@ -199,6 +199,7 @@
         host.replaceChildren();
         if (result.passed) load(true);
       } catch (error) {
+        if (submitEpoch !== authEpoch || window.EnglishHeroCloud.getUser()?.id !== submitUserId) return;
         submit.disabled = false;
         if (status) status.textContent = error?.message || 'تعذر تصحيح التحدي. حاول مجددًا.';
       }
@@ -232,6 +233,7 @@
       renderChallenge(data);
       status.textContent = 'لديك ١٥ دقيقة للإجابة عن الأسئلة العشرة.';
     } catch (error) {
+      if (requestEpoch !== authEpoch || cloud.getUser()?.id !== requestUserId) return;
       status.textContent = error?.message || 'تعذر بدء التحدي. قد لا يكون بنك هذا الدرس جاهزًا بعد.';
     } finally {
       button.disabled = false;
