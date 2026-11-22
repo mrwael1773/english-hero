@@ -140,18 +140,28 @@ begin
 end;
 $lesson_bounds$;
 
--- Client-written progress is no longer sufficient to create a mastery event.
+-- Even a forged mastery entry in the learner's own editable progress JSON
+-- must not let the authenticated browser create a leaderboard mastery event.
+-- Lesson 0 is deliberately present in the synthetic learner's progress fixture above.
 do $legacy_mastery$
 declare
   v_rejected boolean := false;
 begin
   begin
-    perform public.record_student_learning_activity('lesson_mastered', 3, 2);
+    perform public.record_student_learning_activity('lesson_mastered', 0, 2);
   exception when sqlstate '42501' then
     v_rejected := true;
   end;
   if not v_rejected then
-    raise exception 'Client-side mastery claim was accepted';
+    raise exception 'Client-side mastery claim matching editable cloud progress was accepted';
+  end if;
+
+  if exists (
+    select 1 from public.student_mastery_events
+    where user_id = '11111111-1111-4111-8111-111111111111'
+      and lesson_index = 0
+  ) then
+    raise exception 'Client-side mastery claim created a leaderboard event';
   end if;
 end;
 $legacy_mastery$;
