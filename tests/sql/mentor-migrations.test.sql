@@ -580,6 +580,16 @@ begin
     raise exception 'Client roles can directly access private champion event tables';
   end if;
   if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.student_learning_days'::regclass
+      and conname = 'student_learning_days_verification_source_check'
+      and contype = 'c'
+      and convalidated
+  ) then
+    raise exception 'The activity verification-source CHECK constraint must exist and be validated';
+  end if;
+  if not exists (
     select 1 from pg_class
     where oid = 'public.student_learning_days'::regclass and relrowsecurity and relforcerowsecurity
   ) or not exists (
