@@ -38,3 +38,23 @@ test('champion challenge validates the lesson range before making a server reque
   await page.locator('#championChallengeStart').click();
   await expect(page.locator('#championChallengeStatus')).toContainText('أدخل رقم درس من ١ إلى ٨٤');
 });
+
+test('champion challenge renders ten questions and displays the server result', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-page="champions"]').click();
+
+  await page.locator('#championChallengeLesson').fill('1');
+  await page.locator('#championChallengeStart').click();
+
+  const questions = page.locator('#championChallengeForm .champion-challenge-question');
+  await expect(questions).toHaveCount(10);
+  await expect(page.locator('#championChallengeStatus')).toContainText('لديك ١٥ دقيقة');
+
+  for (let index = 0; index < 10; index++) {
+    await questions.nth(index).locator('input[type="radio"]').first().check();
+  }
+  await page.locator('#championChallengeForm button[type="submit"]').click();
+
+  await expect(page.locator('#championChallengeStatus')).toContainText('اجتزت التحدي');
+  await expect(page.locator('#championChallengeForm')).toHaveCount(0);
+});
