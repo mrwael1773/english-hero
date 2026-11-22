@@ -462,10 +462,11 @@ begin
   if v_student->'progress'->'current_word_index' <> 'null'::jsonb then
     raise exception 'Out-of-range word index was not rejected';
   end if;
-  if v_student->'progress'->'mastered_indices' <> '[0]'::jsonb
+  if v_student->'progress'->'mastered_indices' <> '[3]'::jsonb
+     or v_student->'progress'->'mastered_count' <> '1'::jsonb
      or v_student->'progress'->'trained_indices' <> '[0]'::jsonb
      or v_student->'progress'->'started_indices' <> '[3]'::jsonb then
-    raise exception 'Per-lesson progress indices were not safely summarized';
+    raise exception 'Verified mastery summary trusted editable JSON or returned the wrong ledger values';
   end if;
   if v_student->'progress'->'saved_words_count' <> '2'::jsonb
      or v_student->'progress'->'foundation_saved_count' <> '1'::jsonb
@@ -480,11 +481,11 @@ begin
      or v_student->'progress'->'correct_answers_count' <> '8'::jsonb then
     raise exception 'Quiz aggregates were calculated incorrectly';
   end if;
-  if v_student->'progress'->'active_days_count' <> '2'::jsonb
-     or v_student->'progress'->'learning_streak' <> '4'::jsonb
+  if v_student->'progress'->'active_days_count' <> '1'::jsonb
+     or v_student->'progress'->'learning_streak' <> '1'::jsonb
      or v_student->'progress'->'vocab_level' <> '"all"'::jsonb
      or v_student->'progress'->'vocab_position' <> '5'::jsonb then
-    raise exception 'Daily activity or vocabulary level aggregates were calculated incorrectly';
+    raise exception 'Verified challenge-day or vocabulary aggregates were calculated incorrectly';
   end if;
   if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
     raise exception 'Mentor overview did not include the student reading stage summary';
