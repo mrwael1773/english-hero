@@ -91,3 +91,50 @@ test('signing out clears an in-progress champion challenge', async ({ page }) =>
   await expect(page.locator('#championChallengeForm')).toHaveCount(0);
   await expect(page.locator('#championChallengeStatus')).toContainText('سجّل الدخول');
 });
+
+
+test('switching accounts discards an old leaderboard response and reloads for the new session', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    const cloud = window.EnglishHeroCloud;
+    let userId = 'e2e-student';
+    let calls = 0;
+    cloud.getUser = () => ({ id: userId });
+    cloud.getStudentChampions = () => {
+      calls++;
+      if (calls === 1) return new Promise(resolve => { window.__resolveOldChampions = resolve; });
+      return Promise.resolve({
+        generated_at: '2026-11-22T10:00:00Z',
+        today_leaders: [{ display_name: 'طالب الحساب الجديد', score: 3 }],
+        week_leaders: [{ display_name: 'بطل الحساب الجديد', score: 5 }],
+        consistency_leaders: [{ display_name: 'نجم الحساب الجديد', score: 7 }]
+      });
+    };
+    window.__switchE2EAccount = () => {
+      userId = 'e2e-student-new';
+      window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+        detail: { event: 'SIGNED_IN', user: { id: userId } }
+      }));
+      window.dispatchEvent(new CustomEvent('englishhero:authready'));
+    };
+  });
+
+  await page.locator('[data-page="champions"]').click();
+  await page.waitForFunction(() => typeof window.__resolveOldChampions === 'function');
+  await page.evaluate(() => {
+    window.__switchE2EAccount();
+    window.__resolveOldChampions({
+      generated_at: '2026-11-22T09:00:00Z',
+      today_leaders: [{ display_name: 'طالب الحساب السابق', score: 99 }],
+      week_leaders: [{ display_name: 'بطل الحساب السابق', score: 99 }],
+      consistency_leaders: [{ display_name: 'نجم الحساب السابق', score: 99 }]
+    });
+  });
+
+  await expect(page.locator('#championsToday')).toContainText('طالب الحساب الجديد');
+  await expect(page.locator('#championsToday')).not.toContainText('طالب الحساب السابق');
+  await expect(page.locator('#championsWeek')).toContainText('بطل الحساب الجديد');
+  await expect(page.locator('#championsWeek')).not.toContainText('بطل الحساب السابق');
+  await expect(page.locator('#championsConsistency')).toContainText('نجم الحساب الجديد');
+  await expect(page.locator('#championsConsistency')).not.toContainText('نجم الحساب السابق');
+});
