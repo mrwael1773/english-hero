@@ -60,3 +60,34 @@ test('champion challenge renders ten questions and displays the server result', 
   await expect(page.locator('#championChallengeStatus')).toContainText('اجتزت التحدي');
   await expect(page.locator('#championChallengeForm')).toHaveCount(0);
 });
+
+
+test('signing out clears the champions leaderboard from the current page', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-page="champions"]').click();
+  await expect(page.locator('#championsToday')).toContainText('بطلة الاختبار');
+
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+    detail: { event: 'SIGNED_OUT', user: null }
+  })));
+
+  await expect(page.locator('#championsToday')).toBeEmpty();
+  await expect(page.locator('#championsWeek')).toBeEmpty();
+  await expect(page.locator('#championsConsistency')).toBeEmpty();
+  await expect(page.locator('#championsStatus')).toContainText('سجّل الدخول');
+});
+
+test('signing out clears an in-progress champion challenge', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-page="champions"]').click();
+  await page.locator('#championChallengeLesson').fill('1');
+  await page.locator('#championChallengeStart').click();
+  await expect(page.locator('#championChallengeForm .champion-challenge-question')).toHaveCount(10);
+
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+    detail: { event: 'SIGNED_OUT', user: null }
+  })));
+
+  await expect(page.locator('#championChallengeForm')).toHaveCount(0);
+  await expect(page.locator('#championChallengeStatus')).toContainText('سجّل الدخول');
+});
