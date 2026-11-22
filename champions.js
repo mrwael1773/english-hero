@@ -92,6 +92,8 @@
     loading = true;
     const status = $('championsStatus');
     if (status) status.textContent = 'جارٍ تحديث البطولات...';
+    const requestEpoch = authEpoch;
+    const requestUserId = window.EnglishHeroCloud?.getUser?.()?.id || null;
     try {
       await (window.EnglishHeroCloudReady || Promise.resolve(false));
       const cloud = window.EnglishHeroCloud;
@@ -99,8 +101,7 @@
         if (status) status.textContent = 'خدمة المنافسة غير متاحة حاليًا.';
         return;
       }
-      const requestUserId = cloud.getUser()?.id;
-      if (!requestUserId) {
+      if (!requestUserId || cloud.getUser()?.id !== requestUserId) {
         clearForAuthChange(false);
         return;
       }
@@ -108,7 +109,6 @@
         if (status) status.textContent = 'جارٍ استعادة بيانات الحساب. ستظهر البطولة بعد اكتمال المزامنة.';
         return;
       }
-      const requestEpoch = authEpoch;
       const data = await cloud.getStudentChampions();
       if (requestEpoch !== authEpoch || cloud.getUser()?.id !== requestUserId || !cloud.isReady()) return;
       if (!validPayload(data)) throw new Error('Invalid champions response');
@@ -123,6 +123,7 @@
       }
       loadedAt = Date.now();
     } catch (error) {
+      if (requestEpoch !== authEpoch || window.EnglishHeroCloud?.getUser?.()?.id !== requestUserId) return;
       console.warn('English Hero champions:', error?.message || error);
       if (status) status.textContent = 'تعذر تحميل النتائج الآن. حاول التحديث بعد قليل.';
     } finally {
