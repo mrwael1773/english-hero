@@ -6,7 +6,7 @@ alter table public.student_learning_days
 -- IF NOT EXISTS on ADD COLUMN does not repair a missing CHECK constraint when
 -- a partially reconciled environment already has the column. Ensure the
 -- constraint independently, without changing or reclassifying existing rows.
-do $
+do $$
 begin
   if not exists (
     select 1
@@ -19,7 +19,7 @@ begin
       check (verification_source in ('legacy_unverified', 'challenge_verified'));
   end if;
 end
-$;
+$$;
 
 -- A successful one-use server challenge is the only path that upgrades a day
 -- to verified. A legacy row for the same day is upgraded only after this proof.
