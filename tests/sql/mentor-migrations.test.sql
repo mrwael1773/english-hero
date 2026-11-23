@@ -791,3 +791,67 @@ begin
   end if;
 end;
 $reconciliation_contract$;
+
+
+-- The reconciled teacher-pilot table retains its schema safeguards but remains
+-- inaccessible to browser roles until a separately reviewed teacher auth model exists.
+do $teacher_pilot_reconciliation$
+declare
+  v_required_constraints text[] := array[
+    'teacher_pilot_results_code_check',
+    'teacher_pilot_results_pre_score_check',
+    'teacher_pilot_results_post_score_check',
+    'teacher_pilot_results_retention_score_check',
+    'teacher_pilot_results_sessions_attended_check',
+    'teacher_pilot_results_learning_note_check',
+    'teacher_pilot_results_user_id_code_key',
+    'teacher_pilot_results_session_log_check'
+  ];
+  v_constraint text;
+begin
+  if not exists (
+    select 1 from pg_class
+    where oid='public.teacher_pilot_results'::regclass
+      and relrowsecurity and relforcerowsecurity
+  ) then
+    raise exception 'Teacher pilot results must enforce RLS and FORCE RLS';
+  end if;
+
+  foreach v_constraint in array v_required_constraints loop
+    if not exists (
+      select 1 from pg_constraint
+      where conrelid='public.teacher_pilot_results'::regclass
+        and conname=v_constraint
+    ) then
+      raise exception 'Missing teacher pilot constraint: %', v_constraint;
+    end if;
+  end loop;
+
+  if not exists (
+    select 1 from pg_trigger
+    where tgrelid='public.teacher_pilot_results'::regclass
+      and tgname='set_teacher_pilot_results_updated_at'
+      and not tgisinternal
+  ) then
+    raise exception 'Teacher pilot updated_at trigger is missing';
+  end if;
+
+  if has_table_privilege('anon','public.teacher_pilot_results','SELECT')
+     or has_table_privilege('anon','public.teacher_pilot_results','INSERT')
+     or has_table_privilege('anon','public.teacher_pilot_results','UPDATE')
+     or has_table_privilege('anon','public.teacher_pilot_results','DELETE')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','SELECT')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','INSERT')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','UPDATE')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','DELETE') then
+    raise exception 'Teacher pilot table must not grant direct client CRUD';
+  end if;
+
+  if exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='teacher_pilot_results'
+  ) then
+    raise exception 'Teacher pilot table must not have client RLS policies';
+  end if;
+end;
+$teacher_pilot_reconciliation$;
