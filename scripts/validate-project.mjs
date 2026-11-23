@@ -301,7 +301,8 @@ check(html.includes("age>=0&&age<7") && html.includes("x.mode==='mistakes'"), 'W
 try { new Function(progressDashboard); check(true, 'Professional dashboard JavaScript syntax is valid'); } catch (error) { fail.push(`pro-dashboard.js has a syntax error: ${error.message}`); }
 try { new Function(englishHeroPlus); check(true, 'English Hero Plus JavaScript syntax is valid'); } catch (error) { fail.push(`english-hero-plus.js has a syntax error: ${error.message}`); }
 check(englishHeroPlus.includes('rewardClaims') && englishHeroPlus.includes('plus:quiz:') && englishHeroPlus.includes('plus:grammar:') && englishHeroPlus.includes('plus:scenario:') && englishHeroPlus.includes('plus:game:'), 'Development-center XP rewards use stable one-time claim keys');
-check(/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && sw.includes("'./english-hero-plus.js?v="), 'English Hero Plus is linked and cached offline');
+check(!/src="english-hero-plus\.js(?:\?v=\d+)?"/.test(html) && !sw.includes("'./english-hero-plus.js?v="), 'Development center is removed from the app shell');
+check(/data-nav="champions"/.test(html) && html.includes('id="champions"'), 'Student champions is available as a primary navigation section');
 check(!privacy.includes('\\n<h2>'), 'Privacy policy does not contain escaped newline artifacts');
 check(privacy.includes('MyMemory') && privacy.includes('Supabase') && !privacy.includes('OpenAI'), 'Privacy policy matches the current translation and cloud services without the retired AI coach');
 const publicHtml = ['index.html','privacy.html','contact.html','english-basics.html','english-tenses-guide.html','grammar-lesson.html'].map(read).join('\\n');

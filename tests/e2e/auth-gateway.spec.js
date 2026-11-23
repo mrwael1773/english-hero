@@ -192,7 +192,7 @@ test('profile lookup errors fail closed instead of opening onboarding', async ({
   await expect(page.locator('#authGatewayMessage')).toContainText('تعذر التحقق من ملف الحساب');
 });
 
-test('local-only student data is isolated by account on shared devices', async ({ page }) => {
+test('local-only student data stays account-scoped without the removed development center', async ({ page }) => {
   await installAuthMock(page);
   await page.goto('/privacy.html');
   await page.evaluate(() => {
@@ -229,14 +229,29 @@ test('local-only student data is isolated by account on shared devices', async (
   await expect(page.locator('#studentTaskList')).toContainText('مهمة الطالب B');
   await expect(page.locator('#studentTaskList')).not.toContainText('مهمة الطالب A');
   await expect(page.locator('#studentTaskList')).not.toContainText('مهمة قديمة');
-  await expect(page.locator('#scenarioList')).not.toContainText('أفضل نتيجة');
-  await expect(page.locator('#ehpAvatar')).toHaveText('🦊');
+  await expect(page.locator('#ehpAvatar')).toHaveCount(0);
+  await expect(page.locator('script[src*="english-hero-plus.js"]')).toHaveCount(0);
 
   await page.evaluate(() => window.__setMockUser('student-a'));
   await expect(page.locator('#studentTaskList')).toContainText('مهمة الطالب A');
   await expect(page.locator('#studentTaskList')).not.toContainText('مهمة الطالب B');
-  await expect(page.locator('#scenarioList')).toContainText('أفضل نتيجة: 5/5');
-  await expect(page.locator('#ehpAvatar')).toHaveText('👑');
+
+  const preserved = await page.evaluate(() => ({
+    legacyTasks: localStorage.getItem('englishHeroStudentTasksV1'),
+    legacyScenarios: localStorage.getItem('eh-scenarios-done'),
+    legacyPlus: localStorage.getItem('ehPlusV1'),
+    plusA: JSON.parse(localStorage.getItem('ehPlusV2:student-a')),
+    plusB: JSON.parse(localStorage.getItem('ehPlusV2:mock-student')),
+    scenariosA: JSON.parse(localStorage.getItem('eh-scenarios-done:student-a')),
+    scenariosB: JSON.parse(localStorage.getItem('eh-scenarios-done:mock-student'))
+  }));
+  expect(preserved.legacyTasks).not.toBeNull();
+  expect(JSON.parse(preserved.legacyScenarios)[0]).toBe(5);
+  expect(JSON.parse(preserved.legacyPlus).points).toBe(999);
+  expect(preserved.plusA.avatar).toBe('👑');
+  expect(preserved.plusB.avatar).toBe('🦊');
+  expect(preserved.scenariosA[0]).toBe(5);
+  expect(preserved.scenariosB).toEqual({});
 });
 
 test('a stale profile response from the previous account cannot unlock the next account', async ({ page }) => {

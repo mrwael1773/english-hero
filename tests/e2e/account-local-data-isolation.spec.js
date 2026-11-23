@@ -36,7 +36,7 @@ test('student task data stays isolated when switching between accounts', async (
   await expect(taskList).not.toContainText('Account B task');
 });
 
-test('Plus progress and scenario results stay isolated when switching accounts', async ({ page }) => {
+test('legacy Plus and scenario records are preserved after removing the development center', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('ehPlusV2:e2e-student', JSON.stringify({
       known: ['improve'], missed: ['usually'], points: 45, avatar: '🦊', title: 'المجتهد'
@@ -49,30 +49,16 @@ test('Plus progress and scenario results stay isolated when switching accounts',
   });
 
   await page.goto('/index.html');
+  await expect(page.locator('#ehpAvatar')).toHaveCount(0);
+  await expect(page.locator('script[src*="english-hero-plus.js"]')).toHaveCount(0);
 
-  // The initial fixture identity is account A.
-  await expect(page.locator('#ehpAvatar')).toHaveText('🦊');
-  await expect(page.locator('#scenarioList .tile').first()).toContainText('5/5');
-
-  // Switch both account-aware readers to account B.
-  await page.evaluate(() => {
-    window.EnglishHeroCloud.getUser = () => ({ id: 'second-e2e-student' });
-    window.dispatchEvent(new CustomEvent('englishhero:authstate', {
-      detail: { user: { id: 'second-e2e-student' } }
-    }));
-  });
-  await expect(page.locator('#ehpAvatar')).toHaveText('🐼');
-  await expect(page.locator('#scenarioList .tile').first()).toContainText('2/5');
-
-  // Returning to A must restore A's Plus profile and scenario result only.
-  await page.evaluate(() => {
-    window.EnglishHeroCloud.getUser = () => ({ id: 'e2e-student' });
-    window.dispatchEvent(new CustomEvent('englishhero:authstate', {
-      detail: { user: { id: 'e2e-student' } }
-    }));
-  });
-  await expect(page.locator('#ehpAvatar')).toHaveText('🦊');
-  await expect(page.locator('#scenarioList .tile').first()).toContainText('5/5');
+  for (const userId of ['second-e2e-student', 'e2e-student']) {
+    await page.evaluate(id => {
+      window.dispatchEvent(new CustomEvent('englishhero:authstate', {
+        detail: { user: { id } }
+      }));
+    }, userId);
+  }
 
   const stored = await page.evaluate(() => ({
     plusA: JSON.parse(localStorage.getItem('ehPlusV2:e2e-student')),
