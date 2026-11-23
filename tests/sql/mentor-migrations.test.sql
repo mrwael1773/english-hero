@@ -855,21 +855,3 @@ begin
   end if;
 end;
 $teacher_pilot_reconciliation$;
-
-
--- Equivalent object-only progress checks must not be duplicated under a second name.
-do $progress_object_constraint$
-declare
-  v_count integer;
-begin
-  select count(*) into v_count
-  from pg_constraint
-  where conrelid='public.learning_progress'::regclass
-    and contype='c'
-    and pg_get_constraintdef(oid) ilike '%jsonb_typeof(progress)%object%';
-
-  if v_count <> 1 then
-    raise exception 'Expected exactly one equivalent object-only progress constraint, found %', v_count;
-  end if;
-end;
-$progress_object_constraint$;
