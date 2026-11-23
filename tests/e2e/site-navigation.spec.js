@@ -49,3 +49,16 @@ test('opens the premium student champions section from the learning hub', async 
   await expect(section).toContainText('المنافسة تشمل جميع الطلاب');
   await expect(section).toContainText('توقيت السعودية');
 });
+
+test('replaces the development tab with primary student champions navigation', async ({ page }) => {
+  await page.goto('/');
+  const nav = page.getByRole('navigation', { name: 'التنقل الرئيسي' });
+  const championsTab = nav.locator('[data-nav="champions"]');
+  await expect(championsTab).toBeVisible();
+  await expect(championsTab).toContainText('الأبطال');
+  await expect(nav.locator('[data-nav="heroLab"]')).toHaveCount(0);
+  await expect(page.locator('script[src*="english-hero-plus.js"]')).toHaveCount(0);
+  await championsTab.click();
+  await expect(page.locator('#champions')).toHaveClass(/active/);
+  await expect(championsTab).toHaveClass(/active/);
+});
