@@ -181,3 +181,19 @@ test('letter sounds lesson teaches hard and soft C with examples and a mastery c
   await page.locator('[data-choice="1"]').click();
   await expect(page.locator('#quizFeedback')).toContainText('تم حفظ اجتياز المرحلة');
 });
+
+
+test('letter sounds lesson stays concise while covering the required patterns', async ({ page }) => {
+  await page.goto('/reading-letter-sounds.html');
+  await expect(page.locator('.mini-lesson')).toHaveCount(12);
+  const examples = page.locator('.lesson-card').filter({
+    has: page.getByRole('heading', { name: '👀 أمثلة مع تحديد الجزء المستهدف' })
+  }).locator('.example');
+  const practice = page.locator('.lesson-card').filter({
+    has: page.getByRole('heading', { name: '🎧 استمع وكرّر' })
+  }).locator('.example');
+  await expect(examples).toHaveCount(20);
+  await expect(practice).toHaveCount(10);
+  await expect(page.locator('.mini-lesson').filter({ hasText: 'كيف أستخدم القاعدة؟' })).toHaveCount(1);
+  await expect(page.locator('.mini-lesson').filter({ hasText: 'هل القواعد تنطبق دائمًا؟' })).toHaveCount(1);
+});
