@@ -712,3 +712,82 @@ end;
 $$;
 
 \echo 'Mentor dashboard PostgreSQL migration tests passed.'
+
+
+-- Forward-only schema reconciliation must preserve private access boundaries and
+-- keep legacy learning days explicitly unverified.
+do $reconciliation_contract$
+declare
+  v_default text;
+  v_not_null boolean;
+begin
+  if to_regclass('public.mentor_link_tokens') is null
+     or to_regclass('public.reading_progress') is null then
+    raise exception 'Mentor token or reading progress table is missing after reconciliation';
+  end if;
+
+  if not exists (
+    select 1 from pg_class
+    where oid='public.mentor_link_tokens'::regclass and relrowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid='public.reading_progress'::regclass and relrowsecurity
+  ) then
+    raise exception 'Reconciled private tables must have RLS enabled';
+  end if;
+
+  if has_table_privilege('anon','public.mentor_link_tokens','SELECT')
+     or has_table_privilege('authenticated','public.mentor_link_tokens','SELECT')
+     or has_table_privilege('anon','public.reading_progress','SELECT')
+     or has_table_privilege('authenticated','public.reading_progress','SELECT') then
+    raise exception 'Reconciliation exposed a private table to client roles';
+  end if;
+
+  if not has_function_privilege('authenticated','public.get_my_reading_progress()','EXECUTE')
+     or not has_function_privilege('authenticated','public.save_my_reading_progress(text[])','EXECUTE')
+     or has_function_privilege('anon','public.get_my_reading_progress()','EXECUTE')
+     or has_function_privilege('anon','public.save_my_reading_progress(text[])','EXECUTE') then
+    raise exception 'Reading progress RPC grants are not owner-scoped';
+  end if;
+
+  if has_function_privilege('authenticated','public.issue_mentor_link_token(integer)','EXECUTE')
+     or has_function_privilege('anon','public.issue_mentor_link_token(integer)','EXECUTE')
+     or has_function_privilege('authenticated','public.mentor_get_student_overview(text)','EXECUTE')
+     or has_function_privilege('anon','public.mentor_get_student_overview(text)','EXECUTE') then
+    raise exception 'A client role can invoke a privileged mentor function';
+  end if;
+
+  select column_default, is_nullable='NO'
+    into v_default, v_not_null
+  from information_schema.columns
+  where table_schema='public' and table_name='student_learning_days'
+    and column_name='verification_source';
+
+  if v_default is null or v_default not like '%legacy_unverified%' or not v_not_null then
+    raise exception 'Legacy learning days must default to legacy_unverified and be non-null';
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid='public.student_learning_days'::regclass
+      and conname='student_learning_days_verification_source_check'
+  ) then
+    raise exception 'Learning-day verification source constraint is missing';
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid='public.student_mastery_events'::regclass
+      and conname='student_mastery_events_valid_lesson_index'
+      and pg_get_constraintdef(oid) like '%83%'
+  ) then
+    raise exception 'The authoritative 0..83 lesson-index constraint is missing';
+  end if;
+
+  if not has_function_privilege('service_role','public.complete_student_champion_attempt(uuid,uuid,jsonb)','EXECUTE')
+     or has_function_privilege('authenticated','public.complete_student_champion_attempt(uuid,uuid,jsonb)','EXECUTE')
+     or has_function_privilege('anon','public.complete_student_champion_attempt(uuid,uuid,jsonb)','EXECUTE') then
+    raise exception 'Challenge completion must remain service-role only';
+  end if;
+end;
+$reconciliation_contract$;
