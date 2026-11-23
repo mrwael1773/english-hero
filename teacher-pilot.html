@@ -101,9 +101,9 @@ const render=()=>{
 $('lessonState').textContent=data.mastered?(data.lastRetention?.passed===false?'أتقن الدرس سابقًا • يحتاج مراجعة':'أتقن الدرس ✓'):data.lastAttempt?'لم يثبت الإتقان بعد':data.trained.length===6?'أكمل التدريب':data.started?'بدأ الدرس':'لم يبدأ الدرس';
 $('trainingBar').style.width=(data.trained.length/6*100)+'%';$('trainingCount').textContent=data.trained.length+' من 6 كلمات تمت دراستها';
 $('startTest').disabled=data.trained.length!==6;
-$('wordGrid').innerHTML=words.map((w,i)=>'<article class="word"><h3>'+w.en+'</h3><p>'+w.ar+'</p><p class="small muted" dir="ltr" id="example'+i+'" hidden>'+w.ex+'</p><div class="row"><button class="btn" data-listen="'+i+'">🔊 استمع</button><button class="btn" data-reveal="'+i+'">إظهار المثال</button><button class="btn" data-trained="'+i+'">'+(data.trained.includes(i)?'✓ تدربت عليها':'أكملت التدريب')+'</button></div><p class="small muted" id="hint'+i+'">اضغط «إظهار المثال» لعرض جملة الاستخدام.</p></article>').join('');
+$('wordGrid').innerHTML=words.map((w,i)=>'<article class="word"><h3>'+w.en+'</h3><p>'+w.ar+'</p><div class="row"><button class="btn" data-listen="'+i+'">🔊 استمع</button><button class="btn" data-reveal="'+i+'">إظهار المثال</button><button class="btn" data-trained="'+i+'">'+(data.trained.includes(i)?'✓ تدربت عليها':'أكملت التدريب')+'</button></div><p class="small muted" id="hint'+i+'">اضغط «إظهار المثال» لعرض جملة الاستخدام.</p></article>').join('');
 $('wordGrid').querySelectorAll('[data-listen]').forEach(b=>b.onclick=()=>{const w=words[Number(b.dataset.listen)];say(w.en);data.started=true;save();});
-$('wordGrid').querySelectorAll('[data-reveal]').forEach(b=>b.onclick=()=>{$('hint'+b.dataset.reveal).textContent=words[Number(b.dataset.reveal)].ex;$('example'+b.dataset.reveal).hidden=false;data.started=true;save();renderStateOnly();});
+$('wordGrid').querySelectorAll('[data-reveal]').forEach(b=>b.onclick=()=>{$('hint'+b.dataset.reveal).textContent=words[Number(b.dataset.reveal)].ex;data.started=true;save();renderStateOnly();});
 $('wordGrid').querySelectorAll('[data-trained]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.trained);data.started=true;if(!data.trained.includes(i))data.trained.push(i);save();render();});
 renderReview();
 };
