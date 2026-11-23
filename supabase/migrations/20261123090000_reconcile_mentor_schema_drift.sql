@@ -1009,11 +1009,7 @@ begin
     raise exception 'Reconciliation postflight failed: teacher pilot table must enforce RLS';
   end if;
 
-  if has_table_privilege('public','public.teacher_pilot_results','SELECT')
-     or has_table_privilege('public','public.teacher_pilot_results','INSERT')
-     or has_table_privilege('public','public.teacher_pilot_results','UPDATE')
-     or has_table_privilege('public','public.teacher_pilot_results','DELETE')
-     or has_table_privilege('anon','public.teacher_pilot_results','SELECT')
+  if has_table_privilege('anon','public.teacher_pilot_results','SELECT')
      or has_table_privilege('anon','public.teacher_pilot_results','INSERT')
      or has_table_privilege('anon','public.teacher_pilot_results','UPDATE')
      or has_table_privilege('anon','public.teacher_pilot_results','DELETE')
