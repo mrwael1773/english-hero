@@ -56,7 +56,7 @@ async function answerAll(page, translations, shouldPass, wrongIndices = []) {
     }
     // Verify visible correctness feedback for both writing and multiple-choice answers.
     await expect(page.locator('#quizFeedback')).toBeVisible();
-    await expect(page.locator('#quizFeedback')).toContainText(passThis ? 'ممتاز' : 'الصحيح:');
+    await expect(page.locator('#quizFeedback')).toContainText(passThis ? /ممتاز|سبق احتساب/ : 'الصحيح:');
     await expect(page.locator('#quizNext')).toBeVisible();
     await page.locator('#quizNext').click();
   }
@@ -84,8 +84,6 @@ test('a score above 80% records mastery and unlocks the next lesson', async ({ p
   await expect(page.locator('#courseGrid button').nth(1)).toBeEnabled();
   await expect(page.locator('#done')).toContainText('1/');
 });
-
-
 
 test('14 of 18 correct stays below the 80% mastery threshold', async ({ page }) => {
   const translations = await openFirstLesson(page);
@@ -426,4 +424,45 @@ test('XP alone cannot unlock the mastery rank without 15 mastered lessons', asyn
   masteryStage = page.locator('#learningPathSteps .tile').filter({ hasText: '🏆 الإتقان' });
   await expect(masteryStage).toContainText('✓ متاح');
   await expect(masteryStage).toBeEnabled();
+});
+
+async function reopenFirstLesson(page) {
+  await page.evaluate(() => window.page('courses'));
+  const firstLesson = page.locator('#courseGrid button').first();
+  await expect(firstLesson).toBeVisible();
+  await firstLesson.click();
+  const translations = new Map();
+  for (let i = 0; i < 6; i++) {
+    const en = (await page.locator('#wordEnglish').innerText()).trim();
+    const ar = (await page.locator('#wordArabic').innerText()).trim();
+    translations.set(en, ar);
+    translations.set(ar, en);
+    await page.locator('#nextWord').click();
+  }
+  await expect(page.locator('#quizArea')).toBeVisible();
+  return translations;
+}
+
+test('repeating an already mastered lesson does not award XP again', async ({ page }) => {
+  const firstTranslations = await openFirstLesson(page);
+  await answerAll(page, firstTranslations, true);
+  await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
+  const firstResult = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    return { xp: saved.xp, mastered: saved.masteredLessons || [], rewardClaims: saved.rewardClaims || [] };
+  });
+  expect(firstResult.mastered).toContain(0);
+  expect(firstResult.xp).toBe(220);
+  expect(firstResult.rewardClaims).toHaveLength(19);
+
+  const secondTranslations = await reopenFirstLesson(page);
+  await answerAll(page, secondTranslations, true);
+  await expect(page.locator('#quizArea')).toContainText('أتقنت الدرس');
+  const secondResult = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('english-hero-academy-3') || '{}');
+    return { xp: saved.xp, mastered: saved.masteredLessons || [], rewardClaims: saved.rewardClaims || [] };
+  });
+  expect(secondResult.xp).toBe(firstResult.xp);
+  expect(secondResult.mastered).toEqual(firstResult.mastered);
+  expect(secondResult.rewardClaims).toEqual(firstResult.rewardClaims);
 });

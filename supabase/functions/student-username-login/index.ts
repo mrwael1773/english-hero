@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -102,7 +102,7 @@ Deno.serve(async (request: Request) => {
   }
 
   // Keep the response generic so callers cannot distinguish unknown usernames from bad passwords.
-  const loginEmail = userResult.data.user?.email ?? `unregistered-${attemptKey.slice(0, 16)}@invalid.example`;
+  const loginEmail = userResult.data?.user?.email ?? `unregistered-${attemptKey.slice(0, 16)}@invalid.example`;
   const { data, error } = await auth.auth.signInWithPassword({ email: loginEmail, password });
   if (error || !data.session) {
     return json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة." }, 401);

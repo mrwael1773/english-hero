@@ -27,6 +27,7 @@ export default defineConfig({
         '**/core-learning-flows.spec.js',
         '**/site-smoke.spec.js',
         '**/mentor-dashboard.spec.js',
+        '**/champions.spec.js',
         '**/reading-journey.spec.js',
       ],
     },

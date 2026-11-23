@@ -252,10 +252,11 @@
     if (typeof window[name] === 'function') window[name] = wrapper(window[name]);
   };
   const installHooks = () => {
-    wrap('gain', original => function (amount) {
+    wrap('gain', original => function (amount, rewardKey) {
       ensureState();
       const before = levelInfo(state.xp).level;
-      const result = original(amount);
+      // Preserve the idempotency key; dropping it lets a mastered lesson pay XP again.
+      const result = original(amount, rewardKey);
       const after = levelInfo(state.xp).level;
       if (after > before && typeof toast === 'function') {
         const prize = [...rewards].reverse().find(item => item.level <= after && item.level > before);
@@ -314,7 +315,7 @@
       const result=original();
       if (Array.isArray(state.quizHistory) && state.quizHistory.length) {
         const last=state.quizHistory[state.quizHistory.length-1];last.mode='pro';last.label='الاختبار الاحترافي الموقّت';
-        if(pct>=80 && typeof gain==='function'){gain(30);if(typeof toast==='function')toast('🏅 نتيجة ممتازة! مكافأة الاختبار الاحترافي: +30 XP');}
+        if(pct>=80 && typeof gain==='function'){if(gain(30,'professional-exam')){if(typeof toast==='function')toast('🏅 نتيجة ممتازة! مكافأة الاختبار الاحترافي: +30 XP');}else if(typeof toast==='function')toast('🏅 نتيجة ممتازة! سبق احتساب مكافأة هذا الاختبار.');}
         if(typeof save==='function')save();
       }
       const heading=$('quizArea')?.querySelector('h2');

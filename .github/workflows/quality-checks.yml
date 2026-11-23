@@ -56,8 +56,15 @@ jobs:
           node --check sw.js
           node --check pro-dashboard.js
           node --check learning-expansion.js
+          node --check champions.js
           node --check english-hero-plus.js
           node --check grammar-lessons.js
+          node --check tests/integration/student-username-login.test.mjs
+          node --check tests/integration/student-champion-challenge.test.mjs
+          node --check scripts/import-champion-question-bank.mjs
+          node --check scripts/build-champion-question-bank.mjs
+          node --check tests/integration/champion-question-bank-import.test.mjs
+          node --check tests/integration/champion-question-bank-generator.test.mjs
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
@@ -65,13 +72,25 @@ jobs:
           deno-version: v2.x
 
       - name: Type-check username login Edge Function
-        run: deno check --no-lock supabase/functions/student-username-login/index.ts
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/student-username-login/index.ts
 
       - name: Type-check mentor overview Edge Function
         run: deno check --no-lock supabase/functions/mentor-overview/index.ts
 
+      - name: Type-check champion challenge Edge Function
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/student-champion-challenge/index.ts
+
       - name: Test mentor overview Edge Function
         run: deno test --no-lock --allow-env supabase/functions/mentor-overview/index_test.ts
+
+      - name: Test champion challenge Edge Function
+        run: deno test --no-lock --allow-env --node-modules-dir=auto supabase/functions/student-champion-challenge/index_test.ts
+
+      - name: Test private champion question bank importer
+        run: node --test tests/integration/champion-question-bank-import.test.mjs
+
+      - name: Test champion question bank generation from lessons
+        run: node --test tests/integration/champion-question-bank-generator.test.mjs
 
       - name: Validate JSON data and vocabulary count
         run: |
@@ -101,11 +120,19 @@ jobs:
           test -s sw.js
           test -s config.js
           test -s cloud-sync.js
+          test -s champions.js
+          test -s champions.css
           test -s auth-gateway.js
           test -s auth-gateway.css
           test -s auth-guard.js
           test -s supabase/functions/student-username-login/index.ts
           test -s supabase/functions/mentor-overview/index.ts
+          test -s supabase/functions/student-champion-challenge/index.ts
+          test -s scripts/import-champion-question-bank.mjs
+          test -s scripts/build-champion-question-bank.mjs
+          test -s tests/integration/champion-question-bank-import.test.mjs
+          test -s tests/integration/champion-question-bank-generator.test.mjs
+          test -s tests/integration/student-champion-challenge.test.mjs
           test -s manifest.webmanifest
           test -s vocabulary-20000.json
           test -s icon.svg
@@ -152,7 +179,16 @@ jobs:
             supabase/migrations/20261118110000_mentor_passwordless_link_access.sql \
             supabase/migrations/20261121010000_atomic_mentor_overview_access.sql \
             supabase/migrations/20261121100000_mentor_learning_activity_summary.sql \
-            supabase/migrations/20261121120000_mentor_comprehensive_progress_summary.sql
+            supabase/migrations/20261121120000_mentor_comprehensive_progress_summary.sql \
+            supabase/migrations/20261121143000_student_champions_leaderboard.sql \
+            supabase/migrations/20261121150000_student_champions_improvement_category.sql \
+            supabase/migrations/20261121180000_harden_student_champion_lesson_indices.sql \
+            supabase/migrations/20261121193000_champions_mastery_uses_event_ledger.sql \
+            supabase/migrations/20261121210000_server_verified_champion_challenges.sql \
+            supabase/migrations/20261121220000_import_student_champion_question_bank.sql \
+            supabase/migrations/20261121230000_atomic_champion_attempt_rate_limit.sql \
+            supabase/migrations/20261122230000_reject_client_mastery_claims.sql \
+            supabase/migrations/20261122233000_verified_mentor_mastery_metrics.sql
           do
             echo "Applying $migration"
             psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$migration"
@@ -163,3 +199,86 @@ jobs:
           PGPASSWORD: postgres
         run: |
           psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/sql/mentor-migrations.test.sql
+
+  local-supabase-migrations:
+    name: Full local Supabase migration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Set up Supabase CLI
+        id: setup_supabase_cli
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.2.0
+
+      - name: Start isolated local Supabase stack
+        run: supabase start -x studio,imgproxy,logflare,vector,supavisor
+
+      - name: Apply every migration to a clean local database
+        run: supabase db reset --local
+
+      - name: Test username Auth HTTP and learner data isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source <(supabase status -o env)
+          set +a
+
+          : "${API_URL:?Supabase local API URL was not reported}"
+          : "${ANON_KEY:?Supabase local anon key was not reported}"
+          : "${SERVICE_ROLE_KEY:?Supabase local service role key was not reported}"
+          : "${DB_URL:?Supabase local database URL was not reported}"
+
+          export ALLOWED_ORIGIN="http://localhost:3000"
+          cat > /tmp/english-hero-edge-test.env <<EOF
+          SUPABASE_URL=${API_URL}
+          SUPABASE_ANON_KEY=${ANON_KEY}
+          ENGLISH_HERO_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
+          ENGLISH_HERO_ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
+          EOF
+
+          supabase functions serve \
+            --env-file /tmp/english-hero-edge-test.env \
+            --no-verify-jwt > /tmp/english-hero-edge-function.log 2>&1 &
+          echo $! > /tmp/english-hero-edge-function.pid
+
+          ready=0
+          for attempt in $(seq 1 45); do
+            username_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              --header "Origin: ${ALLOWED_ORIGIN}" \
+              "${API_URL}/functions/v1/student-username-login" || true)
+            champion_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              --header "Origin: ${ALLOWED_ORIGIN}" \
+              "${API_URL}/functions/v1/student-champion-challenge" || true)
+            if [ "${username_status}" = "405" ] && [ "${champion_status}" = "405" ]; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "${ready}" != "1" ]; then
+            cat /tmp/english-hero-edge-function.log
+            echo "Local username login Edge Function did not become ready."
+            exit 1
+          fi
+
+          export API_URL ANON_KEY SERVICE_ROLE_KEY DB_URL ALLOWED_ORIGIN
+          node tests/integration/student-username-login.test.mjs
+          if ! node tests/integration/student-champion-challenge.test.mjs; then
+            echo "Champion challenge Edge Function diagnostics:"
+            cat /tmp/english-hero-edge-function.log
+            exit 1
+          fi
+
+      - name: Stop local Supabase stack
+        if: always() && steps.setup_supabase_cli.outcome == 'success'
+        run: supabase stop --no-backup

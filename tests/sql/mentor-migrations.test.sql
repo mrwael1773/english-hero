@@ -18,6 +18,16 @@ values (
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
 select public.record_student_activity();
 select public.record_student_learning_activity('lesson_started', 3, 2);
+do $unverified_activity$
+begin
+  if exists (
+    select 1 from public.student_learning_days
+    where user_id = '11111111-1111-4111-8111-111111111111'
+  ) then
+    raise exception 'A client-reported activity created a consistency day';
+  end if;
+end;
+$unverified_activity$;
 
 -- Reading completion is isolated by authenticated account and ordered stage ID.
 insert into auth.users (id)
@@ -114,8 +124,292 @@ begin
 end;
 $block$;
 
--- A mastered lesson clears the active lesson pointer without deleting the last action.
-select public.record_student_learning_activity('lesson_mastered', 3, 2);
+-- The leaderboard accepts only the 84 lesson IDs that exist in the learning map.
+do $lesson_bounds$
+declare
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.record_student_learning_activity('lesson_mastered', 84, 1);
+  exception when sqlstate '22023' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'A mastery event for a non-existent lesson index was accepted';
+  end if;
+end;
+$lesson_bounds$;
+
+-- Even a forged mastery entry in the learner's own editable progress JSON
+-- must not let the authenticated browser create a leaderboard mastery event.
+-- Lesson 0 is deliberately present in the synthetic learner's progress fixture above.
+do $legacy_mastery$
+declare
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.record_student_learning_activity('lesson_mastered', 0, 2);
+  exception when sqlstate '42501' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'Client-side mastery claim matching editable cloud progress was accepted';
+  end if;
+
+  if exists (
+    select 1 from public.student_mastery_events
+    where user_id = '11111111-1111-4111-8111-111111111111'
+      and lesson_index = 0
+  ) then
+    raise exception 'Client-side mastery claim created a leaderboard event';
+  end if;
+end;
+$legacy_mastery$;
+
+-- A legacy activity marker remains unverified until a successful challenge is submitted.
+insert into public.student_learning_days(user_id, activity_day)
+values ('11111111-1111-4111-8111-111111111111',
+        (now() at time zone 'Asia/Riyadh')::date - 2);
+
+-- Only the trusted server role can complete a challenge and create a mastery event.
+insert into public.student_champion_attempts (
+  id, user_id, lesson_index, answer_key, question_count, expires_at
+) values (
+  '44444444-4444-4444-8444-444444444444',
+  '11111111-1111-4111-8111-111111111111',
+  3,
+  '[0,0,0,0,0,0,0,0,0,0]'::jsonb,
+  10,
+  now() + interval '15 minutes'
+);
+insert into public.student_champion_attempts (
+  id, user_id, lesson_index, answer_key, question_count, expires_at
+) values (
+  '55555555-5555-4555-8555-555555555555',
+  '11111111-1111-4111-8111-111111111111',
+  7,
+  '[0,0,0,0,0,0,0,0,0,0]'::jsonb,
+  10,
+  now() + interval '15 minutes'
+);
+select set_config('request.jwt.claim.role', 'service_role', false);
+
+-- The atomic reservation RPC allows five starts in a rolling hour and rejects the sixth.
+do $atomic_challenge_limit$
+declare
+  v_attempt_id uuid;
+  v_rejected boolean := false;
+  v_index integer;
+begin
+  for v_index in 1..3 loop
+    v_attempt_id := public.start_student_champion_attempt(
+      '11111111-1111-4111-8111-111111111111',
+      8,
+      '[0,1,2,3,0,1,2,3,0,1]'::jsonb,
+      now() + interval '15 minutes'
+    );
+    if v_attempt_id is null then
+      raise exception 'Atomic challenge reservation returned no attempt ID';
+    end if;
+  end loop;
+
+  if (select count(*) from public.student_champion_attempts
+      where user_id = '11111111-1111-4111-8111-111111111111'
+        and created_at >= now() - interval '1 hour') <> 5 then
+    raise exception 'The fifth challenge reservation was not persisted';
+  end if;
+
+  begin
+    perform public.start_student_champion_attempt(
+      '11111111-1111-4111-8111-111111111111',
+      8,
+      '[0,1,2,3,0,1,2,3,0,1]'::jsonb,
+      now() + interval '15 minutes'
+    );
+  exception when sqlstate 'P0001' then
+    if sqlerrm = 'Champion challenge rate limit exceeded' then
+      v_rejected := true;
+    else
+      raise;
+    end if;
+  end;
+
+  if not v_rejected then
+    raise exception 'The sixth challenge reservation bypassed the hourly limit';
+  end if;
+end;
+$atomic_challenge_limit$;
+
+do $question_bank_import$
+declare
+  v_questions jsonb;
+  v_inserted integer;
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.import_student_champion_question_bank('[]'::jsonb);
+    raise exception 'A partial champion question bank was accepted';
+  exception when sqlstate '22023' then
+    null;
+  end;
+
+  select jsonb_agg(
+    jsonb_build_object(
+      'lesson_index', lesson_no,
+      'prompt', format('Synthetic lesson %s question %s', lesson_no + 1, question_no),
+      'options', jsonb_build_array(
+        format('Correct %s %s', lesson_no, question_no),
+        format('Option A %s %s', lesson_no, question_no),
+        format('Option B %s %s', lesson_no, question_no),
+        format('Option C %s %s', lesson_no, question_no)
+      ),
+      'correct_option', 0
+    ) order by lesson_no, question_no
+  ) into v_questions
+  from generate_series(0, 83) as lessons(lesson_no)
+  cross join generate_series(1, 10) as questions(question_no);
+
+  v_inserted := public.import_student_champion_question_bank(v_questions);
+  if v_inserted <> 840 or (select count(*) from public.student_champion_question_bank) <> 840 then
+    raise exception 'The complete champion bank was not imported atomically';
+  end if;
+
+  begin
+    perform public.import_student_champion_question_bank(v_questions);
+  exception when sqlstate '55000' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'The one-time champion bank import accepted a duplicate import';
+  end if;
+end;
+$question_bank_import$;
+select public.complete_student_champion_attempt(
+  '55555555-5555-4555-8555-555555555555',
+  '11111111-1111-4111-8111-111111111111',
+  '[0,0,0,0,0,0,0,1,1,1]'::jsonb
+);
+do $failed_attempt$
+begin
+  if exists (
+    select 1 from public.student_mastery_events
+    where user_id = '11111111-1111-4111-8111-111111111111' and lesson_index = 7
+  ) then
+    raise exception 'A score below 80 percent created a mastery event';
+  end if;
+end;
+$failed_attempt$;
+select public.complete_student_champion_attempt(
+  '44444444-4444-4444-8444-444444444444',
+  '11111111-1111-4111-8111-111111111111',
+  '[0,0,0,0,0,0,0,0,1,1]'::jsonb
+);
+do $replay$
+declare
+  v_rejected boolean := false;
+begin
+  begin
+    perform public.complete_student_champion_attempt(
+      '44444444-4444-4444-8444-444444444444',
+      '11111111-1111-4111-8111-111111111111',
+      '[0,0,0,0,0,0,0,0,0,0]'::jsonb
+    );
+  exception when sqlstate '22023' then
+    v_rejected := true;
+  end;
+  if not v_rejected then
+    raise exception 'A submitted champion challenge could be replayed';
+  end if;
+end;
+$replay$;
+select set_config('request.jwt.claim.role', 'authenticated', false);
+
+-- A second synthetic learner has two new masteries this week versus one
+-- in the matching elapsed period last week, so improvement is +1.
+-- No improvement ranking is shown until a full post-activation comparison window exists.
+do $baseline$
+declare
+  v_result jsonb;
+begin
+  v_result := public.get_student_champions();
+  if jsonb_array_length(v_result->'improvement_leaders') <> 0 then
+    raise exception 'Improvement leaderboard appeared before a full baseline existed';
+  end if;
+end;
+$baseline$;
+-- Simulate a deployment old enough to have a complete comparison baseline.
+update public.student_champions_config set activated_at = now() - interval '15 days' where singleton = true;
+insert into auth.users (id)
+values ('33333333-3333-4333-8333-333333333333');
+insert into public.student_profiles (user_id, username, display_name)
+values ('33333333-3333-4333-8333-333333333333', 'synthetic-improver', 'Improved Learner');
+insert into public.learning_progress (user_id, progress)
+values (
+  '33333333-3333-4333-8333-333333333333',
+  '{"masteredLessons":[0,0,83,84,99,-1,"3","bad"]}'::jsonb
+);
+insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
+values
+  ('33333333-3333-4333-8333-333333333333', 4, now()),
+  ('33333333-3333-4333-8333-333333333333', 5, now());
+insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
+values ('33333333-3333-4333-8333-333333333333', 6, now() - interval '7 days');
+
+do $champions$
+declare
+  v_result jsonb;
+begin
+  if (select count(*) from public.student_mastery_events
+      where user_id = '11111111-1111-4111-8111-111111111111' and lesson_index = 3) <> 1 then
+    raise exception 'Repeated lesson mastery created duplicate champion events';
+  end if;
+  if (select count(*) from public.student_learning_days
+      where user_id = '11111111-1111-4111-8111-111111111111'
+        and verification_source = 'challenge_verified') <> 1 then
+    raise exception 'A successful challenge did not create exactly one verified Saudi activity day';
+  end if;
+  if not exists (
+    select 1 from public.student_learning_days
+    where user_id = '11111111-1111-4111-8111-111111111111'
+      and activity_day = (now() at time zone 'Asia/Riyadh')::date - 2
+      and verification_source = 'legacy_unverified'
+  ) then
+    raise exception 'A legacy activity marker was incorrectly upgraded without challenge proof';
+  end if;
+
+  v_result := public.get_student_champions();
+  if v_result->>'timezone' <> 'Asia/Riyadh'
+     or not exists (
+       select 1 from jsonb_array_elements(v_result->'today_leaders') as today_row
+       where today_row->>'display_name' = 'Synthetic Learner' and today_row->>'score' = '1'
+     )
+     or v_result->'week_leaders'->0->>'display_name' <> 'Improved Learner'
+     or v_result->'week_leaders'->0->>'score' <> '2'
+     or v_result->'mastery_leaders'->0->>'score' <> '3'
+     or v_result->'consistency_leaders'->0->>'display_name' <> 'Synthetic Learner'
+     or v_result->'consistency_leaders'->0->>'score' <> '1'
+     or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
+     or v_result->'improvement_leaders'->0->>'score' <> '1' then
+    raise exception 'Student champions aggregates were not calculated as expected';
+  end if;
+  if not exists (
+    select 1
+    from jsonb_array_elements(v_result->'mastery_leaders') as mastery_row
+    where mastery_row->>'display_name' = 'Improved Learner'
+      and mastery_row->>'score' = '3'
+  ) or not exists (
+    select 1
+    from jsonb_array_elements(v_result->'mastery_leaders') as mastery_row
+    where mastery_row->>'display_name' = 'Synthetic Learner'
+      and mastery_row->>'score' = '1'
+  ) then
+    raise exception 'Mastery leaderboard did not use the deduplicated mastery-event ledger';
+  end if;
+  if v_result::text like '%user_id%' or v_result::text like '%username%' or v_result::text like '%email%' then
+    raise exception 'Student champions RPC leaked private identity fields';
+  end if;
+end;
+$champions$;
 
 do $$
 begin
@@ -151,6 +445,61 @@ set progress = '{
 }'::jsonb
 where user_id = '11111111-1111-4111-8111-111111111111';
 
+-- Token issuance returns the raw bearer only once and persists only its SHA-256 hash.
+do $mentor_token_issuance$
+declare
+  v_token text;
+  v_hash text;
+  v_expires_at timestamptz;
+  v_rejected boolean := false;
+begin
+  v_token := public.issue_mentor_link_token(7);
+  if v_token !~ '^[0-9a-f]{64}$' then
+    raise exception 'Mentor token issuance did not return a 256-bit hexadecimal bearer';
+  end if;
+
+  v_hash := encode(extensions.digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex');
+  select expires_at into v_expires_at
+  from public.mentor_link_tokens
+  where token_hash = v_hash;
+
+  if not found or v_expires_at <= now()
+     or v_expires_at > now() + interval '7 days' + interval '1 minute' then
+    raise exception 'Mentor token hash was not stored with the requested expiry';
+  end if;
+  if exists (select 1 from public.mentor_link_tokens where token_hash = v_token) then
+    raise exception 'Raw mentor bearer token was stored instead of its hash';
+  end if;
+
+  begin
+    perform public.issue_mentor_link_token(0);
+  exception when others then
+    if sqlerrm = 'Expiry must be between 1 and 90 days' then
+      v_rejected := true;
+    else
+      raise;
+    end if;
+  end;
+  if not v_rejected then
+    raise exception 'Mentor token issuance accepted a zero-day expiry';
+  end if;
+
+  v_rejected := false;
+  begin
+    perform public.issue_mentor_link_token(91);
+  exception when others then
+    if sqlerrm = 'Expiry must be between 1 and 90 days' then
+      v_rejected := true;
+    else
+      raise;
+    end if;
+  end;
+  if not v_rejected then
+    raise exception 'Mentor token issuance accepted an expiry above 90 days';
+  end if;
+end;
+$mentor_token_issuance$;
+
 -- Use a known synthetic bearer token and store only its SHA-256 hash.
 insert into public.mentor_link_tokens (token_hash, expires_at)
 values (
@@ -166,8 +515,11 @@ begin
   v_result := public.mentor_get_student_overview(
     encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex')
   );
-  v_student := v_result->'students'->0;
-  if v_student->>'display_name' <> 'Synthetic Learner' then
+  select item into v_student
+  from jsonb_array_elements(v_result->'students') as item
+  where item->>'display_name' = 'Synthetic Learner'
+  limit 1;
+  if v_student is null or v_student->>'display_name' <> 'Synthetic Learner' then
     raise exception 'Overview did not return the synthetic student';
   end if;
   if v_student->'progress'->'xp' <> 'null'::jsonb then
@@ -179,10 +531,11 @@ begin
   if v_student->'progress'->'current_word_index' <> 'null'::jsonb then
     raise exception 'Out-of-range word index was not rejected';
   end if;
-  if v_student->'progress'->'mastered_indices' <> '[0]'::jsonb
+  if v_student->'progress'->'mastered_indices' <> '[3]'::jsonb
+     or v_student->'progress'->'mastered_count' <> '1'::jsonb
      or v_student->'progress'->'trained_indices' <> '[0]'::jsonb
      or v_student->'progress'->'started_indices' <> '[3]'::jsonb then
-    raise exception 'Per-lesson progress indices were not safely summarized';
+    raise exception 'Verified mastery summary trusted editable JSON or returned the wrong ledger values';
   end if;
   if v_student->'progress'->'saved_words_count' <> '2'::jsonb
      or v_student->'progress'->'foundation_saved_count' <> '1'::jsonb
@@ -197,11 +550,11 @@ begin
      or v_student->'progress'->'correct_answers_count' <> '8'::jsonb then
     raise exception 'Quiz aggregates were calculated incorrectly';
   end if;
-  if v_student->'progress'->'active_days_count' <> '2'::jsonb
-     or v_student->'progress'->'learning_streak' <> '4'::jsonb
+  if v_student->'progress'->'active_days_count' <> '1'::jsonb
+     or v_student->'progress'->'learning_streak' <> '1'::jsonb
      or v_student->'progress'->'vocab_level' <> '"all"'::jsonb
      or v_student->'progress'->'vocab_position' <> '5'::jsonb then
-    raise exception 'Daily activity or vocabulary level aggregates were calculated incorrectly';
+    raise exception 'Verified challenge-day or vocabulary aggregates were calculated incorrectly';
   end if;
   if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
     raise exception 'Mentor overview did not include the student reading stage summary';
@@ -249,6 +602,65 @@ begin
   end if;
   if not has_function_privilege('authenticated', 'public.record_student_learning_activity(text,integer,integer)', 'EXECUTE') then
     raise exception 'Authenticated students cannot record learning activity';
+  end if;
+  if not has_function_privilege('authenticated', 'public.get_student_champions()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.get_student_champions()', 'EXECUTE') then
+    raise exception 'Student champions RPC grants are incorrect';
+  end if;
+  if has_function_privilege('authenticated', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE')
+     or not has_function_privilege('service_role', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE') then
+    raise exception 'Only the trusted service role may import the private champion question bank';
+  end if;
+  if has_function_privilege('authenticated', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE')
+     or not has_function_privilege('service_role', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE') then
+    raise exception 'Only the trusted service role may complete champion attempts';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_champion_question_bank', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champion_attempts', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champion_attempts', 'INSERT')
+     or has_table_privilege('anon', 'public.student_champion_question_bank', 'SELECT')
+     or has_table_privilege('anon', 'public.student_champion_attempts', 'SELECT') then
+    raise exception 'Client roles can directly access private challenge data';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_learning_days', 'INSERT')
+     or has_table_privilege('anon', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'INSERT')
+     or has_table_privilege('anon', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'INSERT')
+     or has_table_privilege('anon', 'public.student_champions_config', 'SELECT') then
+    raise exception 'Client roles can directly access private champion event tables';
+  end if;
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.student_learning_days'::regclass
+      and conname = 'student_learning_days_verification_source_check'
+      and contype = 'c'
+      and convalidated
+  ) then
+    raise exception 'The activity verification-source CHECK constraint must exist and be validated';
+  end if;
+  if not exists (
+    select 1 from pg_class
+    where oid = 'public.student_learning_days'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_mastery_events'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champions_config'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champion_question_bank'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champion_attempts'::regclass and relrowsecurity and relforcerowsecurity
+  ) then
+    raise exception 'Champion event and configuration tables must enforce row-level security';
   end if;
   if has_function_privilege('anon', 'public.record_student_activity()', 'EXECUTE') then
     raise exception 'Anonymous users can record student activity';

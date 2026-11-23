@@ -133,6 +133,7 @@
     state={...r,...local,
       displayName:String(local.displayName||r.displayName||user?.user_metadata?.full_name||user?.user_metadata?.display_name||'').trim().slice(0,32),
       xp:Math.max(0,Number(r.xp)||0,Number(local.xp)||0),
+      rewardClaims:union(r.rewardClaims,local.rewardClaims).filter(x=>typeof x==='string'&&x.length<=240),
       best:Math.min(100,Math.max(0,Number(r.best)||0,Number(local.best)||0)),
       quizzes:Math.max(0,Number(r.quizzes)||0,Number(local.quizzes)||0),
       streak:Math.max(0,Number(r.streak)||0,Number(local.streak)||0),
@@ -161,7 +162,8 @@
     state.best=Math.min(100,Math.max(0,Number(state.best)||0));
     state.quizzes=Math.max(0,Number(state.quizzes)||0);
     state.streak=Math.max(0,Number(state.streak)||0);
-    for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory']) if(!Array.isArray(state[key])) state[key]=[];
+    for(const key of ['completed','masteredLessons','lessonStarted','lessonTrained','saved','foundationSaved','chatHistory','rewardClaims']) if(!Array.isArray(state[key])) state[key]=[];
+    state.rewardClaims=[...new Set(state.rewardClaims.filter(x=>typeof x==='string'&&x.length<=240))];
     state.masteredLessons=typeof normalizeMasteredLessons==='function'?normalizeMasteredLessons(state.masteredLessons):[...new Set(state.masteredLessons.filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];for(const key of ['lessonStarted','lessonTrained']) state[key]=[...new Set(state[key].filter(x=>Number.isInteger(x)&&x>=0&&x<lessons.length))];
     for(const key of ['misses','review','daily','lessonPositions']) if(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])) state[key]={};
     state.review=mergeReviewProgress({},state.review,{},state.misses);
@@ -253,8 +255,12 @@
         ready=true;setSignedInUI();
         renderStats();renderCourses();renderHome();renderProfile();renderReview();
         revision++;
+        const uploadedRevision=revision;
         const saved=await uploadProgress();
-        if(saved) status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
+        if(saved && revision===uploadedRevision){
+          await flushPendingMasteryEvents(syncUserId,uploadedRevision);
+          status('✅ تمت مزامنة التقدم. جُمعت بيانات هذا الجهاز والحساب لتقليل فقدان التقدم.');
+        }
       } catch(e) {
         // A failed initial download must not unlock uploads: the local state may
         // belong to another account, and uploading it could overwrite cloud data.
@@ -269,6 +275,33 @@
       if(user && client && user.id!==requestedUserId) queueMicrotask(()=>syncNow());
     }
   }
+  const pendingMasteryKey=userId=>'english-hero-pending-mastery-events-'+userId;
+  function readPendingMasteryEvents(userId){
+    try{
+      const value=JSON.parse(localStorage.getItem(pendingMasteryKey(userId))||'[]');
+      return Array.isArray(value)?[...new Set(value.filter(index=>Number.isInteger(index)&&index>=0&&index<lessons.length))]:[];
+    }catch{return [];}
+  }
+  function writePendingMasteryEvents(userId,events){
+    try{
+      const key=pendingMasteryKey(userId);
+      if(events.length)localStorage.setItem(key,JSON.stringify([...new Set(events)]));
+      else localStorage.removeItem(key);
+      return true;
+    }catch(error){
+      console.warn('English Hero pending mastery storage:',error?.message||error);
+      return false;
+    }
+  }
+  function queuePendingMasteryEvent(userId,lessonIndex){
+    const pending=readPendingMasteryEvents(userId);
+    if(!pending.includes(lessonIndex))pending.push(lessonIndex);
+    return writePendingMasteryEvents(userId,pending);
+  }
+  // Legacy client-generated mastery markers are intentionally not replayed.
+  // Only the server-verified challenge endpoint may write champion mastery events.
+  async function flushPendingMasteryEvents(){ return true; }
+
   async function recordStudentActivity(){
     if(!client || !user || !ready || progressOwnerUserId!==user.id) return;
     try {
@@ -452,8 +485,11 @@
     },
     async recordLearningActivity(action, lessonIndex=null, wordIndex=null) {
       const allowed = ['lesson_started','lesson_progress','lesson_training_completed','lesson_assessment_attempted','lesson_mastered','quiz_completed'];
-      if(!allowed.includes(action) || !client || !user || !ready || progressOwnerUserId!==user.id) return false;
+      if(!allowed.includes(action) || !client || !user || progressOwnerUserId!==user.id) return false;
       if(action.startsWith('lesson_') && !Number.isInteger(lessonIndex)) return false;
+      // A browser-reported score is not trusted for champion ranking.
+      if(action === 'lesson_mastered') return false;
+      if(!ready)return false;
       const {error}=await client.rpc('record_student_learning_activity',{
         p_action:action,
         p_lesson_index:Number.isInteger(lessonIndex)?lessonIndex:null,
@@ -464,6 +500,38 @@
         return false;
       }
       return true;
+    },
+    async getStudentChampions() {
+      if(!client || !user || !ready || progressOwnerUserId!==user.id) return null;
+      const {data,error}=await client.rpc('get_student_champions');
+      if(error) throw error;
+      return data || null;
+    },
+    async startChampionChallenge(lessonIndex) {
+      if(!client || !user || !ready || progressOwnerUserId!==user.id) throw new Error('سجّل الدخول ومزامنة حسابك أولًا.');
+      if(!Number.isInteger(lessonIndex) || lessonIndex<0 || lessonIndex>83) throw new Error('رقم الدرس غير صالح.');
+      const {data,error}=await client.functions.invoke('student-champion-challenge',{
+        body:{action:'start',lesson_index:lessonIndex}
+      });
+      if(error){
+        let details=null;
+        try{details=await error.context?.json();}catch{}
+        throw new Error(details?.error||'تعذر بدء تحدي الأبطال. حاول لاحقًا.');
+      }
+      return data;
+    },
+    async submitChampionChallenge(attemptId,answers) {
+      if(!client || !user || !ready || progressOwnerUserId!==user.id) throw new Error('انتهت جلسة الحساب أو لم تكتمل المزامنة.');
+      if(typeof attemptId!=='string' || !Array.isArray(answers)) throw new Error('بيانات التحدي غير صالحة.');
+      const {data,error}=await client.functions.invoke('student-champion-challenge',{
+        body:{action:'submit',attempt_id:attemptId,answers}
+      });
+      if(error){
+        let details=null;
+        try{details=await error.context?.json();}catch{}
+        throw new Error(details?.error||'تعذر تصحيح التحدي. حاول لاحقًا.');
+      }
+      return data;
     },
     async signInWithUsername(username,password) {
       if(!client) throw new Error('خدمة الحسابات غير مهيأة.');
@@ -553,6 +621,7 @@
         if(ownsActiveProgress)removeAndVerify('english-hero-academy-3');
         for(const key of [
           'english-hero-account-backup-'+targetUserId,
+          pendingMasteryKey(targetUserId),
           'ehPlusV2:'+targetUserId,
           'englishHeroStudentTasksV1:'+targetUserId,
           'eh-scenarios-done:'+targetUserId

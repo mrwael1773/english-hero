@@ -1,5 +1,10 @@
+project_id = "english-hero-local-test"
+
 [functions.student-username-login]
 verify_jwt = false
 
 [functions.mentor-overview]
+verify_jwt = false
+
+[functions.student-champion-challenge]
 verify_jwt = false

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10172b">
+<title>أبطال بطل الإنجليزي | معاينة التصميم</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#121c33;--panel2:#182642;--line:#293958;--muted:#9aabc9;--text:#f4f7ff;--gold:#f5cb75;--blue:#91baff;--mint:#8de0c2}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 82% -12%,#263d68 0,transparent 36%),radial-gradient(ellipse at 4% 28%,#19294b 0,transparent 30%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+main{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:38px 0 64px}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--muted);font-size:.82rem}.brand{display:flex;align-items:center;gap:10px}.brand-mark{width:38px;height:38px;border-radius:13px;background:linear-gradient(145deg,#f8d98e,#9e6d28);display:grid;place-items:center;color:#1b2030;font-size:1.25rem;box-shadow:0 8px 28px #e4b85b33}
+.pill{border:1px solid #46604f;background:#142b2b;color:#a6ebd0;border-radius:999px;padding:7px 12px;font-size:.76rem}
+.hero{padding:40px 0 28px;max-width:760px}.eyebrow{color:var(--gold);font-size:.76rem;letter-spacing:.12em;font-weight:750}.hero h1{font-size:clamp(2rem,5vw,3.65rem);line-height:1.14;margin:12px 0 14px;letter-spacing:-.04em}.hero p{color:#b4c2db;line-height:1.9;margin:0;max-width:610px}
+.season{display:flex;align-items:center;gap:9px;margin-top:22px;color:#b8c7e2;font-size:.82rem}.season b{color:#fff}
+.champions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.feature{position:relative;overflow:hidden;isolation:isolate;border:1px solid #3b4a65;border-radius:25px;min-height:270px;padding:25px;background:linear-gradient(145deg,#1d2d4b,#111b31 72%);box-shadow:0 22px 60px #0003}
+.feature:before{content:"";position:absolute;width:250px;height:250px;border-radius:50%;filter:blur(3px);opacity:.19;z-index:-1;top:-125px;left:-75px;background:var(--glow)}
+.feature:after{content:"";position:absolute;inset:auto 0 0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.8}
+.feature.week{--accent:#9bbfff;--glow:#6599ff}.feature.day{--accent:#f4cf7b;--glow:#f5bd54}
+.feature-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.feature-type{display:flex;align-items:center;gap:10px;font-weight:750}.icon{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;font-size:1.4rem;background:#ffffff10;border:1px solid #ffffff18}.day .icon{color:#ffe0a0}.week .icon{color:#c6dcff}
+.period{font-size:.74rem;color:#c2cde0;background:#ffffff0b;border:1px solid #ffffff18;padding:7px 10px;border-radius:999px}
+.feature h2{font-size:1.65rem;margin:22px 0 6px}.feature .desc{font-size:.85rem;color:#aebed8;margin:0}
+.winner{margin-top:24px;display:flex;align-items:center;gap:15px;border-radius:18px;padding:15px;background:#07112466;border:1px solid #ffffff12}
+.crown{width:58px;height:58px;flex:0 0 58px;border-radius:18px;display:grid;place-items:center;font-size:1.7rem;background:linear-gradient(145deg,#ffe5a4,#b98236);box-shadow:0 8px 24px #e6b85a30}
+.week .crown{background:linear-gradient(145deg,#dceaff,#648ac5);box-shadow:0 8px 24px #6696e633}
+.winner-label{font-size:.73rem;color:#b8c7df}.winner-name{font-size:1.05rem;font-weight:800;margin-top:5px}.pending{font-size:.74rem;color:#c0cce0;margin-top:4px}
+.grid-title{display:flex;justify-content:space-between;align-items:end;margin:34px 0 15px;gap:12px}.grid-title h2{font-size:1.25rem;margin:0}.grid-title p{font-size:.78rem;color:var(--muted);margin:0}
+.categories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.category{border:1px solid var(--line);background:linear-gradient(145deg,#172440,#111a2e);border-radius:20px;padding:20px;min-height:148px}.category .symbol{font-size:1.5rem}.category h3{font-size:1rem;margin:12px 0 5px}.category p{font-size:.78rem;color:var(--muted);margin:0;line-height:1.7}
+.ranking{margin-top:24px;border:1px solid var(--line);border-radius:22px;background:#111b30cc;padding:22px}.ranking-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.ranking h2{font-size:1.15rem;margin:0}.ranking-head span{font-size:.76rem;color:var(--muted)}
+.empty{margin-top:17px;padding:22px;border:1px dashed #435372;border-radius:16px;text-align:center;color:#b4c2db;background:#ffffff04}.empty strong{display:block;color:#fff;margin-bottom:7px}.empty small{font-size:.76rem;line-height:1.8}
+.footnote{color:#7f91b2;font-size:.72rem;text-align:center;margin-top:25px}
+@media(max-width:700px){main{width:min(100% - 22px,560px);padding-top:22px}.hero{padding:32px 0 22px}.champions{grid-template-columns:1fr}.feature{min-height:245px;padding:21px}.categories{grid-template-columns:1fr}.category{min-height:unset;padding:17px}.grid-title{align-items:start;flex-direction:column}.ranking{padding:17px}}
+@media(prefers-reduced-motion:no-preference){.feature,.category{transition:transform .25s ease,border-color .25s ease}.feature:hover,.category:hover{transform:translateY(-3px);border-color:#61769d}}
+</style>
+</head>
+<body>
+<main>
+ <div class="topline"><div class="brand"><span class="brand-mark">✦</span><span>ENGLISH HERO <b> / </b> <span>أبطال بطل الإنجليزي</span></span></div><span class="pill">✧ مساحة التميّز</span></div>
+ <header class="hero"><div class="eyebrow">LEARN • ACHIEVE • SHINE</div><h1>كل إنجاز يصنع <span style="color:var(--gold)">بطلًا.</span></h1><p>هنا نحتفي بالتعلّم الحقيقي؛ إتقان جديد، واستمرارية تصنع الفرق، وتقدّم يستحق أن يُرى.</p><div class="season">🏅 <span>المنافسة مفتوحة لـ <b>جميع طلاب بطل الإنجليزي</b></span></div></header>
+ <section class="champions" aria-label="البطولتان الرئيسيتان">
+  <article class="feature day"><div class="feature-head"><div class="feature-type"><span class="icon">👑</span><span>بطولة اليوم</span></div><span class="period">تتجدد يوميًا</span></div><h2>بطل اليوم</h2><p class="desc">إنجازات تعليمية مستحقة خلال اليوم الحالي.</p><div class="winner"><div class="crown">🏆</div><div><div class="winner-label">صاحب المركز الأول اليوم</div><div class="winner-name">بانتظار أول بطل</div><div class="pending">ستظهر النتيجة بعد ربط سجل الإنجازات الموثوق</div></div></div></article>
+  <article class="feature week"><div class="feature-head"><div class="feature-type"><span class="icon">🏆</span><span>بطولة الأسبوع</span></div><span class="period">الأحد – السبت</span></div><h2>بطل الأسبوع</h2><p class="desc">أفضل أداء تعليمي مستحق على مدار الأسبوع.</p><div class="winner"><div class="crown">🌟</div><div><div class="winner-label">بطل الأسبوع الحالي</div><div class="winner-name">البطولة لم تبدأ بعد</div><div class="pending">تُحتسب النتائج من سجل المكافآت المعتمد</div></div></div></article>
+ </section>
+ <div class="grid-title"><div><h2>بطولات الإنجاز</h2><p>كل فئة تحتفي بمهارة مختلفة، وليس بعدد النقاط فقط.</p></div></div>
+ <section class="categories" aria-label="بطولات الإنجاز">
+   <article class="category"><div class="symbol">🔥</div><h3>نجم الاستمرارية</h3><p>الانتظام في التعلّم عبر أيام الأسبوع.</p></article>
+  <article class="category"><div class="symbol">🧠</div><h3>تحدي الأبطال</h3><p>اختبر إتقانك في تحدٍ قصير، وتُحتسب النتيجة بعد التحقق منها.</p></article>
+ </section>
+ <section class="ranking"><div class="ranking-head"><h2>✨ لوحة المتصدرين</h2><span>تُعرض الأسماء التي أدخلها الطلاب</span></div><div class="empty"><strong>قريبًا… ستبدأ المنافسة!</strong><small>لن نعرض ترتيبًا أو أسماء قبل التأكد من صحة بيانات الإنجازات ومنع تكرار المكافآت.</small></div></section>
+ <p class="footnote">معاينة تصميم فقط — لا توجد بيانات طلاب حقيقية أو نتائج مباشرة في هذه الصفحة.</p>
+</main>
+</body>
+</html>

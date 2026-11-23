@@ -32,3 +32,20 @@ test('refreshes quick navigation when the student changes app sections', async (
   await expect(quickNav.getByRole('link', { name: /إحصائيات التعلّم/ })).toBeVisible();
   await expect(quickNav.getByRole('link', { name: /سجل الاختبارات/ })).toBeVisible();
 });
+
+test('opens the premium student champions section from the learning hub', async ({ page }) => {
+  await page.goto('/');
+  const championsCard = page.locator('.launch-card[data-page="champions"]');
+  await expect(championsCard).toBeVisible();
+  await expect(championsCard).toContainText('أبطال بطل الإنجليزي');
+  await championsCard.click();
+
+  const section = page.locator('#champions');
+  await expect(section).toHaveClass(/active/);
+  await expect(section.locator('#championsTitle')).toContainText('أبطال بطل الإنجليزي');
+  await expect(section.locator('#championsToday')).toBeVisible();
+  await expect(section.locator('#championsWeek')).toBeVisible();
+  await expect(section.locator('#championsRefresh')).toBeEnabled();
+  await expect(section).toContainText('المنافسة تشمل جميع الطلاب');
+  await expect(section).toContainText('توقيت السعودية');
+});
