@@ -712,3 +712,146 @@ end;
 $$;
 
 \echo 'Mentor dashboard PostgreSQL migration tests passed.'
+
+
+-- Forward-only schema reconciliation must preserve private access boundaries and
+-- keep legacy learning days explicitly unverified.
+do $reconciliation_contract$
+declare
+  v_default text;
+  v_not_null boolean;
+begin
+  if to_regclass('public.mentor_link_tokens') is null
+     or to_regclass('public.reading_progress') is null then
+    raise exception 'Mentor token or reading progress table is missing after reconciliation';
+  end if;
+
+  if not exists (
+    select 1 from pg_class
+    where oid='public.mentor_link_tokens'::regclass and relrowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid='public.reading_progress'::regclass and relrowsecurity
+  ) then
+    raise exception 'Reconciled private tables must have RLS enabled';
+  end if;
+
+  if has_table_privilege('anon','public.mentor_link_tokens','SELECT')
+     or has_table_privilege('authenticated','public.mentor_link_tokens','SELECT')
+     or has_table_privilege('anon','public.reading_progress','SELECT')
+     or has_table_privilege('authenticated','public.reading_progress','SELECT') then
+    raise exception 'Reconciliation exposed a private table to client roles';
+  end if;
+
+  if not has_function_privilege('authenticated','public.get_my_reading_progress()','EXECUTE')
+     or not has_function_privilege('authenticated','public.save_my_reading_progress(text[])','EXECUTE')
+     or has_function_privilege('anon','public.get_my_reading_progress()','EXECUTE')
+     or has_function_privilege('anon','public.save_my_reading_progress(text[])','EXECUTE') then
+    raise exception 'Reading progress RPC grants are not owner-scoped';
+  end if;
+
+  if has_function_privilege('authenticated','public.issue_mentor_link_token(integer)','EXECUTE')
+     or has_function_privilege('anon','public.issue_mentor_link_token(integer)','EXECUTE')
+     or has_function_privilege('authenticated','public.mentor_get_student_overview(text)','EXECUTE')
+     or has_function_privilege('anon','public.mentor_get_student_overview(text)','EXECUTE') then
+    raise exception 'A client role can invoke a privileged mentor function';
+  end if;
+
+  select column_default, is_nullable='NO'
+    into v_default, v_not_null
+  from information_schema.columns
+  where table_schema='public' and table_name='student_learning_days'
+    and column_name='verification_source';
+
+  if v_default is null or v_default not like '%legacy_unverified%' or not v_not_null then
+    raise exception 'Legacy learning days must default to legacy_unverified and be non-null';
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid='public.student_learning_days'::regclass
+      and conname='student_learning_days_verification_source_check'
+  ) then
+    raise exception 'Learning-day verification source constraint is missing';
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid='public.student_mastery_events'::regclass
+      and conname='student_mastery_events_valid_lesson_index'
+      and pg_get_constraintdef(oid) like '%83%'
+  ) then
+    raise exception 'The authoritative 0..83 lesson-index constraint is missing';
+  end if;
+
+  if not has_function_privilege('service_role','public.complete_student_champion_attempt(uuid,uuid,jsonb)','EXECUTE')
+     or has_function_privilege('authenticated','public.complete_student_champion_attempt(uuid,uuid,jsonb)','EXECUTE')
+     or has_function_privilege('anon','public.complete_student_champion_attempt(uuid,uuid,jsonb)','EXECUTE') then
+    raise exception 'Challenge completion must remain service-role only';
+  end if;
+end;
+$reconciliation_contract$;
+
+
+-- The reconciled teacher-pilot table retains its schema safeguards but remains
+-- inaccessible to browser roles until a separately reviewed teacher auth model exists.
+do $teacher_pilot_reconciliation$
+declare
+  v_required_constraints text[] := array[
+    'teacher_pilot_results_code_check',
+    'teacher_pilot_results_pre_score_check',
+    'teacher_pilot_results_post_score_check',
+    'teacher_pilot_results_retention_score_check',
+    'teacher_pilot_results_sessions_attended_check',
+    'teacher_pilot_results_learning_note_check',
+    'teacher_pilot_results_user_id_code_key',
+    'teacher_pilot_results_session_log_check'
+  ];
+  v_constraint text;
+begin
+  if not exists (
+    select 1 from pg_class
+    where oid='public.teacher_pilot_results'::regclass
+      and relrowsecurity and relforcerowsecurity
+  ) then
+    raise exception 'Teacher pilot results must enforce RLS and FORCE RLS';
+  end if;
+
+  foreach v_constraint in array v_required_constraints loop
+    if not exists (
+      select 1 from pg_constraint
+      where conrelid='public.teacher_pilot_results'::regclass
+        and conname=v_constraint
+    ) then
+      raise exception 'Missing teacher pilot constraint: %', v_constraint;
+    end if;
+  end loop;
+
+  if not exists (
+    select 1 from pg_trigger
+    where tgrelid='public.teacher_pilot_results'::regclass
+      and tgname='set_teacher_pilot_results_updated_at'
+      and not tgisinternal
+  ) then
+    raise exception 'Teacher pilot updated_at trigger is missing';
+  end if;
+
+  if has_table_privilege('anon','public.teacher_pilot_results','SELECT')
+     or has_table_privilege('anon','public.teacher_pilot_results','INSERT')
+     or has_table_privilege('anon','public.teacher_pilot_results','UPDATE')
+     or has_table_privilege('anon','public.teacher_pilot_results','DELETE')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','SELECT')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','INSERT')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','UPDATE')
+     or has_table_privilege('authenticated','public.teacher_pilot_results','DELETE') then
+    raise exception 'Teacher pilot table must not grant direct client CRUD';
+  end if;
+
+  if exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='teacher_pilot_results'
+  ) then
+    raise exception 'Teacher pilot table must not have client RLS policies';
+  end if;
+end;
+$teacher_pilot_reconciliation$;
