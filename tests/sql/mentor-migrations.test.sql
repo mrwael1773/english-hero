@@ -445,6 +445,272 @@ set progress = '{
 }'::jsonb
 where user_id = '11111111-1111-4111-8111-111111111111';
 
+-- Token issuance returns the raw bearer only once and persists only its SHA-256 hash.
+do $mentor_token_issuance$
+declare
+  v_token text;
+  v_hash text;
+  v_expires_at timestamptz;
+  v_rejected boolean := false;
+begin
+  v_token := public.issue_mentor_link_token(7);
+  if v_token !~ '^[0-9a-f]{64}insert into public.mentor_link_tokens (token_hash, expires_at)
+values (
+  encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex'),
+  now() + interval '1 day'
+);
+
+do $$
+declare
+  v_result jsonb;
+  v_student jsonb;
+begin
+  v_result := public.mentor_get_student_overview(
+    encode(extensions.digest(convert_to(repeat('a', 64), 'UTF8'), 'sha256'), 'hex')
+  );
+  select item into v_student
+  from jsonb_array_elements(v_result->'students') as item
+  where item->>'display_name' = 'Synthetic Learner'
+  limit 1;
+  if v_student is null or v_student->>'display_name' <> 'Synthetic Learner' then
+    raise exception 'Overview did not return the synthetic student';
+  end if;
+  if v_student->'progress'->'xp' <> 'null'::jsonb then
+    raise exception 'Unsafe oversized XP was not converted to null';
+  end if;
+  if v_student->'progress'->'current_lesson_index' <> '3'::jsonb then
+    raise exception 'Active lesson index was not safely recovered from progress JSON';
+  end if;
+  if v_student->'progress'->'current_word_index' <> 'null'::jsonb then
+    raise exception 'Out-of-range word index was not rejected';
+  end if;
+  if v_student->'progress'->'mastered_indices' <> '[3]'::jsonb
+     or v_student->'progress'->'mastered_count' <> '1'::jsonb
+     or v_student->'progress'->'trained_indices' <> '[0]'::jsonb
+     or v_student->'progress'->'started_indices' <> '[3]'::jsonb then
+    raise exception 'Verified mastery summary trusted editable JSON or returned the wrong ledger values';
+  end if;
+  if v_student->'progress'->'saved_words_count' <> '2'::jsonb
+     or v_student->'progress'->'foundation_saved_count' <> '1'::jsonb
+     or v_student->'progress'->'review_words_count' <> '3'::jsonb
+     or v_student->'progress'->'review_due_count' <> '1'::jsonb
+     or v_student->'progress'->'missed_words_count' <> '1'::jsonb then
+    raise exception 'Vocabulary or review aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'quiz_attempts' <> '7'::jsonb
+     or v_student->'progress'->'best_quiz_score' <> '90'::jsonb
+     or v_student->'progress'->'answers_count' <> '10'::jsonb
+     or v_student->'progress'->'correct_answers_count' <> '8'::jsonb then
+    raise exception 'Quiz aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'active_days_count' <> '1'::jsonb
+     or v_student->'progress'->'learning_streak' <> '1'::jsonb
+     or v_student->'progress'->'vocab_level' <> '"all"'::jsonb
+     or v_student->'progress'->'vocab_position' <> '5'::jsonb then
+    raise exception 'Verified challenge-day or vocabulary aggregates were calculated incorrectly';
+  end if;
+  if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
+    raise exception 'Mentor overview did not include the student reading stage summary';
+  end if;
+end;
+$$;
+
+-- Expired and revoked bearer tokens must be rejected by the RPC.
+insert into public.mentor_link_tokens (token_hash, created_at, expires_at)
+values (
+  encode(extensions.digest(convert_to(repeat('b', 64), 'UTF8'), 'sha256'), 'hex'),
+  now() - interval '2 days',
+  now() - interval '1 day'
+);
+insert into public.mentor_link_tokens (token_hash, expires_at, revoked_at)
+values (
+  encode(extensions.digest(convert_to(repeat('c', 64), 'UTF8'), 'sha256'), 'hex'),
+  now() + interval '1 day',
+  now()
+);
+
+do $$
+declare
+  v_hash text;
+begin
+  foreach v_hash in array array[
+    encode(extensions.digest(convert_to(repeat('b', 64), 'UTF8'), 'sha256'), 'hex'),
+    encode(extensions.digest(convert_to(repeat('c', 64), 'UTF8'), 'sha256'), 'hex')
+  ] loop
+    begin
+      perform public.mentor_get_student_overview(v_hash);
+      raise exception 'Expired or revoked mentor token was accepted';
+    exception
+      when sqlstate '28000' then null;
+    end;
+  end loop;
+end;
+$$;
+
+-- Verify effective grants, including PostgreSQL's implicit PUBLIC privileges.
+do $$
+begin
+  if not has_function_privilege('authenticated', 'public.record_student_activity()', 'EXECUTE') then
+    raise exception 'Authenticated students cannot record last-seen activity';
+  end if;
+  if not has_function_privilege('authenticated', 'public.record_student_learning_activity(text,integer,integer)', 'EXECUTE') then
+    raise exception 'Authenticated students cannot record learning activity';
+  end if;
+  if not has_function_privilege('authenticated', 'public.get_student_champions()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.get_student_champions()', 'EXECUTE') then
+    raise exception 'Student champions RPC grants are incorrect';
+  end if;
+  if has_function_privilege('authenticated', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE')
+     or not has_function_privilege('service_role', 'public.import_student_champion_question_bank(jsonb)', 'EXECUTE') then
+    raise exception 'Only the trusted service role may import the private champion question bank';
+  end if;
+  if has_function_privilege('authenticated', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE')
+     or not has_function_privilege('service_role', 'public.complete_student_champion_attempt(uuid,uuid,jsonb)', 'EXECUTE') then
+    raise exception 'Only the trusted service role may complete champion attempts';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_champion_question_bank', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champion_attempts', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champion_attempts', 'INSERT')
+     or has_table_privilege('anon', 'public.student_champion_question_bank', 'SELECT')
+     or has_table_privilege('anon', 'public.student_champion_attempts', 'SELECT') then
+    raise exception 'Client roles can directly access private challenge data';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_learning_days', 'INSERT')
+     or has_table_privilege('anon', 'public.student_learning_days', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_mastery_events', 'INSERT')
+     or has_table_privilege('anon', 'public.student_mastery_events', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'SELECT')
+     or has_table_privilege('authenticated', 'public.student_champions_config', 'INSERT')
+     or has_table_privilege('anon', 'public.student_champions_config', 'SELECT') then
+    raise exception 'Client roles can directly access private champion event tables';
+  end if;
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.student_learning_days'::regclass
+      and conname = 'student_learning_days_verification_source_check'
+      and contype = 'c'
+      and convalidated
+  ) then
+    raise exception 'The activity verification-source CHECK constraint must exist and be validated';
+  end if;
+  if not exists (
+    select 1 from pg_class
+    where oid = 'public.student_learning_days'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_mastery_events'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champions_config'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champion_question_bank'::regclass and relrowsecurity and relforcerowsecurity
+  ) or not exists (
+    select 1 from pg_class
+    where oid = 'public.student_champion_attempts'::regclass and relrowsecurity and relforcerowsecurity
+  ) then
+    raise exception 'Champion event and configuration tables must enforce row-level security';
+  end if;
+  if has_function_privilege('anon', 'public.record_student_activity()', 'EXECUTE') then
+    raise exception 'Anonymous users can record student activity';
+  end if;
+  if has_function_privilege('authenticated', 'public.mentor_get_student_overview(text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.mentor_get_student_overview(text)', 'EXECUTE') then
+    raise exception 'A client role can call the privileged mentor overview RPC';
+  end if;
+  if not has_function_privilege('service_role', 'public.mentor_get_student_overview(text)', 'EXECUTE') then
+    raise exception 'Service role cannot call the mentor overview RPC';
+  end if;
+  if has_function_privilege('authenticated', 'public.issue_mentor_link_token(integer)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.issue_mentor_link_token(integer)', 'EXECUTE') then
+    raise exception 'A client role can issue mentor bearer tokens';
+  end if;
+  if has_function_privilege('authenticated', 'public.get_mentor_student_overview()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.get_mentor_student_overview()', 'EXECUTE') then
+    raise exception 'The retired authenticated mentor RPC remains executable';
+  end if;
+  if has_table_privilege('authenticated', 'public.student_activity', 'SELECT')
+     or has_table_privilege('anon', 'public.student_activity', 'SELECT') then
+    raise exception 'A client role can read the private student activity table';
+  end if;
+  if has_table_privilege('authenticated', 'public.mentor_link_tokens', 'SELECT')
+     or has_table_privilege('anon', 'public.mentor_link_tokens', 'SELECT') then
+    raise exception 'A client role can read private mentor token hashes';
+  end if;
+  if not exists (
+    select 1 from pg_class
+    where oid = 'public.reading_progress'::regclass and relrowsecurity
+  ) then
+    raise exception 'Reading progress table does not have row-level security enabled';
+  end if;
+  if has_table_privilege('authenticated', 'public.reading_progress', 'SELECT')
+     or has_table_privilege('authenticated', 'public.reading_progress', 'INSERT')
+     or has_table_privilege('authenticated', 'public.reading_progress', 'UPDATE')
+     or has_table_privilege('anon', 'public.reading_progress', 'SELECT') then
+    raise exception 'A client role can directly access private reading progress';
+  end if;
+  if not has_function_privilege('authenticated', 'public.get_my_reading_progress()', 'EXECUTE')
+     or not has_function_privilege('authenticated', 'public.save_my_reading_progress(text[])', 'EXECUTE') then
+    raise exception 'Authenticated students cannot use their reading progress RPCs';
+  end if;
+  if has_function_privilege('anon', 'public.get_my_reading_progress()', 'EXECUTE')
+     or has_function_privilege('anon', 'public.save_my_reading_progress(text[])', 'EXECUTE') then
+    raise exception 'Anonymous users can access student reading progress RPCs';
+  end if;
+end;
+$$;
+
+\echo 'Mentor dashboard PostgreSQL migration tests passed.'
+ then
+    raise exception 'Mentor token issuance did not return a 256-bit hexadecimal bearer';
+  end if;
+
+  v_hash := encode(extensions.digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex');
+  select expires_at into v_expires_at
+  from public.mentor_link_tokens
+  where token_hash = v_hash;
+
+  if not found or v_expires_at <= now()
+     or v_expires_at > now() + interval '7 days' + interval '1 minute' then
+    raise exception 'Mentor token hash was not stored with the requested expiry';
+  end if;
+  if exists (select 1 from public.mentor_link_tokens where token_hash = v_token) then
+    raise exception 'Raw mentor bearer token was stored instead of its hash';
+  end if;
+
+  begin
+    perform public.issue_mentor_link_token(0);
+  exception when others then
+    if sqlerrm = 'Expiry must be between 1 and 90 days' then
+      v_rejected := true;
+    else
+      raise;
+    end if;
+  end;
+  if not v_rejected then
+    raise exception 'Mentor token issuance accepted a zero-day expiry';
+  end if;
+
+  v_rejected := false;
+  begin
+    perform public.issue_mentor_link_token(91);
+  exception when others then
+    if sqlerrm = 'Expiry must be between 1 and 90 days' then
+      v_rejected := true;
+    else
+      raise;
+    end if;
+  end;
+  if not v_rejected then
+    raise exception 'Mentor token issuance accepted an expiry above 90 days';
+  end if;
+end;
+$mentor_token_issuance$;
+
 -- Use a known synthetic bearer token and store only its SHA-256 hash.
 insert into public.mentor_link_tokens (token_hash, expires_at)
 values (
