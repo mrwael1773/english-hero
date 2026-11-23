@@ -117,9 +117,7 @@ before update on public.teacher_pilot_results
 for each row execute function public.set_teacher_pilot_results_updated_at();
 revoke all on function public.set_teacher_pilot_results_updated_at() from public, anon, authenticated;
 
--- Reconciled source:
-
- supabase/migrations/20261118110000_mentor_passwordless_link_access.sql
+-- Reconciled source: supabase/migrations/20261118110000_mentor_passwordless_link_access.sql
 -- Passwordless mentor access through a revocable, expiring bearer link.
 -- The raw token is returned only once by an owner-only provisioning function.
 create table if not exists public.mentor_link_tokens (
