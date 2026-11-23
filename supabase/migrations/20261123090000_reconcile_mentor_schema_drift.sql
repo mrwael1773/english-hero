@@ -42,19 +42,18 @@ begin
 end
 $lesson_bounds$;
 
+
 -- Preserve the intended teacher-pilot schema without restoring browser CRUD.
 -- The historical create migration grants authenticated CRUD before a later
--- migration revokes it. Reconciliation creates only the missing constraints
--- and timestamp trigger, while keeping the table fail-closed throughout.
+-- migration revokes it. Reconciliation creates only missing constraints and
+-- the timestamp trigger while keeping the table fail-closed.
 do $teacher_pilot_preflight$
 begin
   if to_regclass('public.teacher_pilot_results') is null then
     raise exception 'teacher_pilot_results is missing; refusing to reconcile an absent pilot table';
   end if;
-
   if exists (
-    select 1
-    from public.teacher_pilot_results
+    select 1 from public.teacher_pilot_results
     group by user_id, code
     having count(*) > 1
   ) then
@@ -994,14 +993,6 @@ comment on function public.mentor_get_student_overview(text) is
 -- Fail closed if a partially existing object did not match the required shape.
 do $postflight$
 begin
-  if not exists (select 1 from information_schema.columns where table_schema='public' and table_name='mentor_link_tokens' and column_name='token_hash')
-     or not exists (select 1 from information_schema.columns where table_schema='public' and table_name='mentor_link_tokens' and column_name='expires_at')
-     or not exists (select 1 from information_schema.columns where table_schema='public' and table_name='reading_progress' and column_name='completed_stage_ids')
-     or not exists (select 1 from information_schema.columns where table_schema='public' and table_name='student_learning_days' and column_name='verification_source')
-  then
-    raise exception 'Reconciliation postflight failed: required columns are missing';
-  end if;
-
   if not exists (
     select 1 from pg_class
     where oid='public.teacher_pilot_results'::regclass and relrowsecurity and relforcerowsecurity
@@ -1020,10 +1011,7 @@ begin
     raise exception 'Reconciliation postflight failed: teacher pilot client grants detected';
   end if;
 
-  if exists (
-    select 1 from pg_policies
-    where schemaname='public' and tablename='teacher_pilot_results'
-  ) then
+  if exists (select 1 from pg_policies where schemaname='public' and tablename='teacher_pilot_results') then
     raise exception 'Reconciliation postflight failed: teacher pilot client policies detected';
   end if;
 
@@ -1033,6 +1021,13 @@ begin
       and tgname='set_teacher_pilot_results_updated_at' and not tgisinternal
   ) then
     raise exception 'Reconciliation postflight failed: teacher pilot timestamp trigger is missing';
+  end if;
+  if not exists (select 1 from information_schema.columns where table_schema='public' and table_name='mentor_link_tokens' and column_name='token_hash')
+     or not exists (select 1 from information_schema.columns where table_schema='public' and table_name='mentor_link_tokens' and column_name='expires_at')
+     or not exists (select 1 from information_schema.columns where table_schema='public' and table_name='reading_progress' and column_name='completed_stage_ids')
+     or not exists (select 1 from information_schema.columns where table_schema='public' and table_name='student_learning_days' and column_name='verification_source')
+  then
+    raise exception 'Reconciliation postflight failed: required columns are missing';
   end if;
 
   if has_table_privilege('anon','public.mentor_link_tokens','SELECT')
@@ -1069,8 +1064,7 @@ $postflight$;
     alter table public.teacher_pilot_results add constraint teacher_pilot_results_user_id_code_key unique (user_id, code);
   end if;
   if not exists (select 1 from pg_constraint where conrelid='public.teacher_pilot_results'::regclass and conname='teacher_pilot_results_session_log_check') then
-    alter table public.teacher_pilot_results add constraint teacher_pilot_results_session_log_check
-      check (jsonb_typeof(session_log) = 'array' and jsonb_array_length(session_log) <= 16) not valid;
+    alter table public.teacher_pilot_results add constraint teacher_pilot_results_session_log_check check (jsonb_typeof(session_log) = 'array' and jsonb_array_length(session_log) <= 16) not valid;
   end if;
 end
 $teacher_pilot_constraints$;
