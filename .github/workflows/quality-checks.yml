@@ -2,7 +2,7 @@ name: English Hero quality checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/reconcile-mentor-schema-drift]
   pull_request:
     branches: [main]
   workflow_dispatch:
