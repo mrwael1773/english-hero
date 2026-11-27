@@ -188,7 +188,8 @@ jobs:
             supabase/migrations/20261121220000_import_student_champion_question_bank.sql \
             supabase/migrations/20261121230000_atomic_champion_attempt_rate_limit.sql \
             supabase/migrations/20261122230000_reject_client_mastery_claims.sql \
-            supabase/migrations/20261122233000_verified_mentor_mastery_metrics.sql
+            supabase/migrations/20261122233000_verified_mentor_mastery_metrics.sql \
+            supabase/migrations/20261128120000_classify_supervisor_accounts.sql
           do
             echo "Applying $migration"
             psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$migration"

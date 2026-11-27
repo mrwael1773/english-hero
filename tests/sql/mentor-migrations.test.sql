@@ -14,6 +14,22 @@ values (
   '{"xp":120,"completed":[0,1],"masteredLessons":[0],"lessonStarted":[0,3],"lessonTrained":[0],"lessonPositions":{"3":2}}'::jsonb
 );
 
+-- Role assignment is identity-based: a later student may share a supervisor display name.
+do $supervisor_roles$
+begin
+  if (select count(*) from public.student_access_roles where role = 'supervisor') <> 4 then
+    raise exception 'The four expected accounts were not assigned the supervisor role';
+  end if;
+  if exists (
+    select 1 from public.student_access_roles r
+    join public.student_profiles p on p.user_id = r.user_id
+    where r.role = 'supervisor' and p.username = 'future-mahmud-student'
+  ) then
+    raise exception 'A future student was classified as a supervisor by display name';
+  end if;
+end;
+$supervisor_roles$;
+
 -- The authenticated student can write only through the constrained functions.
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
 select public.record_student_activity();
@@ -355,6 +371,29 @@ values
 insert into public.student_mastery_events (user_id, lesson_index, mastered_at)
 values ('33333333-3333-4333-8333-333333333333', 6, now() - interval '7 days');
 
+-- Give supervisor accounts high verified scores and give the same-name student one score.
+insert into public.student_mastery_events(user_id, lesson_index, mastered_at)
+select supervisor_id, 20 + lesson_no, now()
+from (values
+  ('a1111111-1111-4111-8111-111111111111'::uuid),
+  ('a2222222-2222-4222-8222-222222222222'::uuid),
+  ('a3333333-3333-4333-8333-333333333333'::uuid),
+  ('a4444444-4444-4444-8444-444444444444'::uuid)
+) as supervisors(supervisor_id)
+cross join generate_series(0, 3) as lessons(lesson_no);
+insert into public.student_learning_days(user_id, activity_day, verification_source)
+select supervisor_id, (now() at time zone 'Asia/Riyadh')::date, 'challenge_verified'
+from (values
+  ('a1111111-1111-4111-8111-111111111111'::uuid),
+  ('a2222222-2222-4222-8222-222222222222'::uuid),
+  ('a3333333-3333-4333-8333-333333333333'::uuid),
+  ('a4444444-4444-4444-8444-444444444444'::uuid)
+) as supervisors(supervisor_id);
+insert into public.student_mastery_events(user_id, lesson_index, mastered_at)
+values ('b5555555-5555-4555-8555-555555555555', 24, now());
+insert into public.student_learning_days(user_id, activity_day, verification_source)
+values ('b5555555-5555-4555-8555-555555555555', (now() at time zone 'Asia/Riyadh')::date, 'challenge_verified');
+
 do $champions$
 declare
   v_result jsonb;
@@ -386,11 +425,35 @@ begin
      or v_result->'week_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'week_leaders'->0->>'score' <> '2'
      or v_result->'mastery_leaders'->0->>'score' <> '3'
-     or v_result->'consistency_leaders'->0->>'display_name' <> 'Synthetic Learner'
-     or v_result->'consistency_leaders'->0->>'score' <> '1'
+     or not exists (select 1 from jsonb_array_elements(v_result->'consistency_leaders') as consistency_row
+       where consistency_row->>'display_name' = 'Synthetic Learner' and consistency_row->>'score' = '1')
      or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'improvement_leaders'->0->>'score' <> '1' then
     raise exception 'Student champions aggregates were not calculated as expected';
+  end if;
+  if (select count(*) from jsonb_array_elements(v_result->'today_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'week_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'mastery_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'consistency_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'improvement_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1 then
+    raise exception 'A same-name student was hidden or a supervisor record was included in student champions';
+  end if;
+  if exists (
+    select 1 from (
+      select jsonb_array_elements(v_result->'today_leaders') as leaderboard_row
+      union all select jsonb_array_elements(v_result->'week_leaders')
+      union all select jsonb_array_elements(v_result->'mastery_leaders')
+      union all select jsonb_array_elements(v_result->'consistency_leaders')
+      union all select jsonb_array_elements(v_result->'improvement_leaders')
+    ) as leaders
+    where leaders.leaderboard_row->>'display_name' in ('أبو باسل', 'وائل صامد', 'مشعل')
+  ) then
+    raise exception 'A supervisor account appeared in a student champions leaderboard';
   end if;
   if not exists (
     select 1
@@ -558,6 +621,14 @@ begin
   end if;
   if v_student->'progress'->'reading_completed' <> '["letter-sounds","digraphs"]'::jsonb then
     raise exception 'Mentor overview did not include the student reading stage summary';
+  end if;
+  if (select count(*) from jsonb_array_elements(v_result->'students') as item
+      where item->>'display_name' = 'محمود') <> 1 then
+    raise exception 'A future student sharing a supervisor display name was hidden or supervisors were not excluded';
+  end if;
+  if exists (select 1 from jsonb_array_elements(v_result->'students') as item
+      where item->>'display_name' in ('أبو باسل', 'وائل صامد', 'مشعل')) then
+    raise exception 'A supervisor account appeared in the mentor student overview';
   end if;
 end;
 $$;
