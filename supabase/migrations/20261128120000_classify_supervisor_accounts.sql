@@ -1,6 +1,6 @@
 -- Classify the four existing supervisor accounts by stable account identity.
 -- No account, profile, progress, or activity row is deleted or rewritten.
--- Abort if the expected accounts are not all present exactly once.
+-- In a clean local database none of these accounts exist yet; if any are present, require all four.
 alter table public.student_access_roles
   drop constraint if exists student_access_roles_role_check;
 alter table public.student_access_roles
@@ -14,8 +14,8 @@ begin
   select count(*) into v_supervisor_count
   from public.student_profiles
   where username in ('1013506835', 'wael_2009', 'mahmud', 'iii');
-  if v_supervisor_count <> 4 then
-    raise exception 'Expected exactly four known supervisor accounts; found %', v_supervisor_count;
+  if v_supervisor_count not in (0, 4) then
+    raise exception 'Expected either zero (clean local database) or all four known supervisor accounts; found %', v_supervisor_count;
   end if;
 end;
 $$;
