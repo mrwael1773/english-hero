@@ -225,7 +225,7 @@ begin
     'generated_at', v_now
   );
 end;
-$function$
+$function$;
 
 revoke all on function public.mentor_get_student_overview(text) from public, anon, authenticated;
 grant execute on function public.mentor_get_student_overview(text) to service_role;
@@ -352,7 +352,7 @@ begin
     'improvement_leaders', v_improvement_leaders
   );
 end;
-$function$
+$function$;
 
 revoke all on function public.get_student_champions() from public, anon;
 grant execute on function public.get_student_champions() to authenticated;
