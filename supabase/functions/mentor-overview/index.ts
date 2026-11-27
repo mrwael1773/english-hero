@@ -18,6 +18,16 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
+const supervisorDisplayNames = new Set(["ابوباسل", "وائلصامد", "محمود", "مشعل"]);
+
+export function isSupervisorDisplayName(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  const normalized = value.normalize("NFKC")
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/[\s\u200E\u200F\u202A-\u202E]/g, "");
+  return supervisorDisplayNames.has(normalized);
+}
+
 export function sanitizeOverview(payload: unknown): { students: Record<string, unknown>[]; generated_at: string } | null {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
   const source = payload as Record<string, unknown>;
@@ -68,6 +78,9 @@ export function sanitizeOverview(payload: unknown): { students: Record<string, u
         !optionalIndex(stats.last_action_word_index) ||
         !(stats.last_action === null || (typeof stats.last_action === "string" && allowedActions.has(stats.last_action))) ||
         !(stats.last_action_at === null || (typeof stats.last_action_at === "string" && Number.isFinite(Date.parse(stats.last_action_at))))) return null;
+
+    // Supervisor accounts are not students and must not affect student totals or rankings.
+    if (isSupervisorDisplayName(student.display_name)) continue;
 
     // Explicit allowlist: unexpected database fields never leave this function.
     students.push({
