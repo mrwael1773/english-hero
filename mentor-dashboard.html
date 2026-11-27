@@ -133,7 +133,7 @@ main{width:min(1120px,100%);padding:20px 22px 64px}
 </head>
 <body>
 <main>
-<header class="site-header"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><path d="M14 8h20v7c0 9-4 14-10 14S14 24 14 15V8Z" fill="none" stroke="currentColor" stroke-width="2.8"/><path d="M14 12H7v5c0 5 3 8 9 8M34 12h7v5c0 5-3 8-9 8M24 29v7m-9 4h18m-15-4h12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="m24 12 1.7 3.5 3.8.6-2.8 2.7.7 3.8-3.4-1.8-3.4 1.8.7-3.8-2.8-2.7 3.8-.6L24 12Z" fill="#e4c77b"/></svg></div><div><div class="brand-name">بطل الإنجليزي</div><div class="brand-subtitle">ENGLISH HERO</div></div></div><button class="btn primary header-refresh" id="headerRefresh" type="button">＋ تحديث داخلي</button></header>
+<header class="site-header"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><path d="M14 8h20v7c0 9-4 14-10 14S14 24 14 15V8Z" fill="none" stroke="currentColor" stroke-width="2.8"/><path d="M14 12H7v5c0 5 3 8 9 8M34 12h7v5c0 5-3 8-9 8M24 29v7m-9 4h18m-15-4h12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="m24 12 1.7 3.5 3.8.6-2.8 2.7.7 3.8-3.4-1.8-3.4 1.8.7-3.8-2.8-2.7 3.8-.6L24 12Z" fill="#e4c77b"/></svg></div><div><div class="brand-name">بطل الإنجليزي</div><div class="brand-subtitle">ENGLISH HERO</div></div></div><button class="btn primary header-refresh" id="headerRefresh" type="button" disabled>＋ تحديث داخلي</button></header>
 <section class="panel" id="accessPanel">
 <div class="panel-heading"><div><h2>الوصول إلى لوحة المتابعة</h2><p class="muted small">هذه الصفحة مخصصة للموجّه الطلابي.</p></div></div>
 <div class="security-note"><span aria-hidden="true">◆</span><div><strong>رابط خاص وآمن</strong><p>الرابط يمنح حامله صلاحية مشاهدة ملخص بيانات الطلاب. لا تشاركه، ويمكن إبطاله أو تنتهي صلاحيته.</p></div></div>
@@ -403,6 +403,7 @@ main{width:min(1120px,100%);padding:20px 22px 64px}
    $('masteryRate').textContent=rows.length?Math.round(studentsWithMastery/rows.length*100)+'%':'—';
    $('challengeDays').textContent=String(totals.days);$('savedWords').textContent=String(totals.saved);
    $('updatedAt').textContent='آخر تحديث: '+formatDate(generatedAt);
+   $('heroUpdateLabel').textContent='آخر تحديث '+formatDate(generatedAt);
    $('studentSearch').value='';$('studentSort').value='name';
    renderStudents();renderChampions();activateView('overviewView');
    $('dashboard').classList.remove('hidden');$('accessPanel').classList.add('hidden');
@@ -428,8 +429,10 @@ main{width:min(1120px,100%);padding:20px 22px 64px}
    }
    loading=true;
    $('refresh').disabled=true;
+   $('headerRefresh').disabled=true;
    $('openDashboard').disabled=true;
    $('refresh').textContent='جارٍ التحديث...';
+   $('headerRefresh').textContent='جارٍ التحديث...';
    $('openDashboard').textContent='جارٍ التحقق...';
    $('dashboard').setAttribute('aria-busy','true');
    say('جارٍ التحقق وتحميل ملخص الطلاب...');
@@ -490,8 +493,10 @@ main{width:min(1120px,100%);padding:20px 22px 64px}
    }finally{
      loading=false;
      $('refresh').disabled=false;
+     $('headerRefresh').disabled=false;
      $('openDashboard').disabled=false;
      $('refresh').textContent='تحديث البيانات';
+     $('headerRefresh').textContent='＋ تحديث داخلي';
      $('openDashboard').textContent='فتح لوحة المتابعة';
      $('dashboard').setAttribute('aria-busy','false');
    }
@@ -501,6 +506,7 @@ main{width:min(1120px,100%);padding:20px 22px 64px}
  $('studentSort').addEventListener('change',renderStudents);
  $('openDashboard').addEventListener('click',loadOverview);
  $('refresh').addEventListener('click',loadOverview);
+ $('headerRefresh').addEventListener('click',loadOverview);
  // The bearer token is kept only in memory. The URL fragment is removed immediately
  // so it is not sent in HTTP requests, referrers, or retained in browser history.
  token=location.hash.startsWith('#')?location.hash.slice(1):'';
@@ -511,6 +517,7 @@ main{width:min(1120px,100%);padding:20px 22px 64px}
    say('الرابط غير مكتمل؛ لم يتم إرسال أي طلب لبيانات الطلاب.',true);
  }else{
    $('accessStatus').textContent='تم استلام رمز الوصول. اضغط فتح لوحة المتابعة للتحقق منه.';
+   $('headerRefresh').disabled=false;
  }
 })();
 </script>
