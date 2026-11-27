@@ -441,13 +441,13 @@ begin
   end if;
   if exists (
     select 1 from (
-      select jsonb_array_elements(v_result->'today_leaders') as row
+      select jsonb_array_elements(v_result->'today_leaders') as leader
       union all select jsonb_array_elements(v_result->'week_leaders')
       union all select jsonb_array_elements(v_result->'mastery_leaders')
       union all select jsonb_array_elements(v_result->'consistency_leaders')
       union all select jsonb_array_elements(v_result->'improvement_leaders')
     ) as leaders
-    where row->>'display_name' in ('أبو باسل', 'وائل صامد', 'مشعل')
+    where leaders.leader->>'display_name' in ('أبو باسل', 'وائل صامد', 'مشعل')
   ) then
     raise exception 'A supervisor account appeared in a student champions leaderboard';
   end if;
