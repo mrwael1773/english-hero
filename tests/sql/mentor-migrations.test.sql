@@ -431,13 +431,17 @@ begin
      or v_result->'improvement_leaders'->0->>'score' <> '1' then
     raise exception 'Student champions aggregates were not calculated as expected';
   end if;
-  if not exists (select 1 from jsonb_array_elements(v_result->'today_leaders') as leaderboard_row
-      where leaderboard_row->>'display_name' = 'محمود')
-     or not exists (select 1 from jsonb_array_elements(v_result->'mastery_leaders') as leaderboard_row
-      where leaderboard_row->>'display_name' = 'محمود')
-     or not exists (select 1 from jsonb_array_elements(v_result->'consistency_leaders') as leaderboard_row
-      where leaderboard_row->>'display_name' = 'محمود') then
-    raise exception 'A student sharing a supervisor display name was excluded from student champions';
+  if (select count(*) from jsonb_array_elements(v_result->'today_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'week_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'mastery_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'consistency_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1
+     or (select count(*) from jsonb_array_elements(v_result->'improvement_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') <> 1 then
+    raise exception 'A same-name student was hidden or a supervisor record was included in student champions';
   end if;
   if exists (
     select 1 from (
