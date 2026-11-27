@@ -81,6 +81,8 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
       internal_debug: "must-not-leak",
       students: [{
         username: "learner",
+        user_id: "internal-user-id",
+        role: "supervisor",
         display_name: "Learner",
         last_seen_at: null,
         email: "private@example.test",
@@ -115,6 +117,8 @@ Deno.test("hashes the bearer token and returns only allowlisted student fields",
     const output = await response.json();
     assertEquals(output.students[0].display_name, "Learner");
     assertEquals("username" in output.students[0], false);
+    assertEquals("user_id" in output.students[0], false);
+    assertEquals("role" in output.students[0], false);
     assertEquals("email" in output.students[0], false);
     assertEquals("internal_debug" in output, false);
     assertEquals("raw_answers" in output.students[0].progress, false);
