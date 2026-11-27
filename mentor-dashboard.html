@@ -90,12 +90,50 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 }
 @media(max-width:370px){.stats{grid-template-columns:1fr}.stat{display:flex;align-items:center;justify-content:space-between}.stat b{margin:0}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Reference visual identity: warm ivory canvas, forest green and illustrated hero. */
+:root{color-scheme:light;--bg:#f3f7f4;--surface:#fff;--surface-2:#edf4ee;--line:#d9e4dd;--text:#203c33;--muted:#718078;--mint:#39745d;--blue:#5577a7;--danger:#a64d4d;--radius:22px}
+html{background:var(--bg)}
+body{background:#f3f7f4;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{width:min(1120px,100%);padding:20px 22px 64px}
+.site-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0 20px;margin:0 0 20px;border-bottom:1px solid #dce6df}
+.brand{gap:12px}.brand-mark{width:54px;height:54px;flex-basis:54px;border-radius:16px;background:#285d4c;color:#f6e4aa;border:1px solid #6e927f;box-shadow:0 3px 8px #1b46301c}
+.brand-mark svg{width:40px;height:40px}.brand-name{font-size:clamp(20px,3vw,30px);font-weight:900;line-height:1.2;color:#203c33}.brand-subtitle{font-size:11px;letter-spacing:4px;font-weight:800;color:#718078}
+.eyebrow{color:#39745d}.btn{border:1px solid #d2dfd6;background:#fff;color:#315847;border-radius:15px;box-shadow:0 2px 5px #1b46300d}.btn.primary{background:#285d4c;border-color:#285d4c;color:#fff}.header-refresh{min-height:48px;padding:9px 18px}
+.panel{background:#fff;border:1px solid #d8e4dc;border-radius:22px;padding:22px;margin:16px 0;box-shadow:0 4px 16px #294c3810}
+.panel-heading{margin-bottom:16px}.panel-heading p{color:#718078}
+#accessPanel{background:#fff}#accessPanel .security-note{background:#eef5ef;border-color:#d5e5da;color:#315847}#accessPanel .security-note p{color:#66776e}
+.status{background:#f0f5f1;border-color:#dbe6df;color:#4b6659}.status.error{background:#fbefed;border-color:#ebd0cb;color:#a64d4d}
+.welcome-hero{position:relative;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);align-items:center;min-height:285px;overflow:hidden;margin:20px 0 30px;padding:30px 32px;border:2px solid #cfe0d3;border-radius:25px;background-color:#eaf3eb;background-image:linear-gradient(rgba(91,142,109,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(91,142,109,.045) 1px,transparent 1px);background-size:48px 48px}
+.welcome-hero:before{content:"";position:absolute;inset:35% auto 0 0;width:36%;background:linear-gradient(90deg,#cde3d2a8,transparent);pointer-events:none}
+.hero-copy{position:relative;z-index:1}.hero-kicker{display:inline-flex;align-items:center;gap:12px;color:#39745d;font-size:15px;font-weight:900}.hero-kicker:before{content:"";width:42px;height:3px;background:#c49b50}
+.hero-copy h2{margin:12px 0 10px;font-size:clamp(31px,5vw,50px);line-height:1.45;font-weight:950;color:#203c33}.hero-copy h2 em{font-style:normal;color:#2d6a52}.hero-copy p{max-width:510px;color:#596d62;font-size:17px;line-height:1.9}
+.update-chip{display:inline-flex;align-items:center;gap:9px;margin-top:12px;padding:8px 12px;border:1px solid #d0ded3;border-radius:13px;background:#f7faf7;color:#4e6758;font-size:12px}
+.hero-art{position:relative;z-index:1;display:grid;place-items:center}.hero-art svg{width:min(100%,300px);height:auto;filter:drop-shadow(0 8px 7px #355b4020)}
+.hero-bottom-rule{position:absolute;bottom:0;right:0;width:110px;height:10px;background:linear-gradient(90deg,#d8b66c 0 30%,#6b9e83 30% 100%)}
+.view-heading{align-items:center;margin:24px 0 14px}.view-heading h2{font-size:clamp(20px,3vw,27px);font-weight:900}.view-heading:after{content:"";width:10px;height:10px;border:2px solid #6c9880;border-radius:3px;box-shadow:13px 0 0 -2px #6c9880,0 13px 0 -2px #6c9880,13px 13px 0 -2px #6c9880;order:-1;margin-inline-start:8px}
+.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+.stat{display:grid;grid-template-columns:52px 1fr;grid-template-rows:auto auto auto;column-gap:12px;align-items:center;min-height:150px;padding:20px 18px;border:1px solid #d9e4dd;border-radius:20px;background:#fff;box-shadow:0 2px 8px #284a3510}
+.stat:after{display:none}.stat-icon{grid-row:1/4;display:grid;place-items:center;width:52px;height:52px;border-radius:15px;font-size:27px;font-weight:800}
+.icon-students{background:#eaf0fa;color:#4f6e9e}.icon-active{background:#e6f1ea;color:#43866a}.icon-mastery{background:#f0ebf7;color:#806a9c}.icon-training{background:#fbf1db;color:#ad7c2f}
+.stat-label{color:#53665c;font-size:15px;font-weight:850}.stat b{margin:1px 0 0;font-size:36px;color:#203c33}.stat-hint{margin-top:5px;padding-top:8px;border-top:1px solid #e7ede8;color:#78867e;font-size:12px}
+.support-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 20px}.support-stat{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid #dce6df;border-radius:14px;background:#f9fbf9;color:#6d7c73;font-size:13px}.support-stat b{color:#285d4c;font-size:19px}
+.insight-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.insight-card,.champion-panel{background:#fff;border:1px solid #d9e4dd;border-radius:18px;box-shadow:0 2px 8px #284a3509}.insight-kicker{color:#6d927c}.insight-value{color:#285d4c}.data-note,.guide{background:#f2f7f3;border:1px solid #dce8df;color:#63746a}
+.dashboard-nav{border-bottom:1px solid #dce6df}.nav-tab{color:#6d7c73}.nav-tab:hover{background:#eff5f0;color:#285d4c}.nav-tab.active{background:#e8f2eb;border-color:#cfe0d4;color:#285d4c}
+.search-box,.sort-box{background:#f8faf8;border-color:#d8e4dc;color:#63746a}.search-box input,.sort-box select{color:#29483a}.search-box input::placeholder{color:#8b9990}.sort-box option{background:#fff;color:#29483a}
+.table-wrap{border-color:#dce6df}th{background:#edf4ee;color:#315f4b}th,td{border-bottom-color:#e4ece6}tbody tr:hover{background:#f5f9f5}
+.champion-panel h3{color:#285d4c}.champion-list li{border-top-color:#e6ede8}.champion-list li:before{background:#e9f2eb;color:#39745d}
+.progress-disclosure summary{color:#39745d}.progress-group{border-top-color:#e5ece7}.progress-group h4{color:#587f68}
+@media(max-width:680px){main{padding:12px 13px 42px}.site-header{padding:8px 0 16px;margin-bottom:14px}.brand-mark{width:48px;height:48px;flex-basis:48px}.header-refresh{font-size:12px;padding:8px 11px;min-height:42px}.welcome-hero{grid-template-columns:1fr;min-height:0;padding:22px 20px 16px;margin:14px 0 24px}.hero-copy h2{font-size:34px}.hero-copy p{font-size:15px}.hero-art{margin-top:5px}.hero-art svg{width:min(76%,250px)}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{grid-template-columns:40px 1fr;column-gap:8px;min-height:132px;padding:13px 10px}.stat-icon{width:40px;height:40px;font-size:22px;border-radius:12px}.stat-label{font-size:12px}.stat b{font-size:29px}.stat-hint{font-size:10px}.support-stats{gap:8px}.support-stat{padding:10px;font-size:11px}.insight-grid{grid-template-columns:1fr}.view-heading{margin-top:20px}}
+@media(max-width:370px){.brand-name{font-size:18px}.brand-subtitle{letter-spacing:3px}.header-refresh{font-size:11px}.welcome-hero{padding:18px 15px}.hero-copy h2{font-size:30px}.stats{grid-template-columns:1fr}.stat{min-height:95px;grid-template-columns:42px 1fr}.stat-icon{grid-row:1/4}}
+@media(prefers-reduced-motion:reduce){.btn{transition:none}}
+
 </style>
 <script src="./config.js"></script>
 </head>
 <body>
 <main>
-<header><div class="brand"><div class="brand-mark" aria-hidden="true">EH</div><div><div class="eyebrow">ENGLISH HERO · متابعة المدرسة</div><h1>لوحة متابعة الطلاب</h1><p class="muted small">ملخص التقدم التعليمي وآخر اتصال بالحساب.</p></div></div></header>
+<header class="site-header"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><path d="M14 8h20v7c0 9-4 14-10 14S14 24 14 15V8Z" fill="none" stroke="currentColor" stroke-width="2.8"/><path d="M14 12H7v5c0 5 3 8 9 8M34 12h7v5c0 5-3 8-9 8M24 29v7m-9 4h18m-15-4h12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="m24 12 1.7 3.5 3.8.6-2.8 2.7.7 3.8-3.4-1.8-3.4 1.8.7-3.8-2.8-2.7 3.8-.6L24 12Z" fill="#e4c77b"/></svg></div><div><div class="brand-name">بطل الإنجليزي</div><div class="brand-subtitle">ENGLISH HERO</div></div></div><button class="btn primary header-refresh" id="headerRefresh" type="button" disabled>＋ تحديث داخلي</button></header>
 <section class="panel" id="accessPanel">
 <div class="panel-heading"><div><h2>الوصول إلى لوحة المتابعة</h2><p class="muted small">هذه الصفحة مخصصة للموجّه الطلابي.</p></div></div>
 <div class="security-note"><span aria-hidden="true">◆</span><div><strong>رابط خاص وآمن</strong><p>الرابط يمنح حامله صلاحية مشاهدة ملخص بيانات الطلاب. لا تشاركه، ويمكن إبطاله أو تنتهي صلاحيته.</p></div></div>
@@ -103,7 +141,8 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <p class="small muted" id="accessStatus" role="status" aria-live="polite">جارٍ التحقق من الرابط...</p>
 </section>
 <section class="panel hidden" id="dashboard">
-<div class="panel-heading dashboard-heading"><div><div class="eyebrow">ENGLISH HERO · MENTOR INSIGHTS</div><h2>مركز متابعة بطل الإنجليزي</h2><p class="muted small" id="updatedAt">لم يتم التحديث بعد</p></div><button class="btn" id="refresh" type="button">تحديث البيانات</button></div>
+<div class="panel-heading dashboard-heading"><div><div class="eyebrow">متابعة البرنامج</div><h2>مركز متابعة بطل الإنجليزي</h2><p class="muted small" id="updatedAt">لم يتم التحديث بعد</p></div><button class="btn" id="refresh" type="button">تحديث البيانات</button></div>
+<section class="welcome-hero" aria-label="مقدمة لوحة متابعة بطل الإنجليزي"><div class="hero-copy"><span class="hero-kicker">متابعة البرنامج</span><h2>لوحة متابعة<br><em>بطل الإنجليزي</em></h2><p>المشاركة والتقدم ونتائج القياس للصفين الأول والثاني الثانوي.</p><span class="update-chip"><span aria-hidden="true">▦</span><span id="heroUpdateLabel">آخر تحديث يظهر بعد تحميل البيانات</span></span></div><div class="hero-art" aria-hidden="true"><svg viewBox="0 0 300 220"><defs><linearGradient id="bookGold" x1="0" x2="1"><stop stop-color="#f1d998"/><stop offset="1" stop-color="#c79e4e"/></linearGradient><linearGradient id="bookGreen" x1="0" x2="1"><stop stop-color="#416f5c"/><stop offset="1" stop-color="#244b3e"/></linearGradient></defs><ellipse cx="150" cy="194" rx="125" ry="12" fill="#b6d3c1" opacity=".45"/><path d="M43 150q51-15 103 4v24q-52-18-103-2Z" fill="#d9b77a" stroke="#52695d" stroke-width="3"/><path d="M43 150q51-15 103 4l-7 12q-44-15-89-3Z" fill="#f1dfb6"/><path d="M154 154q50-20 103-5v25q-52-13-103 5Z" fill="#d9b77a" stroke="#52695d" stroke-width="3"/><path d="M154 154q50-20 103-5l-8 12q-45-12-89 5Z" fill="#f1dfb6"/><path d="M53 119q48-13 95 3v28q-47-16-95-1Z" fill="url(#bookGreen)" stroke="#355747" stroke-width="3"/><path d="M53 119q48-13 95 3" fill="none" stroke="#d8c18a" stroke-width="3"/><path d="M155 122q47-16 94-3v27q-48-13-94 4Z" fill="url(#bookGreen)" stroke="#355747" stroke-width="3"/><path d="M155 122q47-16 94-3" fill="none" stroke="#d8c18a" stroke-width="3"/><path d="M70 91h160v23H70z" fill="#c89e59" stroke="#5b624e" stroke-width="3"/><path d="M70 91q78-16 160 0l-8 12q-75-15-144 0Z" fill="#f0d9a7"/><path d="M133 25h34v17c0 21-7 31-17 31s-17-10-17-31V25Z" fill="url(#bookGold)" stroke="#755d31" stroke-width="3"/><path d="M133 33h-19v8c0 14 9 19 22 19M167 33h19v8c0 14-9 19-22 19" fill="none" stroke="#9b793d" stroke-width="7" stroke-linecap="round"/><path d="M150 12v-7m-20 12-5-6m45 6 5-6" stroke="#b68b42" stroke-width="3" stroke-linecap="round"/><path d="m150 33 4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1Z" fill="#fff2be" stroke="#9b793d" stroke-width="1.5"/><rect x="205" y="91" width="60" height="49" rx="7" transform="rotate(-8 205 91)" fill="#e9e5c9" stroke="#536b5b" stroke-width="3"/><text x="235" y="123" text-anchor="middle" font-size="25" font-family="Georgia,serif" font-weight="bold" fill="#355747">Aa</text><path d="M34 79q-11-12-17 1m251 10q14-9 20 4" fill="none" stroke="#6d9a7f" stroke-width="2" stroke-dasharray="3 4"/><path d="m27 69 5 3-4 4m238 5 5 3-4 4" fill="none" stroke="#b58b45" stroke-width="2"/></svg></div><div class="hero-bottom-rule"></div></section>
 <nav class="dashboard-nav" aria-label="أقسام لوحة المتابعة">
 <button class="nav-tab active" type="button" data-view="overviewView" aria-current="page">النظرة العامة</button>
 <button class="nav-tab" type="button" data-view="studentsView">متابعة الطلاب</button>
@@ -113,12 +152,14 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <section class="dashboard-view" id="overviewView" aria-labelledby="overviewTitle">
 <div class="view-heading"><div><h2 id="overviewTitle">صورة البرنامج الآن</h2><p class="muted small">مؤشرات مجمعة من سجلات الطلاب المتاحة للوحة.</p></div></div>
 <div class="stats">
-<div class="stat"><span class="stat-label">إجمالي الطلاب</span><b id="total">—</b><span class="stat-hint">الحسابات المسجلة</span></div>
-<div class="stat"><span class="stat-label">سبق لهم الاتصال</span><b id="seen">—</b><span class="stat-hint">لديهم وقت اتصال مسجل</span></div>
-<div class="stat"><span class="stat-label">لم يتصلوا بعد</span><b id="notSeen">—</b><span class="stat-hint">لا يوجد اتصال مسجل</span></div>
-<div class="stat"><span class="stat-label">دروس متقنة</span><b id="totalMastered">—</b><span class="stat-hint">من سجل الإتقان الموثق</span></div>
-<div class="stat"><span class="stat-label">تدريبات مكتملة</span><b id="totalTrained">—</b><span class="stat-hint">ليست دليلًا على الإتقان</span></div>
-<div class="stat"><span class="stat-label">مراحل قراءة مجتازة</span><b id="totalReading">—</b><span class="stat-hint">من 11 مرحلة لكل طالب</span></div>
+<div class="stat"><span class="stat-icon icon-students" aria-hidden="true">♧</span><span class="stat-label">طلاب الدفعة</span><b id="total">—</b><span class="stat-hint">الحسابات المسجلة</span></div>
+<div class="stat"><span class="stat-icon icon-active" aria-hidden="true">◉</span><span class="stat-label">سبق لهم الاتصال</span><b id="seen">—</b><span class="stat-hint">لديهم وقت اتصال مسجل</span></div>
+<div class="stat"><span class="stat-icon icon-mastery" aria-hidden="true">▣</span><span class="stat-label">الدروس المتقنة</span><b id="totalMastered">—</b><span class="stat-hint">من سجل الإتقان الموثق</span></div>
+<div class="stat"><span class="stat-icon icon-training" aria-hidden="true">▤</span><span class="stat-label">تدريبات مكتملة</span><b id="totalTrained">—</b><span class="stat-hint">ليست دليلًا على الإتقان</span></div>
+</div>
+<div class="support-stats">
+<div class="support-stat"><span>لم يتصلوا بعد</span><b id="notSeen">—</b></div>
+<div class="support-stat"><span>مراحل قراءة مجتازة</span><b id="totalReading">—</b></div>
 </div>
 <div class="insight-grid">
 <article class="insight-card"><div class="insight-kicker">MASTERY</div><h3>الإتقان الموثق</h3><p class="insight-value" id="masteryRate">—</p><p class="muted small">نسبة الطلاب الذين لديهم درس واحد على الأقل في سجل الإتقان الموثق.</p></article>
@@ -142,8 +183,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <div class="view-heading"><div><h2 id="guideTitle">دليل قراءة المؤشرات</h2><p class="muted small">مصدر كل مؤشر وحدود تفسيره.</p></div></div>
 <aside class="guide" aria-label="شرح بيانات لوحة المتابعة"><h3>كيف تقرأ بيانات الطالب؟</h3><ul><li><strong>نقاط التطبيق (XP):</strong> الرصيد المسجل في تقدم التطبيق، وليس إنجازًا موثقًا من الخادم؛ لا يُستخدم وحده لإثبات الإتقان.</li><li><strong>بقية مؤشرات التقدم:</strong> التدريب والبدء والمفردات والمراجعة ونتائج الاختبارات وموضع التعلم مأخوذة من نسخة التقدم التي يزامنها التطبيق؛ تفيد في المتابعة لكنها ليست إثباتًا مستقلًا من الخادم.</li><li><strong>أتقن:</strong> عدد الدروس التي اجتاز الطالب تحديها المعتمد بنسبة ٨٠٪ أو أكثر؛ العدد وأسماء الدروس مصدرهما سجل الإتقان الموثق على الخادم.</li><li><strong>أكمل التدريب:</strong> أنهى محتوى الدرس لكنه لم يثبت إتقانه بعد.</li><li><strong>بدأ:</strong> عدد الدروس التي فتحها وبدأ التعلم فيها، وقد يشمل دروسًا أتقنها لاحقًا.</li><li><strong>موضع التعلم الحالي:</strong> مثل «الكلمة رقم ٦» تعني موضع الطالب داخل الدرس، ولا تعني أنه أتقن ٦ كلمات.</li><li><strong>المفردات والمراجعة والاختبارات:</strong> أعداد وملخصات مجمعة؛ لا تُعرض إجابات الطالب أو نصوصه.</li><li><strong>القراءة:</strong> تعرض اللوحة المراحل الإحدى عشرة التي اجتازها الطالب بعد مزامنتها من جهازه؛ لا تُعرض إجابات القراءة أو تفاصيل محاولاته.</li><li><strong>أيام تحدي الأبطال:</strong> أيام نشاط موثقة عبر مسار التحدي المعتمد فقط.</li><li><strong>آخر نشاط:</strong> آخر إجراء تعليمي وصل إلى النظام، وليس سجلًا كاملًا لكل ما فعله الطالب.</li></ul></aside><p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو نصوص المراجعة أو المحادثات أو تفاصيل الجلسات.</p>
 </section>
-</section>
-<p class="status small" id="status" role="status" aria-live="polite">لا يتم عرض بيانات الطلاب قبل التحقق من صلاحية الرابط.</p>
+</section><p class="status small" id="status" role="status" aria-live="polite">لا يتم عرض بيانات الطلاب قبل التحقق من صلاحية الرابط.</p>
 </main>
 <script>
 'use strict';
@@ -357,13 +397,13 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
      acc.reading+=Array.isArray(p.reading_completed)?p.reading_completed.length:0;
      acc.days+=count(p.active_days_count);acc.saved+=count(p.saved_words_count);
      return acc;
-   },{mastered:0,trained:0,reading:0,days:0,saved:0});
-   $('total').textContent=String(rows.length);$('seen').textContent=String(seen);$('notSeen').textContent=String(rows.length-seen);
+   },{mastered:0,trained:0,reading:0,days:0,saved:0});   $('total').textContent=String(rows.length);$('seen').textContent=String(seen);$('notSeen').textContent=String(rows.length-seen);
    $('totalMastered').textContent=String(totals.mastered);$('totalTrained').textContent=String(totals.trained);$('totalReading').textContent=String(totals.reading);
    const studentsWithMastery=rows.filter(student=>count(student.progress.mastered_count)>0).length;
    $('masteryRate').textContent=rows.length?Math.round(studentsWithMastery/rows.length*100)+'%':'—';
    $('challengeDays').textContent=String(totals.days);$('savedWords').textContent=String(totals.saved);
    $('updatedAt').textContent='آخر تحديث: '+formatDate(generatedAt);
+   $('heroUpdateLabel').textContent='آخر تحديث '+formatDate(generatedAt);
    $('studentSearch').value='';$('studentSort').value='name';
    renderStudents();renderChampions();activateView('overviewView');
    $('dashboard').classList.remove('hidden');$('accessPanel').classList.add('hidden');
@@ -389,8 +429,10 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    }
    loading=true;
    $('refresh').disabled=true;
+   $('headerRefresh').disabled=true;
    $('openDashboard').disabled=true;
    $('refresh').textContent='جارٍ التحديث...';
+   $('headerRefresh').textContent='جارٍ التحديث...';
    $('openDashboard').textContent='جارٍ التحقق...';
    $('dashboard').setAttribute('aria-busy','true');
    say('جارٍ التحقق وتحميل ملخص الطلاب...');
@@ -451,8 +493,10 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    }finally{
      loading=false;
      $('refresh').disabled=false;
+     $('headerRefresh').disabled=false;
      $('openDashboard').disabled=false;
      $('refresh').textContent='تحديث البيانات';
+     $('headerRefresh').textContent='＋ تحديث داخلي';
      $('openDashboard').textContent='فتح لوحة المتابعة';
      $('dashboard').setAttribute('aria-busy','false');
    }
@@ -462,6 +506,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
  $('studentSort').addEventListener('change',renderStudents);
  $('openDashboard').addEventListener('click',loadOverview);
  $('refresh').addEventListener('click',loadOverview);
+ $('headerRefresh').addEventListener('click',loadOverview);
  // The bearer token is kept only in memory. The URL fragment is removed immediately
  // so it is not sent in HTTP requests, referrers, or retained in browser history.
  token=location.hash.startsWith('#')?location.hash.slice(1):'';
@@ -472,6 +517,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    say('الرابط غير مكتمل؛ لم يتم إرسال أي طلب لبيانات الطلاب.',true);
  }else{
    $('accessStatus').textContent='تم استلام رمز الوصول. اضغط فتح لوحة المتابعة للتحقق منه.';
+   $('headerRefresh').disabled=false;
  }
 })();
 </script>
