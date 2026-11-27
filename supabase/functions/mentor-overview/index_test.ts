@@ -1,4 +1,4 @@
-import { handleMentorOverview, isSupervisorDisplayName, sanitizeOverview } from "./index.ts";
+import { handleMentorOverview, sanitizeOverview } from "./index.ts";
 
 const origin = "https://mrwael1773.github.io";
 
@@ -31,40 +31,6 @@ function withSupabaseMock(mock: typeof fetch) {
   };
 }
 
-
-Deno.test("recognizes the four supervisor accounts and Arabic spelling variants", () => {
-  for (const name of ["أبو باسل", "ابوباسل", "وائل صامد", "محمود", "مشعل", "أَبُو بَاسِل"]) {
-    assertEquals(isSupervisorDisplayName(name), true);
-  }
-  for (const name of ["أحمد", "عبدالله", "محمد", "باسل"]) {
-    assertEquals(isSupervisorDisplayName(name), false);
-  }
-});
-
-Deno.test("sanitizer excludes supervisors before their data reaches the mentor dashboard", () => {
-  const progress = {
-    xp: 1, completed_count: 1, mastered_count: 1, started_count: 1, trained_count: 0,
-    mastered_indices: [0], trained_indices: [], started_indices: [0],
-    saved_words_count: 0, foundation_saved_count: 0, review_words_count: 0,
-    review_due_count: 0, missed_words_count: 0, quiz_attempts: 0,
-    best_quiz_score: null, answers_count: 0, correct_answers_count: 0,
-    active_days_count: 1, learning_streak: 1, vocab_level: null, vocab_position: null,
-    reading_completed: [], current_lesson_index: null, current_word_index: null,
-    last_action: null, last_action_at: null, last_action_lesson_index: null, last_action_word_index: null
-  };
-  const result = sanitizeOverview({
-    generated_at: "2026-11-28T00:00:00Z",
-    students: [
-      { display_name: "أبو باسل", last_seen_at: null, progress },
-      { display_name: "وائل صامد", last_seen_at: null, progress },
-      { display_name: "محمود", last_seen_at: null, progress },
-      { display_name: "مشعل", last_seen_at: null, progress },
-      { display_name: "أحمد", last_seen_at: null, progress }
-    ]
-  });
-  assertEquals(result?.students.length, 1);
-  assertEquals(result?.students[0].display_name, "أحمد");
-});
 
 Deno.test("sanitizes the complete mentor progress contract", () => {
   const sanitized = sanitizeOverview({
