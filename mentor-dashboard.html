@@ -32,6 +32,46 @@ table{width:100%;border-collapse:collapse;min-width:820px}th,td{text-align:right
 th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:rgba(145,186,255,.045)}
 .empty-row td{text-align:center!important;padding:28px 16px!important;color:var(--muted)}
 .footer-note{margin:14px 2px 0;color:var(--muted);font-size:12px}.guide{margin:18px 0 4px;padding:16px 18px;border:1px solid rgba(145,186,255,.24);border-radius:15px;background:rgba(145,186,255,.06)}.guide h3{margin:0 0 8px;font-size:15px}.guide ul{margin:6px 0 0;padding-right:20px;color:var(--muted);font-size:13px}.guide li{margin:5px 0}.progress-cell{line-height:1.7;min-width:260px;white-space:normal}.progress-disclosure summary{cursor:pointer;color:var(--mint);font-weight:800;line-height:1.6;list-style-position:inside}.progress-disclosure summary:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:5px}.progress-disclosure[open] summary{margin-bottom:8px}.progress-details{padding:2px 0}.progress-group{padding:7px 0;border-top:1px solid rgba(54,77,106,.65)}.progress-group h4{margin:0 0 3px;color:var(--blue);font-size:12px}.progress-group ul{margin:0;padding-right:18px}.progress-group li{margin:2px 0;overflow-wrap:anywhere}.xp-cell{font-weight:850;font-variant-numeric:tabular-nums}
+
+/* Mentor dashboard redesign: presentation only; data and access flow remain unchanged. */
+.dashboard-heading{align-items:center}.dashboard-heading h2{font-size:clamp(21px,3vw,27px);margin:2px 0}
+.dashboard-nav{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 13px;margin:0 0 18px;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.nav-tab{flex:0 0 auto;border:1px solid transparent;border-radius:12px;padding:9px 15px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.nav-tab:hover{background:rgba(145,186,255,.08);color:var(--text)}
+.nav-tab.active{background:rgba(121,226,194,.12);border-color:rgba(121,226,194,.3);color:var(--mint)}
+.nav-tab:focus-visible,.student-tools input:focus-visible,.student-tools select:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.view-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 16px}
+.view-heading h2{margin:0;font-size:19px}.view-heading p{margin:4px 0 0}
+.stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 18px}
+.stat{position:relative;overflow:hidden;padding:17px 18px;background:linear-gradient(145deg,#1b304b,#14253b)}
+.stat:after{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--mint);opacity:.75}
+.stat b{font-size:clamp(25px,3vw,32px)}
+.stat-hint{display:block;margin-top:4px;color:#91a8c2;font-size:11px;line-height:1.5}
+.insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+.insight-card,.champion-panel{min-width:0;padding:18px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(150deg,rgba(25,45,70,.94),rgba(16,31,50,.96))}
+.insight-kicker{color:var(--mint);font-size:10px;font-weight:900;letter-spacing:1px}
+.insight-card h3,.champion-panel h3{margin:4px 0 8px;font-size:15px}
+.insight-value{margin:4px 0;font-size:27px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--text)}
+.insight-card .small{line-height:1.65}
+.data-note{margin:16px 0 0;padding:12px 14px;border:1px solid rgba(145,186,255,.2);border-radius:13px;background:rgba(145,186,255,.055);color:var(--muted);font-size:12px;line-height:1.8}
+.student-tools{display:flex;gap:10px;align-items:center;margin:12px 0 4px}
+.search-box,.sort-box{display:flex;align-items:center;gap:9px;min-height:46px;padding:0 13px;border:1px solid var(--line);border-radius:12px;background:#12233a;color:var(--muted)}
+.search-box{flex:1}.search-box>span:not(.sr-only){font-size:21px}
+.search-box input,.sort-box select{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:13px}
+.search-box input::placeholder{color:#8298b3}
+.sort-box{flex:0 0 auto}.sort-box select{min-width:145px;cursor:pointer}.sort-box option{background:#12233a;color:var(--text)}
+#studentResultCount{margin:8px 2px 10px}
+.champion-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.champion-panel h3{font-size:17px}.champion-list{margin:12px 0 0;padding:0;list-style:none;counter-reset:champion}
+.champion-list li{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid rgba(54,77,106,.62);counter-increment:champion}
+.champion-list li:before{content:counter(champion);display:grid;place-items:center;width:29px;height:29px;flex:0 0 29px;border-radius:9px;background:#243a56;color:var(--mint);font-weight:900;font-size:12px}
+.champion-name{flex:1;min-width:0;font-weight:800;overflow-wrap:anywhere}
+.champion-score{color:var(--mint);font-size:13px;font-weight:900;white-space:nowrap}
+.champion-list .empty-champion{color:var(--muted);font-size:13px}
+.champion-list .empty-champion:before{display:none}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.insight-grid{grid-template-columns:1fr}.champion-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.student-tools{align-items:stretch;flex-direction:column}.sort-box select{min-width:0}.dashboard-nav{gap:5px}.nav-tab{padding:8px 12px;font-size:12px}.dashboard-heading{align-items:stretch}}
+
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .hidden{display:none!important}
 @media(max-width:680px){
@@ -63,14 +103,45 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <p class="small muted" id="accessStatus" role="status" aria-live="polite">جارٍ التحقق من الرابط...</p>
 </section>
 <section class="panel hidden" id="dashboard">
-<div class="panel-heading"><div><h2>ملخص الطلاب</h2><p class="muted small" id="updatedAt">لم يتم التحديث بعد</p></div><button class="btn" id="refresh" type="button">تحديث البيانات</button></div>
+<div class="panel-heading dashboard-heading"><div><div class="eyebrow">ENGLISH HERO · MENTOR INSIGHTS</div><h2>مركز متابعة بطل الإنجليزي</h2><p class="muted small" id="updatedAt">لم يتم التحديث بعد</p></div><button class="btn" id="refresh" type="button">تحديث البيانات</button></div>
+<nav class="dashboard-nav" aria-label="أقسام لوحة المتابعة">
+<button class="nav-tab active" type="button" data-view="overviewView" aria-current="page">النظرة العامة</button>
+<button class="nav-tab" type="button" data-view="studentsView">متابعة الطلاب</button>
+<button class="nav-tab" type="button" data-view="championsView">الأبطال</button>
+<button class="nav-tab" type="button" data-view="guideView">دليل المؤشرات</button>
+</nav>
+<section class="dashboard-view" id="overviewView" aria-labelledby="overviewTitle">
+<div class="view-heading"><div><h2 id="overviewTitle">صورة البرنامج الآن</h2><p class="muted small">مؤشرات مجمعة من سجلات الطلاب المتاحة للوحة.</p></div></div>
 <div class="stats">
-<div class="stat"><span class="stat-label">إجمالي الحسابات</span><b id="total">—</b></div>
-<div class="stat"><span class="stat-label">اتصلوا سابقًا</span><b id="seen">—</b></div>
-<div class="stat"><span class="stat-label">لم يسجلوا اتصالًا</span><b id="notSeen">—</b></div>
+<div class="stat"><span class="stat-label">إجمالي الطلاب</span><b id="total">—</b><span class="stat-hint">الحسابات المسجلة</span></div>
+<div class="stat"><span class="stat-label">سبق لهم الاتصال</span><b id="seen">—</b><span class="stat-hint">لديهم وقت اتصال مسجل</span></div>
+<div class="stat"><span class="stat-label">لم يتصلوا بعد</span><b id="notSeen">—</b><span class="stat-hint">لا يوجد اتصال مسجل</span></div>
+<div class="stat"><span class="stat-label">دروس متقنة</span><b id="totalMastered">—</b><span class="stat-hint">من سجل الإتقان الموثق</span></div>
+<div class="stat"><span class="stat-label">تدريبات مكتملة</span><b id="totalTrained">—</b><span class="stat-hint">ليست دليلًا على الإتقان</span></div>
+<div class="stat"><span class="stat-label">مراحل قراءة مجتازة</span><b id="totalReading">—</b><span class="stat-hint">من 11 مرحلة لكل طالب</span></div>
 </div>
+<div class="insight-grid">
+<article class="insight-card"><div class="insight-kicker">MASTERY</div><h3>الإتقان الموثق</h3><p class="insight-value" id="masteryRate">—</p><p class="muted small">نسبة الدروس المتقنة إلى مجموع الدروس المتقنة والتدريب المكتمل. التدريب لا يُحتسب إتقانًا.</p></article>
+<article class="insight-card"><div class="insight-kicker">CHALLENGE DAYS</div><h3>أيام تحدي الأبطال</h3><p class="insight-value" id="challengeDays">—</p><p class="muted small">مجموع أيام المشاركة التي سجلها مسار تحدي الأبطال المعتمد.</p></article>
+<article class="insight-card"><div class="insight-kicker">VOCABULARY</div><h3>نشاط المفردات</h3><p class="insight-value" id="savedWords">—</p><p class="muted small">كلمات أضيفت للمراجعة وفق نسخة التقدم المزامنة من التطبيق.</p></article>
+</div>
+<p class="data-note">تنبيه منهجي: أعداد الإتقان مصدرها سجل أحداث الإتقان الموثق على الخادم. أما التدريب والمفردات والقراءة ونتائج الاختبارات وXP فهي بيانات تقدم يزامنها التطبيق، ولا تمثل كلها إثباتًا مستقلًا من الخادم.</p>
+</section>
+<section class="dashboard-view hidden" id="studentsView" aria-labelledby="studentsTitle">
+<div class="view-heading"><div><h2 id="studentsTitle">متابعة الطلاب</h2><p class="muted small">ابحث بالاسم، ثم رتّب القائمة حسب المؤشر الذي تريد مراجعته.</p></div></div>
+<div class="student-tools"><label class="search-box"><span class="sr-only">البحث عن طالب</span><span aria-hidden="true">⌕</span><input id="studentSearch" type="search" placeholder="ابحث عن اسم الطالب..." autocomplete="off"></label><label class="sort-box"><span>ترتيب حسب</span><select id="studentSort"><option value="name">الاسم</option><option value="mastery">الدروس المتقنة</option><option value="activity">أيام تحدي الأبطال</option><option value="recent">آخر اتصال</option><option value="xp">نقاط التطبيق (غير موثقة)</option></select></label></div>
+<p class="muted small" id="studentResultCount" aria-live="polite"></p>
 <div class="table-wrap"><table><caption class="sr-only">ملخص تقدم الطلاب في بطل الإنجليزي</caption><thead><tr><th scope="col">الطالب</th><th scope="col">آخر اتصال</th><th scope="col">نقاط التطبيق (XP) • غير موثقة</th><th scope="col">آخر نشاط</th><th scope="col">تفاصيل التقدم الدراسي</th></tr></thead><tbody id="students"></tbody></table></div>
-<aside class="guide" aria-label="شرح بيانات لوحة المتابعة"><h3>كيف تقرأ بيانات الطالب؟</h3><ul><li><strong>نقاط التطبيق (XP):</strong> الرصيد المسجل في تقدم التطبيق، وليس إنجازًا موثقًا من الخادم؛ لا يُستخدم وحده لإثبات الإتقان.</li><li><strong>بقية مؤشرات التقدم:</strong> التدريب والبدء والمفردات والمراجعة ونتائج الاختبارات وموضع التعلم مأخوذة من نسخة التقدم التي يزامنها التطبيق؛ تفيد في المتابعة لكنها ليست إثباتًا مستقلًا من الخادم.</li><li><strong>أتقن:</strong> عدد الدروس التي اجتاز الطالب تحديها المعتمد بنسبة ٨٠٪ أو أكثر؛ العدد وأسماء الدروس مصدرهما سجل الإتقان الموثق على الخادم.</li><li><strong>أكمل التدريب:</strong> أنهى محتوى الدرس لكنه لم يثبت إتقانه بعد.</li><li><strong>بدأ:</strong> عدد الدروس التي فتحها وبدأ التعلم فيها، وقد يشمل دروسًا أتقنها لاحقًا.</li><li><strong>موضع التعلم الحالي:</strong> مثل «الكلمة رقم ٦» تعني موضع الطالب داخل الدرس، ولا تعني أنه أتقن ٦ كلمات.</li><li><strong>المفردات والمراجعة والاختبارات:</strong> أعداد وملخصات مجمعة؛ لا تُعرض إجابات الطالب أو نصوصه.</li><li><strong>القراءة:</strong> تعرض اللوحة المراحل الإحدى عشرة التي اجتازها الطالب بعد مزامنتها من جهازه؛ لا تُعرض إجابات القراءة أو تفاصيل محاولاته، وقد لا يظهر التقدم السابق حتى يفتح الطالب مسار القراءة بعد تحديث الموقع.</li><li><strong>آخر نشاط:</strong> آخر إجراء تعليمي وصل إلى النظام، وليس سجلًا كاملًا لكل ما فعله الطالب.</li></ul></aside><p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو نصوص المراجعة أو المحادثات أو تفاصيل الجلسات.</p>
+</section>
+<section class="dashboard-view hidden" id="championsView" aria-labelledby="championsTitle">
+<div class="view-heading"><div><h2 id="championsTitle">أبطال الإتقان والاستمرارية</h2><p class="muted small">ترتيب وصفي مبني على مؤشرات موثقة متاحة في لوحة المرشد، وليس ترتيبًا عامًا لنقاط XP.</p></div></div>
+<div class="champion-grid"><article class="champion-panel"><h3>الأكثر إتقانًا</h3><p class="muted small">بحسب عدد الدروس المسجلة في سجل الإتقان الموثق.</p><ol id="masteryChampions" class="champion-list"><li class="empty-champion">بانتظار تحميل البيانات</li></ol></article><article class="champion-panel"><h3>الأكثر استمرارية</h3><p class="muted small">بحسب أيام تحدي الأبطال المسجلة من المسار المعتمد.</p><ol id="consistencyChampions" class="champion-list"><li class="empty-champion">بانتظار تحميل البيانات</li></ol></article></div>
+<p class="data-note">تُعرض أسماء الطلاب الظاهرة في حساباتهم وعددًا إجماليًا فقط. لا تُعرض إجابات الاختبارات أو البريد أو اسم المستخدم أو معرّفات الحسابات.</p>
+</section>
+<section class="dashboard-view hidden" id="guideView" aria-labelledby="guideTitle">
+<div class="view-heading"><div><h2 id="guideTitle">دليل قراءة المؤشرات</h2><p class="muted small">مصدر كل مؤشر وحدود تفسيره.</p></div></div>
+<aside class="guide" aria-label="شرح بيانات لوحة المتابعة"><h3>كيف تقرأ بيانات الطالب؟</h3><ul><li><strong>نقاط التطبيق (XP):</strong> الرصيد المسجل في تقدم التطبيق، وليس إنجازًا موثقًا من الخادم؛ لا يُستخدم وحده لإثبات الإتقان.</li><li><strong>بقية مؤشرات التقدم:</strong> التدريب والبدء والمفردات والمراجعة ونتائج الاختبارات وموضع التعلم مأخوذة من نسخة التقدم التي يزامنها التطبيق؛ تفيد في المتابعة لكنها ليست إثباتًا مستقلًا من الخادم.</li><li><strong>أتقن:</strong> عدد الدروس التي اجتاز الطالب تحديها المعتمد بنسبة ٨٠٪ أو أكثر؛ العدد وأسماء الدروس مصدرهما سجل الإتقان الموثق على الخادم.</li><li><strong>أكمل التدريب:</strong> أنهى محتوى الدرس لكنه لم يثبت إتقانه بعد.</li><li><strong>بدأ:</strong> عدد الدروس التي فتحها وبدأ التعلم فيها، وقد يشمل دروسًا أتقنها لاحقًا.</li><li><strong>موضع التعلم الحالي:</strong> مثل «الكلمة رقم ٦» تعني موضع الطالب داخل الدرس، ولا تعني أنه أتقن ٦ كلمات.</li><li><strong>المفردات والمراجعة والاختبارات:</strong> أعداد وملخصات مجمعة؛ لا تُعرض إجابات الطالب أو نصوصه.</li><li><strong>القراءة:</strong> تعرض اللوحة المراحل الإحدى عشرة التي اجتازها الطالب بعد مزامنتها من جهازه؛ لا تُعرض إجابات القراءة أو تفاصيل محاولاته.</li><li><strong>أيام تحدي الأبطال:</strong> أيام نشاط موثقة عبر مسار التحدي المعتمد فقط.</li><li><strong>آخر نشاط:</strong> آخر إجراء تعليمي وصل إلى النظام، وليس سجلًا كاملًا لكل ما فعله الطالب.</li></ul></aside><p class="footer-note">تُعرض أقل كمية لازمة للمتابعة فقط؛ لا تظهر عناوين البريد أو إجابات الاختبارات أو نصوص المراجعة أو المحادثات أو تفاصيل الجلسات.</p>
+</section>
 </section>
 <p class="status small" id="status" role="status" aria-live="polite">لا يتم عرض بيانات الطلاب قبل التحقق من صلاحية الرابط.</p>
 </main>
@@ -79,7 +150,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 (()=>{
  const $=id=>document.getElementById(id);
  const config=window.ENGLISH_HERO_CLOUD_CONFIG;
- let token='',loading=false;
+ let token='',loading=false,currentRows=[];
  const say=(message,isError=false)=>{
    $('status').textContent=message;
    $('status').classList.toggle('error',isError);
@@ -221,34 +292,81 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    td.appendChild(details);
    row.appendChild(td);
  }
- function render(rows,generatedAt){
-   const tbody=$('students');
-   tbody.replaceChildren();
-   if(rows.length===0){
-     const tr=document.createElement('tr');
-     tr.className='empty-row';
-     const td=document.createElement('td');
-     td.colSpan=5;
-     td.textContent='لا توجد حسابات طلاب لعرضها حاليًا.';
-     tr.appendChild(td);
-     tbody.appendChild(tr);
+ function activateView(viewId){
+   const allowed=['overviewView','studentsView','championsView','guideView'];
+   if(!allowed.includes(viewId))return;
+   for(const id of allowed)$(id).classList.toggle('hidden',id!==viewId);
+   document.querySelectorAll('.nav-tab').forEach(button=>{
+     const active=button.dataset.view===viewId;
+     button.classList.toggle('active',active);
+     if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+   });
+ }
+ function renderStudents(){
+   const query=$('studentSearch').value.trim().toLocaleLowerCase('ar');
+   const sort=$('studentSort').value;
+   const rows=currentRows.filter(student=>(student.display_name||'').toLocaleLowerCase('ar').includes(query));
+   rows.sort((a,b)=>{
+     const pa=a.progress,pb=b.progress;
+     if(sort==='mastery')return count(pb.mastered_count)-count(pa.mastered_count)||(a.display_name||'').localeCompare(b.display_name||'','ar');
+     if(sort==='activity')return count(pb.active_days_count)-count(pa.active_days_count)||(a.display_name||'').localeCompare(b.display_name||'','ar');
+     if(sort==='xp')return count(pb.xp)-count(pa.xp)||(a.display_name||'').localeCompare(b.display_name||'','ar');
+     if(sort==='recent')return (Date.parse(b.last_seen_at||'')||0)-(Date.parse(a.last_seen_at||'')||0);
+     return (a.display_name||'').localeCompare(b.display_name||'','ar');
+   });
+   const tbody=$('students');tbody.replaceChildren();
+   if(!rows.length){
+     const tr=document.createElement('tr');tr.className='empty-row';
+     const td=document.createElement('td');td.colSpan=5;td.textContent=query?'لا توجد نتائج تطابق البحث.':'لا توجد حسابات طلاب لعرضها حاليًا.';
+     tr.appendChild(td);tbody.appendChild(tr);
    }
    for(const student of rows){
-     const tr=document.createElement('tr');
-     const progress=student.progress;
+     const tr=document.createElement('tr'),progress=student.progress;
      cell(tr,'الطالب',student.display_name||'—');
      cell(tr,'آخر اتصال',formatDate(student.last_seen_at));
      cell(tr,'نقاط الخبرة (XP)',progress.xp===null?'غير متاحة':count(progress.xp)+' نقطة','xp-cell');
      cell(tr,'آخر نشاط',describeActivity(progress));
-     appendProgressCell(tr,progress);
-     tbody.appendChild(tr);
+     appendProgressCell(tr,progress);tbody.appendChild(tr);
    }
-   $('total').textContent=String(rows.length);
-   $('seen').textContent=String(rows.filter(x=>x.last_seen_at).length);
-   $('notSeen').textContent=String(rows.filter(x=>!x.last_seen_at).length);
+   $('studentResultCount').textContent='عرض '+rows.length+' من '+currentRows.length+' طالبًا';
+ }
+ function renderChampions(){
+   const configs=[
+     {id:'masteryChampions',key:'mastered_count',label:'درسًا متقنًا'},
+     {id:'consistencyChampions',key:'active_days_count',label:'يوم تحدٍ'}
+   ];
+   for(const config of configs){
+     const list=$(config.id);list.replaceChildren();
+     const leaders=currentRows.filter(s=>count(s.progress[config.key])>0)
+       .sort((a,b)=>count(b.progress[config.key])-count(a.progress[config.key])||(a.display_name||'').localeCompare(b.display_name||'','ar')).slice(0,5);
+     if(!leaders.length){const li=document.createElement('li');li.className='empty-champion';li.textContent='لا توجد نتائج مسجلة حتى الآن.';list.appendChild(li);continue;}
+     for(const student of leaders){
+       const li=document.createElement('li'),name=document.createElement('span'),score=document.createElement('span');
+       name.className='champion-name';name.textContent=student.display_name||'طالب';
+       score.className='champion-score';score.textContent=count(student.progress[config.key])+' '+config.label;
+       li.append(name,score);list.appendChild(li);
+     }
+   }
+ }
+ function render(rows,generatedAt){
+   currentRows=rows.slice();
+   const seen=rows.filter(x=>x.last_seen_at).length;
+   const totals=rows.reduce((acc,s)=>{
+     const p=s.progress;
+     acc.mastered+=count(p.mastered_count);acc.trained+=count(p.trained_count);
+     acc.reading+=Array.isArray(p.reading_completed)?p.reading_completed.length:0;
+     acc.days+=count(p.active_days_count);acc.saved+=count(p.saved_words_count);
+     return acc;
+   },{mastered:0,trained:0,reading:0,days:0,saved:0});
+   $('total').textContent=String(rows.length);$('seen').textContent=String(seen);$('notSeen').textContent=String(rows.length-seen);
+   $('totalMastered').textContent=String(totals.mastered);$('totalTrained').textContent=String(totals.trained);$('totalReading').textContent=String(totals.reading);
+   const denominator=totals.mastered+totals.trained;
+   $('masteryRate').textContent=denominator?Math.round(totals.mastered/denominator*100)+'%':'—';
+   $('challengeDays').textContent=String(totals.days);$('savedWords').textContent=String(totals.saved);
    $('updatedAt').textContent='آخر تحديث: '+formatDate(generatedAt);
-   $('dashboard').classList.remove('hidden');
-   $('accessPanel').classList.add('hidden');
+   $('studentSearch').value='';$('studentSort').value='name';
+   renderStudents();renderChampions();activateView('overviewView');
+   $('dashboard').classList.remove('hidden');$('accessPanel').classList.add('hidden');
  }
  function showAccessPanel(){
    // Remove previously loaded student data when access or refresh fails.
@@ -256,6 +374,8 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    $('total').textContent='—';
    $('seen').textContent='—';
    $('notSeen').textContent='—';
+   $('totalMastered').textContent='—';$('totalTrained').textContent='—';$('totalReading').textContent='—';$('masteryRate').textContent='—';$('challengeDays').textContent='—';$('savedWords').textContent='—';currentRows=[];
+   $('masteryChampions').replaceChildren();$('consistencyChampions').replaceChildren();
    $('updatedAt').textContent='';
    $('dashboard').classList.add('hidden');
    $('accessPanel').classList.remove('hidden');
@@ -337,6 +457,9 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
      $('dashboard').setAttribute('aria-busy','false');
    }
  }
+ document.querySelectorAll('.nav-tab').forEach(button=>button.addEventListener('click',()=>activateView(button.dataset.view)));
+ $('studentSearch').addEventListener('input',renderStudents);
+ $('studentSort').addEventListener('change',renderStudents);
  $('openDashboard').addEventListener('click',loadOverview);
  $('refresh').addEventListener('click',loadOverview);
  // The bearer token is kept only in memory. The URL fragment is removed immediately
