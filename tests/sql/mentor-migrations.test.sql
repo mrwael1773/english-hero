@@ -425,18 +425,18 @@ begin
      or v_result->'week_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'week_leaders'->0->>'score' <> '2'
      or v_result->'mastery_leaders'->0->>'score' <> '3'
-     or v_result->'consistency_leaders'->0->>'display_name' <> 'Synthetic Learner'
-     or v_result->'consistency_leaders'->0->>'score' <> '1'
+     or not exists (select 1 from jsonb_array_elements(v_result->'consistency_leaders') as consistency_row
+       where consistency_row->>'display_name' = 'Synthetic Learner' and consistency_row->>'score' = '1')
      or v_result->'improvement_leaders'->0->>'display_name' <> 'Improved Learner'
      or v_result->'improvement_leaders'->0->>'score' <> '1' then
     raise exception 'Student champions aggregates were not calculated as expected';
   end if;
-  if not exists (select 1 from jsonb_array_elements(v_result->'today_leaders') as row
-      where row->>'display_name' = 'محمود')
-     or not exists (select 1 from jsonb_array_elements(v_result->'mastery_leaders') as row
-      where row->>'display_name' = 'محمود')
-     or not exists (select 1 from jsonb_array_elements(v_result->'consistency_leaders') as row
-      where row->>'display_name' = 'محمود') then
+  if not exists (select 1 from jsonb_array_elements(v_result->'today_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود')
+     or not exists (select 1 from jsonb_array_elements(v_result->'mastery_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود')
+     or not exists (select 1 from jsonb_array_elements(v_result->'consistency_leaders') as leaderboard_row
+      where leaderboard_row->>'display_name' = 'محمود') then
     raise exception 'A student sharing a supervisor display name was excluded from student champions';
   end if;
   if exists (
@@ -447,7 +447,7 @@ begin
       union all select jsonb_array_elements(v_result->'consistency_leaders')
       union all select jsonb_array_elements(v_result->'improvement_leaders')
     ) as leaders
-    where leaders.leader->>'display_name' in ('أبو باسل', 'وائل صامد', 'مشعل')
+    where leaders.leaderboard_row->>'display_name' in ('أبو باسل', 'وائل صامد', 'مشعل')
   ) then
     raise exception 'A supervisor account appeared in a student champions leaderboard';
   end if;
