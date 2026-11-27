@@ -65,6 +65,13 @@ test('mentor dashboard sends the token only in Authorization and renders a minim
   await page.locator('#openDashboard').click();
 
   await expect(page.locator('#dashboard')).toBeVisible();
+  await expect(page.locator('#totalMastered')).toHaveText('1');
+  await expect(page.locator('#totalTrained')).toHaveText('1');
+  await expect(page.locator('#masteryRate')).toHaveText('100%');
+  await page.locator('[data-view="championsView"]').click();
+  await expect(page.locator('#masteryChampions')).toContainText('1 درسًا متقنًا');
+  await expect(page.locator('#consistencyChampions')).toContainText('4 يوم تحدٍ');
+  await page.locator('[data-view="studentsView"]').click();
   await expect(page.locator('#total')).toHaveText('1');
   await expect(page.locator('#seen')).toHaveText('1');
   await expect(page.locator('#notSeen')).toHaveText('0');
