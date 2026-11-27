@@ -441,7 +441,7 @@ begin
   end if;
   if exists (
     select 1 from (
-      select jsonb_array_elements(v_result->'today_leaders') as leader
+      select jsonb_array_elements(v_result->'today_leaders') as leaderboard_row
       union all select jsonb_array_elements(v_result->'week_leaders')
       union all select jsonb_array_elements(v_result->'mastery_leaders')
       union all select jsonb_array_elements(v_result->'consistency_leaders')
