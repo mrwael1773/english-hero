@@ -121,7 +121,7 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
 <div class="stat"><span class="stat-label">مراحل قراءة مجتازة</span><b id="totalReading">—</b><span class="stat-hint">من 11 مرحلة لكل طالب</span></div>
 </div>
 <div class="insight-grid">
-<article class="insight-card"><div class="insight-kicker">MASTERY</div><h3>الإتقان الموثق</h3><p class="insight-value" id="masteryRate">—</p><p class="muted small">نسبة الدروس المتقنة إلى مجموع الدروس المتقنة والتدريب المكتمل. التدريب لا يُحتسب إتقانًا.</p></article>
+<article class="insight-card"><div class="insight-kicker">MASTERY</div><h3>الإتقان الموثق</h3><p class="insight-value" id="masteryRate">—</p><p class="muted small">نسبة الطلاب الذين لديهم درس واحد على الأقل في سجل الإتقان الموثق.</p></article>
 <article class="insight-card"><div class="insight-kicker">CHALLENGE DAYS</div><h3>أيام تحدي الأبطال</h3><p class="insight-value" id="challengeDays">—</p><p class="muted small">مجموع أيام المشاركة التي سجلها مسار تحدي الأبطال المعتمد.</p></article>
 <article class="insight-card"><div class="insight-kicker">VOCABULARY</div><h3>نشاط المفردات</h3><p class="insight-value" id="savedWords">—</p><p class="muted small">كلمات أضيفت للمراجعة وفق نسخة التقدم المزامنة من التطبيق.</p></article>
 </div>
@@ -360,8 +360,8 @@ th{background:#1b3049;color:var(--mint);font-weight:800;white-space:nowrap}tbody
    },{mastered:0,trained:0,reading:0,days:0,saved:0});
    $('total').textContent=String(rows.length);$('seen').textContent=String(seen);$('notSeen').textContent=String(rows.length-seen);
    $('totalMastered').textContent=String(totals.mastered);$('totalTrained').textContent=String(totals.trained);$('totalReading').textContent=String(totals.reading);
-   const denominator=totals.mastered+totals.trained;
-   $('masteryRate').textContent=denominator?Math.round(totals.mastered/denominator*100)+'%':'—';
+   const studentsWithMastery=rows.filter(student=>count(student.progress.mastered_count)>0).length;
+   $('masteryRate').textContent=rows.length?Math.round(studentsWithMastery/rows.length*100)+'%':'—';
    $('challengeDays').textContent=String(totals.days);$('savedWords').textContent=String(totals.saved);
    $('updatedAt').textContent='آخر تحديث: '+formatDate(generatedAt);
    $('studentSearch').value='';$('studentSort').value='name';
